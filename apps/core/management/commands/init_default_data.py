@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('开始初始化默认数据...')
         
-        # 创建默认论坛板块
+        # 创建默认论坛板块 (8个)
         boards_data = [
             {
                 'name': '技术交流',
@@ -34,6 +34,26 @@ class Command(BaseCommand):
                 'slug': 'chat',
                 'description': '轻松聊天，分享生活趣事',
             },
+            {
+                'name': 'Python编程',
+                'slug': 'python',
+                'description': 'Python语言讨论、代码分享',
+            },
+            {
+                'name': 'Web开发',
+                'slug': 'web',
+                'description': '前端后端开发讨论',
+            },
+            {
+                'name': '人工智能',
+                'slug': 'ai',
+                'description': 'AI、机器学习、深度学习',
+            },
+            {
+                'name': '数据库',
+                'slug': 'database',
+                'description': 'MySQL、Redis、MongoDB等数据库讨论',
+            },
         ]
         
         boards_created = 0
@@ -48,12 +68,14 @@ class Command(BaseCommand):
         
         self.stdout.write(f'论坛板块: 新建 {boards_created} 个')
         
-        # 创建默认博客分类
+        # 创建默认博客分类 (6个)
         categories_data = [
             {'name': '技术笔记', 'slug': 'tech-notes'},
             {'name': '项目实战', 'slug': 'projects'},
             {'name': '工具推荐', 'slug': 'tools'},
             {'name': '生活随笔', 'slug': 'life'},
+            {'name': '编程学习', 'slug': 'learning'},
+            {'name': '源码解析', 'slug': 'source-code'},
         ]
         
         categories_created = 0
@@ -68,15 +90,13 @@ class Command(BaseCommand):
         
         self.stdout.write(f'博客分类: 新建 {categories_created} 个')
         
-        # 创建默认标签
+        # 创建默认标签 (6个)
         tags_data = [
             {'name': 'Python', 'slug': 'python'},
             {'name': 'Django', 'slug': 'django'},
             {'name': 'JavaScript', 'slug': 'javascript'},
             {'name': '前端开发', 'slug': 'frontend'},
             {'name': '后端开发', 'slug': 'backend'},
-            {'name': '数据库', 'slug': 'database'},
-            {'name': 'Linux', 'slug': 'linux'},
             {'name': '网络安全', 'slug': 'security'},
         ]
         
