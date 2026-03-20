@@ -61,6 +61,18 @@ class Step2SiteForm(forms.Form):
         }),
         help_text='用逗号分隔的关键词'
     )
+    allowed_hosts = forms.CharField(
+        label='允许访问的主机',
+        max_length=500,
+        required=False,
+        initial='localhost,127.0.0.1,0.0.0.0,*',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'localhost,127.0.0.1,0.0.0.0,*',
+            'autocomplete': 'off'
+        }),
+        help_text='允许访问网站的域名或IP，用逗号分隔。* 表示允许所有'
+    )
     
     def clean_site_name(self):
         name = self.cleaned_data['site_name']
@@ -285,4 +297,15 @@ class QuickInstallForm(forms.Form):
         label='管理员密码',
         min_length=8,
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+    allowed_hosts = forms.CharField(
+        label='允许访问的主机',
+        max_length=500,
+        required=False,
+        initial='localhost,127.0.0.1,0.0.0.0,*',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'localhost,127.0.0.1,0.0.0.0,*'
+        }),
+        help_text='允许局域网访问请保持默认，或填写*允许所有'
     )

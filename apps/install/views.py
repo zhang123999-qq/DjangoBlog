@@ -157,10 +157,13 @@ def quick_install(request):
         form = QuickInstallForm(request.POST)
         if form.is_valid():
             try:
+                # 获取allowed_hosts
+                allowed_hosts = form.cleaned_data.get('allowed_hosts', 'localhost,127.0.0.1,0.0.0.0,*')
+                
                 # 1. 写入.env
                 env_data = {
                     'DEBUG': 'True',
-                    'ALLOWED_HOSTS': 'localhost,127.0.0.1',
+                    'ALLOWED_HOSTS': allowed_hosts,
                     'SITE_NAME': form.cleaned_data['site_name'],
                 }
                 write_env_file(env_data, BASE_DIR)
@@ -176,7 +179,13 @@ def quick_install(request):
                         password=form.cleaned_data['admin_password']
                     )
                 
-                # 4. 创建网站配置
+                # 4. 初始化默认数据（分类、标签、板块）
+                try:
+                    call_command('init_default_data', verbosity=0)
+                except Exception as e:
+                    logger.warning(f"初始化默认数据失败: {str(e)}")
+                
+                # 5. 创建网站配置
                 SiteConfig.objects.update_or_create(
                     id=1,
                     defaults={
@@ -185,7 +194,7 @@ def quick_install(request):
                     }
                 )
                 
-                # 5. 创建锁文件
+                # 6. 创建锁文件
                 create_install_lock()
                 
                 messages.success(request, '🎉 安装成功！请登录管理后台。')
@@ -338,9 +347,13 @@ def step6_execute(request):
     if request.method == 'POST':
         try:
             # 执行安装
+            # 获取网站配置（包含allowed_hosts）
+            site_config = request.session.get('install_step2', {})
+            allowed_hosts = site_config.get('allowed_hosts', 'localhost,127.0.0.1,0.0.0.0,*')
+            
             env_data = {
                 'DEBUG': 'True',
-                'ALLOWED_HOSTS': 'localhost,127.0.0.1',
+                'ALLOWED_HOSTS': allowed_hosts,
             }
             
             # 网站配置
@@ -382,6 +395,12 @@ def step6_execute(request):
                     'is_installed': True
                 }
             )
+            
+            # 初始化默认数据（分类、标签、板块）
+            try:
+                call_command('init_default_data', verbosity=0)
+            except Exception as e:
+                logger.warning(f"初始化默认数据失败: {str(e)}")
             
             # 创建锁文件
             create_install_lock()
