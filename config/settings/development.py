@@ -64,6 +64,12 @@ try:
     INSTALLED_APPS += ['debug_toolbar']
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
     INTERNAL_IPS = ['127.0.0.1', '0.0.0.0']
+    
+    # Debug Toolbar 配置 - 禁用重定向拦截
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+        'INTERCEPT_REDIRECTS': False,  # 关键：禁用重定向拦截
+    }
 except ImportError:
     pass
 
