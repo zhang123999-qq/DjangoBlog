@@ -22,6 +22,10 @@ urlpatterns = [
     path('install/', include('apps.install.urls', namespace='install')),
 ]
 
-# 开发模式下提供媒体文件访问
+# 开发模式下提供媒体文件访问和调试工具栏
 if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
