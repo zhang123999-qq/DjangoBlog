@@ -55,7 +55,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # =============================================================================
-# 调试工具（可选）- 已禁用
+# 调试工具 - 已禁用
 # =============================================================================
 
 # Debug Toolbar 已禁用
@@ -64,11 +64,6 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 #     INSTALLED_APPS += ['debug_toolbar']
 #     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 #     INTERNAL_IPS = ['127.0.0.1', '0.0.0.0']
-#     
-#     DEBUG_TOOLBAR_CONFIG = {
-#         'SHOW_TOOLBAR_CALLBACK': lambda request: True,
-#         'INTERCEPT_REDIRECTS': False,
-#     }
 # except ImportError:
 #     pass
 
