@@ -1,3 +1,17 @@
+"""
+用户账户应用视图模块
+
+处理用户相关的HTTP请求，包括：
+- 用户注册
+- 用户登录/登出
+- 个人资料查看/编辑
+- 头像管理
+- 验证码生成
+
+Author: zhang123999-qq
+Date: 2026-03-20
+"""
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect

@@ -1,3 +1,17 @@
+"""
+论坛应用视图模块
+
+处理论坛相关的HTTP请求，包括：
+- 版块列表/详情
+- 主题发布/编辑/删除
+- 回复功能
+- 点赞功能
+- 热门主题统计
+
+Author: zhang123999-qq
+Date: 2026-03-20
+"""
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import login_required
