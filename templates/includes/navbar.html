@@ -1,0 +1,71 @@
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            {% if site_config %}{{ site_config.site_name }}{% else %}Django 综合网站{% endif %}
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav gap-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="bi bi-house-door me-1"></i> 首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/blog/">
+                        <i class="bi bi-file-text me-1"></i> 博客
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/forum/">
+                        <i class="bi bi-chat-dots me-1"></i> 论坛
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/tools/">
+                        <i class="bi bi-tools me-1"></i> 工具栏
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto gap-3">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="position-relative">
+                                {% if user.profile.avatar %}
+                                    <img src="{{ user.profile.avatar.url }}" alt="头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
+                                {% else %}
+                                    <img src="/static/img/default-avatar.png" alt="默认头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
+                                {% endif %}
+                                <span class="position-absolute bottom-0 right-0 w-2 h-2 bg-success rounded-full border-2 border-white"></span>
+                            </div>
+                            <span>{{ user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="border-radius: 12px; box-shadow: var(--card-shadow); border: none;">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> 个人中心</a></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile_edit' %}"><i class="bi bi-pencil"></i> 编辑资料</a></li>
+                            {% if user.is_staff or user.is_superuser %}
+                                <li><a class="dropdown-item d-flex align-items-center gap-2" href="/admin/"><i class="bi bi-gear"></i> 后台管理</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> 登录
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary" href="{% url 'accounts:register' %}">
+                            <i class="bi bi-person-plus me-1"></i> 注册
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

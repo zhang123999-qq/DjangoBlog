@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}工具栏 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">工具栏</h1>
+    
+    {% if error %}
+        <div class="alert alert-danger mb-4">{{ error }}</div>
+    {% endif %}
+    
+    <div class="alert alert-info mb-4">
+        <p>总工具数: {{ total_tools }}</p>
+        <p>启用工具数: {{ enabled_tools_count }}</p>
+    </div>
+    
+    <div class="row">
+        {% for tool in tools %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="card-title"><a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark">{{ tool.name }}</a></h3>
+                        <p class="card-text">{{ tool.description }}</p>
+                        <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-primary">使用工具</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">暂无可用工具</div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

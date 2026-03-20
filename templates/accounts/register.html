@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}注册 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">用户注册</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {% if field.name == 'captcha' %}
+                                    <div class="d-flex align-items-center gap-3">
+                                        {{ field }}
+                                        <div class="captcha-image">
+                                            <img src="data:image/png;base64,{{ captcha_image }}" alt="验证码" class="rounded" style="height: 40px;">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="refreshCaptcha(this)">刷新</button>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger mt-2">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary w-100">注册</button>
+                    </form>
+                    <script>
+                        function refreshCaptcha(button) {
+                            // 重新加载页面以获取新的验证码
+                            window.location.reload();
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

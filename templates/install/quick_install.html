@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}快速安装 - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="install-container">
+    <div class="install-header text-center py-4">
+        <h2>⚡ 快速安装</h2>
+        <p class="text-muted">填写基本信息，一键完成安装</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" id="quick-install-form">
+                        {% csrf_token %}
+                        
+                        <!-- 网站信息 -->
+                        <h5 class="mb-3">📝 网站信息</h5>
+                        <div class="mb-3">
+                            <label for="id_site_name" class="form-label">网站名称 *</label>
+                            {{ form.site_name }}
+                            <div class="form-text">显示在浏览器标签上的名称</div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 管理员信息 -->
+                        <h5 class="mb-3">👤 管理员账户</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_admin_username" class="form-label">用户名 *</label>
+                                {{ form.admin_username }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_admin_email" class="form-label">邮箱 *</label>
+                                {{ form.admin_email }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_admin_password" class="form-label">密码 *</label>
+                            {{ form.admin_password }}
+                            <div class="form-text">至少8个字符</div>
+                        </div>
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 提示信息 -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">📌 安装说明</h6>
+                            <ul class="mb-0">
+                                <li>将自动创建SQLite数据库</li>
+                                <li>安装完成后请妥善保管管理员密码</li>
+                                <li>可随时在管理后台修改配置</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'install:index' %}" class="btn btn-outline-secondary">
+                                ← 返回
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                🚀 开始安装
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('quick-install-form').addEventListener('submit', function(e) {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>正在安装...';
+});
+</script>
+{% endblock %}

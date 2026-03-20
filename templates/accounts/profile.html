@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}个人中心 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">个人中心</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" alt="头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                                <img src="/static/img/default-avatar.png" alt="默认头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            {% endif %}
+                            <h3 class="mt-3">{{ user.username }}</h3>
+                            {% if user.nickname %}
+                                <p class="text-muted">{{ user.nickname }}</p>
+                            {% endif %}
+                            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary mt-2">编辑资料</a>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <h4>基本信息</h4>
+                                <hr>
+                                <div class="row mb-2">
+                                    <div class="col-sm-3"><strong>邮箱：</strong></div>
+                                    <div class="col-sm-9">{{ user.email }}</div>
+                                </div>
+                                {% if user.profile.bio %}
+                                    <div class="row mb-2">
+                                        <div class="col-sm-3"><strong>简介：</strong></div>
+                                        <div class="col-sm-9">{{ user.profile.bio }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if user.profile.website %}
+                                    <div class="row mb-2">
+                                        <div class="col-sm-3"><strong>网站：</strong></div>
+                                        <div class="col-sm-9"><a href="{{ user.profile.website }}" target="_blank">{{ user.profile.website }}</a></div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 待审核内容 -->
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">我的待审核内容</h3>
+                </div>
+                <div class="card-body">
+                    <!-- 待审核主题 -->
+                    {% if pending_topics %}
+                        <div class="mb-4">
+                            <h4>待审核主题</h4>
+                            <div class="list-group">
+                                {% for topic in pending_topics %}
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1"><a href="{{ topic.get_absolute_url }}">{{ topic.title }}</a></h5>
+                                        <p class="mb-1 text-muted">提交时间: {{ topic.created_at|date:"Y-m-d H:i" }}</p>
+                                        <p class="mb-0 text-muted">状态: 待审核</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- 待审核回复 -->
+                    {% if pending_replies %}
+                        <div class="mb-4">
+                            <h4>待审核回复</h4>
+                            <div class="list-group">
+                                {% for reply in pending_replies %}
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">回复于: <a href="{{ reply.topic.get_absolute_url }}">{{ reply.topic.title }}</a></h5>
+                                        <p class="mb-1 text-muted">提交时间: {{ reply.created_at|date:"Y-m-d H:i" }}</p>
+                                        <p class="mb-0 text-muted">状态: 待审核</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- 待审核评论 -->
+                    {% if pending_comments %}
+                        <div class="mb-4">
+                            <h4>待审核评论</h4>
+                            <div class="list-group">
+                                {% for comment in pending_comments %}
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">评论于: <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a></h5>
+                                        <p class="mb-1 text-muted">提交时间: {{ comment.created_at|date:"Y-m-d H:i" }}</p>
+                                        <p class="mb-0 text-muted">状态: 待审核</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not pending_topics and not pending_replies and not pending_comments %}
+                        <p class="text-muted">暂无待审核内容</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 已拒绝内容 -->
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">已拒绝内容</h3>
+                </div>
+                <div class="card-body">
+                    <!-- 已拒绝主题 -->
+                    {% if rejected_topics %}
+                        <div class="mb-4">
+                            <h4>已拒绝主题</h4>
+                            <div class="list-group">
+                                {% for topic in rejected_topics %}
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">{{ topic.title }}</h5>
+                                        <p class="mb-1 text-muted">提交时间: {{ topic.created_at|date:"Y-m-d H:i" }}</p>
+                                        {% if topic.review_note %}
+                                            <p class="mb-1 text-danger">拒绝原因: {{ topic.review_note }}</p>
+                                        {% endif %}
+                                        <p class="mb-0 text-muted">状态: 已拒绝</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- 已拒绝回复 -->
+                    {% if rejected_replies %}
+                        <div class="mb-4">
+                            <h4>已拒绝回复</h4>
+                            <div class="list-group">
+                                {% for reply in rejected_replies %}
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">回复于: {{ reply.topic.title }}</h5>
+                                        <p class="mb-1 text-muted">提交时间: {{ reply.created_at|date:"Y-m-d H:i" }}</p>
+                                        {% if reply.review_note %}
+                                            <p class="mb-1 text-danger">拒绝原因: {{ reply.review_note }}</p>
+                                        {% endif %}
+                                        <p class="mb-0 text-muted">状态: 已拒绝</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- 已拒绝评论 -->
+                    {% if rejected_comments %}
+                        <div class="mb-4">
+                            <h4>已拒绝评论</h4>
+                            <div class="list-group">
+                                {% for comment in rejected_comments %}
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">评论于: {{ comment.post.title }}</h5>
+                                        <p class="mb-1 text-muted">提交时间: {{ comment.created_at|date:"Y-m-d H:i" }}</p>
+                                        {% if comment.review_note %}
+                                            <p class="mb-1 text-danger">拒绝原因: {{ comment.review_note }}</p>
+                                        {% endif %}
+                                        <p class="mb-0 text-muted">状态: 已拒绝</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not rejected_topics and not rejected_replies and not rejected_comments %}
+                        <p class="text-muted">暂无已拒绝内容</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

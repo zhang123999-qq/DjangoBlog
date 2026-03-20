@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">{{ title }}</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_title" class="form-label">主题标题</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {% for error in form.title.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="id_content" class="form-label">主题内容</label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {% for error in form.content.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary">发布</button>
+                <a href="{{ board.get_absolute_url }}" class="btn btn-secondary">取消</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

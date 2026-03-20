@@ -1,0 +1,330 @@
+{% extends 'base_tech.html' %}
+{% load static %}
+
+{% block title %}首页 - DjangoBlog{% endblock %}
+
+{% block content %}
+<!-- Hero 区域 -->
+<section class="hero-section py-5 mt-5">
+    <div class="container">
+        <div class="row align-items-center min-vh-50">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">
+                    <span class="text-gradient">探索科技的无限可能</span>
+                </h1>
+                <p class="lead text-secondary mb-4">
+                    基于 Django 4.2 构建的现代化博客论坛系统，
+                    集成博客、论坛、工具箱于一体。
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'blog:post_list' %}" class="btn btn-tech-primary btn-lg btn-tech-pulse">
+                        <i class="bi bi-journal-text me-2"></i>浏览博客
+                    </a>
+                    <a href="{% url 'tools:tool_list' %}" class="btn btn-tech-outline btn-lg">
+                        <i class="bi bi-tools me-2"></i>在线工具
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 统计卡片 -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-6 col-md-3">
+                <div class="card-tech text-center p-4">
+                    <div class="stat-value display-5 fw-bold text-gradient mb-2" data-target="{{ post_count|default:0 }}">
+                        {{ post_count|default:0 }}
+                    </div>
+                    <div class="stat-label text-secondary">
+                        <i class="bi bi-file-text me-1"></i>博客文章
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-tech text-center p-4">
+                    <div class="stat-value display-5 fw-bold text-gradient mb-2" data-target="{{ user_count|default:0 }}">
+                        {{ user_count|default:0 }}
+                    </div>
+                    <div class="stat-label text-secondary">
+                        <i class="bi bi-people me-1"></i>注册用户
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-tech text-center p-4">
+                    <div class="stat-value display-5 fw-bold text-gradient mb-2" data-target="{{ tool_count|default:59 }}">
+                        {{ tool_count|default:59 }}
+                    </div>
+                    <div class="stat-label text-secondary">
+                        <i class="bi bi-tools me-1"></i>在线工具
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-tech text-center p-4">
+                    <div class="stat-value display-5 fw-bold text-gradient mb-2" data-target="{{ view_count|default:0 }}">
+                        {{ view_count|default:0 }}
+                    </div>
+                    <div class="stat-label text-secondary">
+                        <i class="bi bi-eye me-1"></i>总浏览量
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 最新文章 -->
+<section class="blog-section py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title">
+                <i class="bi bi-journal-text me-2 text-gradient"></i>
+                最新文章
+            </h2>
+            <a href="{% url 'blog:post_list' %}" class="btn btn-tech-ghost">
+                查看更多 <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        
+        <div class="row g-4">
+            {% for post in latest_posts|slice:6 %}
+            <div class="col-md-6 col-lg-4">
+                <article class="card-tech h-100">
+                    {% if post.cover_image %}
+                    <div class="card-img-wrapper">
+                        <img src="{{ post.cover_image.url }}" class="card-img-top" alt="{{ post.title }}">
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="mb-2">
+                            {% if post.category %}
+                            <span class="badge bg-tech">{{ post.category.name }}</span>
+                            {% endif %}
+                            <small class="text-muted ms-2">
+                                <i class="bi bi-calendar3 me-1"></i>{{ post.created_at|date:"Y-m-d" }}
+                            </small>
+                        </div>
+                        <h5 class="card-title">
+                            <a href="{{ post.get_absolute_url }}" class="text-decoration-none text-light">
+                                {{ post.title }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-secondary">
+                            {{ post.summary|truncatechars:100 }}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>{{ post.author.username }}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-eye me-1"></i>{{ post.views_count }}
+                            </small>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-secondary mt-3">暂无文章</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 热门工具 -->
+<section class="tools-section py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title">
+                <i class="bi bi-tools me-2 text-gradient"></i>
+                热门工具
+            </h2>
+            <a href="{% url 'tools:tool_list' %}" class="btn btn-tech-ghost">
+                全部工具 <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        
+        <div class="row g-4">
+            {% for tool in popular_tools|slice:8 %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none">
+                    <div class="tool-card-tech">
+                        <div class="tool-icon">
+                            <i class="bi bi-{{ tool.icon|default:'gear' }}"></i>
+                        </div>
+                        <h6 class="tool-name">{{ tool.name }}</h6>
+                        <p class="tool-desc">{{ tool.description|truncatechars:30 }}</p>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{% url 'tools:tool_detail' 'base64-codec' %}" class="text-decoration-none">
+                    <div class="tool-card-tech">
+                        <div class="tool-icon">
+                            <i class="bi bi-code-slash"></i>
+                        </div>
+                        <h6 class="tool-name">Base64 编解码</h6>
+                        <p class="tool-desc">文本 Base64 编码解码</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{% url 'tools:tool_detail' 'json-formatter' %}" class="text-decoration-none">
+                    <div class="tool-card-tech">
+                        <div class="tool-icon">
+                            <i class="bi bi-braces"></i>
+                        </div>
+                        <h6 class="tool-name">JSON 格式化</h6>
+                        <p class="tool-desc">JSON 美化压缩验证</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{% url 'tools:tool_detail' 'qrcode-generator' %}" class="text-decoration-none">
+                    <div class="tool-card-tech">
+                        <div class="tool-icon">
+                            <i class="bi bi-qr-code"></i>
+                        </div>
+                        <h6 class="tool-name">二维码生成</h6>
+                        <p class="tool-desc">文本网址转二维码</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{% url 'tools:tool_detail' 'timestamp-converter' %}" class="text-decoration-none">
+                    <div class="tool-card-tech">
+                        <div class="tool-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <h6 class="tool-name">时间戳转换</h6>
+                        <p class="tool-desc">Unix 时间戳转换</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 论坛板块 -->
+<section class="forum-section py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title">
+                <i class="bi bi-chat-square-text me-2 text-gradient"></i>
+                热门讨论
+            </h2>
+            <a href="{% url 'forum:board_list' %}" class="btn btn-tech-ghost">
+                进入论坛 <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        
+        <div class="card-tech">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>主题</th>
+                                <th>版块</th>
+                                <th>作者</th>
+                                <th>回复</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for topic in hot_topics|slice:5 %}
+                            <tr>
+                                <td>
+                                    <a href="{{ topic.get_absolute_url }}" class="text-light text-decoration-none">
+                                        {% if topic.is_top %}<span class="badge bg-danger me-1">置顶</span>{% endif %}
+                                        {{ topic.title }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-tech">{{ topic.board.name }}</span></td>
+                                <td>{{ topic.author.username }}</td>
+                                <td>{{ topic.reply_count }}</td>
+                                <td><small class="text-muted">{{ topic.last_reply_at|date:"m-d H:i" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox display-4"></i>
+                                    <p class="mt-2">暂无讨论</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero 区域 */
+    .hero-section {
+        min-height: 60vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* 区域标题 */
+    .section-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    /* 统计卡片 */
+    .stats-section .card-tech {
+        border-top: 3px solid var(--tech-primary);
+    }
+    
+    /* 表格样式 */
+    .table-dark {
+        background: transparent;
+    }
+    
+    .table-dark thead th {
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.1), 
+            rgba(124, 58, 237, 0.1)
+        );
+        color: var(--tech-primary);
+        font-weight: 600;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+    }
+    
+    .table-dark td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .table-dark tbody tr:hover {
+        background: rgba(0, 212, 255, 0.05);
+    }
+    
+    /* Badge 样式 */
+    .bg-tech {
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+    }
+</style>
+{% endblock %}

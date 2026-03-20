@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}联系我们 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-5">联系我们</h1>
+                <div class="card p-5">
+                    <p class="text-center mb-4">如有任何问题或建议，欢迎联系我们。</p>
+                    <hr class="my-4">
+                    
+                    <div class="row mt-4">
+                        <!-- 邮箱 -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="bi bi-envelope-fill text-primary" style="font-size: 2.5rem;"></i>
+                                    </div>
+                                    <h5>邮箱</h5>
+                                    <p class="text-muted mb-0">
+                                        <a href="mailto:2973084264@qq.com" class="text-decoration-none">
+                                            2973084264@qq.com
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- GitHub -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="bi bi-github text-dark" style="font-size: 2.5rem;"></i>
+                                    </div>
+                                    <h5>GitHub</h5>
+                                    <p class="text-muted mb-0">
+                                        <a href="https://github.com/zhang123999-qq/DjangoBlog" target="_blank" class="text-decoration-none">
+                                            zhang123999-qq/DjangoBlog
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- 留言表单 -->
+                    <h5 class="mb-3">发送消息</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">姓名</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">消息内容</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="bi bi-send"></i> 发送消息
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

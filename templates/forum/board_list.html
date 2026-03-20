@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}论坛版块 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">论坛版块</h1>
+    
+    <div class="row">
+            {% for board in boards %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title"><a href="{{ board.get_absolute_url }}" class="text-decoration-none text-dark">{{ board.name }}</a></h3>
+                            {% if board.description %}
+                                <p class="card-text mb-3">{{ board.description }}</p>
+                            {% endif %}
+                            <div class="card-footer bg-transparent border-top">
+                                <div class="row">
+                                    <div class="col">
+                                        <small class="text-muted">主题数：{{ board.topic_count }}</small>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted">回复数：{{ board.reply_count }}</small>
+                                    </div>
+                                    <div class="col">
+                                        {% if board.last_post_at %}
+                                            <small class="text-muted">最后回复：{{ board.last_post_at|date:"Y-m-d H:i" }}</small>
+                                        {% else %}
+                                            <small class="text-muted">暂无回复</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+{% endblock %}

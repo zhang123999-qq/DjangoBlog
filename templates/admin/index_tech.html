@@ -1,0 +1,542 @@
+{% extends "admin/base_site_tech.html" %}
+{% load i18n admin_urls static humanize %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <!-- 欢迎信息 -->
+    <div class="welcome-section mb-4">
+        <h2 class="welcome-title">
+            <i class="fas fa-hand-sparkles me-2 text-gradient"></i>
+            欢迎回来，{{ user.username }}
+        </h2>
+        <p class="text-secondary">这是您的管理仪表盘，您可以在这里管理网站的各个方面。</p>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-value">{{ user_count|default:0 }}</h3>
+                <p class="stat-label">注册用户</p>
+            </div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i> +{{ today_users|default:0 }}
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-value">{{ post_count|default:0 }}</h3>
+                <p class="stat-label">博客文章</p>
+            </div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i> +{{ today_posts|default:0 }}
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-value">{{ topic_count|default:0 }}</h3>
+                <p class="stat-label">论坛主题</p>
+            </div>
+            <div class="stat-trend">
+                <i class="fas fa-minus"></i> 0
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <i class="fas fa-comment-dots"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-value">{{ comment_count|default:0 }}</h3>
+                <p class="stat-label">评论/回复</p>
+            </div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i> +{{ today_comments|default:0 }}
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-value">{{ total_views|default:0|intcomma }}</h3>
+                <p class="stat-label">总浏览量</p>
+            </div>
+            <div class="stat-trend up">
+                <i class="fas fa-arrow-up"></i> +{{ today_views|default:0 }}
+            </div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+                <h3 class="stat-value">{{ pending_count|default:0 }}</h3>
+                <p class="stat-label">待审核</p>
+            </div>
+            <div class="stat-trend">
+                <span class="small">评论: {{ pending_comments|default:0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快捷操作 -->
+    <div class="dashboard-card mb-4">
+        <h3 class="card-title">
+            <i class="fas fa-bolt me-2 text-tech"></i>
+            快捷操作
+        </h3>
+        <div class="quick-actions">
+            <a href="/admin/blog/post/add/" class="quick-action-btn">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <span>发布文章</span>
+            </a>
+            <a href="/admin/forum/topic/" class="quick-action-btn">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    <i class="fas fa-list"></i>
+                </div>
+                <span>管理主题</span>
+            </a>
+            <a href="/admin/blog/comment/?review_status=pending" class="quick-action-btn">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <span>审核评论</span>
+                {% if pending_comments %}
+                <span class="badge bg-danger">{{ pending_comments }}</span>
+                {% endif %}
+            </a>
+            <a href="/admin/accounts/user/" class="quick-action-btn">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #00d4ff, #0099cc);">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <span>用户管理</span>
+            </a>
+            <a href="/tools/" target="_blank" class="quick-action-btn">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                    <i class="fas fa-wrench"></i>
+                </div>
+                <span>在线工具</span>
+            </a>
+            <a href="/admin/sites/site/1/change/" class="quick-action-btn">
+                <div class="quick-icon" style="background: linear-gradient(135deg, #6b7280, #4b5563);">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <span>网站设置</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 左侧：应用列表 -->
+        <div class="col-lg-8">
+            {% for app in app_list %}
+            <div class="dashboard-card">
+                <h3 class="card-title">
+                    <i class="fas fa-cubes me-2 text-tech"></i>
+                    {{ app.name }}
+                </h3>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>模型</th>
+                                <th class="text-center">添加</th>
+                                <th class="text-center">修改</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in app.models %}
+                            <tr>
+                                <td>
+                                    {% if model.admin_url %}
+                                    <a href="{{ model.admin_url }}" class="text-light text-decoration-none hover-primary">
+                                        {{ model.name }}
+                                    </a>
+                                    {% else %}
+                                    {{ model.name }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if model.add_url %}
+                                    <a href="{{ model.add_url }}" class="btn btn-sm btn-tech-outline">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if model.admin_url %}
+                                    <a href="{{ model.admin_url }}" class="btn btn-sm btn-tech-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">您没有权限查看或编辑任何内容。</p>
+            {% endfor %}
+        </div>
+        
+        <!-- 右侧：最近操作 -->
+        <div class="col-lg-4">
+            <div class="dashboard-card">
+                <h3 class="card-title">
+                    <i class="fas fa-history me-2 text-tech"></i>
+                    最近操作
+                </h3>
+                {% load log %}
+                {% get_admin_log 10 as admin_log for_user user %}
+                {% if not admin_log %}
+                <p class="text-muted">暂无操作记录</p>
+                {% else %}
+                <ul class="action-list">
+                    {% for entry in admin_log %}
+                    <li class="action-item">
+                        <div class="action-icon {% if entry.is_addition %}add{% endif %}{% if entry.is_change %}change{% endif %}{% if entry.is_deletion %}delete{% endif %}">
+                            {% if entry.is_addition %}
+                            <i class="fas fa-plus"></i>
+                            {% elif entry.is_change %}
+                            <i class="fas fa-edit"></i>
+                            {% else %}
+                            <i class="fas fa-trash"></i>
+                            {% endif %}
+                        </div>
+                        <div class="action-content">
+                            {% if entry.is_deletion or not entry.get_admin_url %}
+                            <span class="text-secondary">{{ entry.object_repr }}</span>
+                            {% else %}
+                            <a href="{{ entry.get_admin_url }}" class="text-light text-decoration-none hover-primary">
+                                {{ entry.object_repr }}
+                            </a>
+                            {% endif %}
+                            <small class="d-block text-muted">
+                                {{ entry.content_type.name }} · {{ entry.action_time|date:"m-d H:i" }}
+                            </small>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            
+            <!-- 系统信息 -->
+            <div class="dashboard-card">
+                <h3 class="card-title">
+                    <i class="fas fa-server me-2 text-tech"></i>
+                    系统信息
+                </h3>
+                <ul class="list-unstyled text-secondary">
+                    <li class="mb-2">
+                        <i class="fas fa-code-branch me-2"></i>
+                        Django {{ django_version }}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-python me-2"></i>
+                        Python {{ python_version }}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-database me-2"></i>
+                        {{ db_engine }}
+                    </li>
+                    <li>
+                        <i class="fas fa-clock me-2"></i>
+                        {{ server_time|date:"Y-m-d H:i:s" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* 欢迎区域 */
+    .welcome-section {
+        background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 25px;
+    }
+    
+    .welcome-title {
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(0, 212, 255, 0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-card.warning {
+        border-color: rgba(249, 115, 22, 0.3);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .stat-info {
+        flex: 1;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        color: var(--text-secondary);
+        margin: 5px 0 0;
+        font-size: 0.9rem;
+    }
+    
+    .stat-trend {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    
+    .stat-trend.up {
+        color: var(--tech-success);
+    }
+    
+    .stat-trend.down {
+        color: var(--tech-danger);
+    }
+    
+    /* 仪表盘卡片 */
+    .dashboard-card {
+        background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    
+    .card-title {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .text-tech {
+        color: var(--tech-primary);
+    }
+    
+    /* 快捷操作 */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .quick-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .quick-action-btn:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: var(--tech-primary);
+        color: var(--tech-primary);
+        transform: translateY(-3px);
+    }
+    
+    .quick-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+    
+    .quick-action-btn .badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    /* 操作列表 */
+    .action-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .action-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .action-item:last-child {
+        border-bottom: none;
+    }
+    
+    .action-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    
+    .action-icon.add {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    
+    .action-icon.change {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    
+    .action-icon.delete {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+    
+    .action-content {
+        flex: 1;
+    }
+    
+    /* 表格样式 */
+    .table-dark {
+        background: transparent;
+    }
+    
+    .table-dark thead th {
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.1), 
+            rgba(124, 58, 237, 0.1)
+        );
+        color: var(--tech-primary);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .table-dark td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .table-dark tbody tr:hover {
+        background: rgba(0, 212, 255, 0.05);
+    }
+    
+    .hover-primary:hover {
+        color: var(--tech-primary) !important;
+    }
+    
+    /* 按钮 */
+    .btn-tech-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-tech-outline:hover {
+        border-color: var(--tech-primary);
+        color: var(--tech-primary);
+        background: rgba(0, 212, 255, 0.05);
+    }
+    
+    .btn-tech-primary {
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        border: none;
+        color: var(--bg-dark);
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-tech-primary:hover {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}

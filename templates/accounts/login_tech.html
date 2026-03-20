@@ -1,0 +1,160 @@
+{% extends 'base_tech.html' %}
+{% load static %}
+
+{% block title %}登录 - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card-tech">
+                <div class="card-header text-center">
+                    <div class="auth-icon mx-auto mb-3">
+                        <i class="bi bi-person-lock"></i>
+                    </div>
+                    <h4 class="mb-0">欢迎回来</h4>
+                    <small class="text-muted">登录你的 DjangoBlog 账号</small>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="form-tech">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-4">
+                            <label for="id_username" class="form-label">
+                                <i class="bi bi-person me-1"></i>用户名
+                            </label>
+                            <input type="text" name="username" id="id_username" class="form-control" 
+                                   placeholder="请输入用户名" required autofocus>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">
+                                <i class="bi bi-lock me-1"></i>密码
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="id_password" class="form-control" 
+                                       placeholder="请输入密码" required>
+                                <button class="btn btn-tech-ghost" type="button" onclick="togglePassword()">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
+                                <label class="form-check-label text-secondary" for="rememberMe">
+                                    记住我
+                                </label>
+                            </div>
+                            <a href="#" class="text-tech text-decoration-none small">忘记密码？</a>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-tech-primary w-100 mb-3">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>登录
+                        </button>
+                        
+                        <div class="text-center">
+                            <span class="text-muted">还没有账号？</span>
+                            <a href="{% url 'accounts:register' %}" class="text-tech text-decoration-none">立即注册</a>
+                        </div>
+                    </form>
+                    
+                    <!-- 社交登录 -->
+                    <div class="mt-4 pt-4 border-top border-secondary">
+                        <p class="text-center text-muted mb-3">
+                            <small>或使用以下方式登录</small>
+                        </p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button class="btn btn-tech-outline btn-sm">
+                                <i class="bi bi-github"></i> GitHub
+                            </button>
+                            <button class="btn btn-tech-outline btn-sm">
+                                <i class="bi bi-google"></i> Google
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+    }
+    
+    .form-tech .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        color: var(--text-primary);
+        padding: 0.75rem 1rem;
+    }
+    
+    .form-tech .form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--tech-primary);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+    
+    .form-tech .form-label {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    .form-check-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+    }
+    
+    .form-check-input:checked {
+        background: var(--tech-primary);
+        border-color: var(--tech-primary);
+    }
+    
+    .text-tech {
+        color: var(--tech-primary);
+    }
+    
+    .text-tech:hover {
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    }
+</script>
+{% endblock %}

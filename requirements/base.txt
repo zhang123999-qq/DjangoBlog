@@ -1,0 +1,58 @@
+# Django 核心 (Python 3.13+)
+Django>=4.2,<5.0
+django-environ>=0.11.0
+django-axes>=7.0.0
+
+# 数据库
+mysqlclient>=2.2.0
+
+# Redis 缓存
+redis>=5.0.0
+django-redis>=5.4.0
+
+# REST API
+djangorestframework>=3.14.0
+django-filter>=23.0
+drf-spectacular>=0.27.0
+
+# 用户认证
+django-allauth>=65.0.0
+
+# 富文本编辑器
+django-ckeditor>=6.7.0
+
+# 图片处理
+Pillow>=10.0.0
+
+# Markdown支持
+markdown>=3.7
+bleach>=6.2.0
+
+# 工具栏依赖
+requests>=2.32.0
+qrcode>=8.0
+pycryptodome>=3.21.0
+cryptography>=42.0.0
+pyzbar>=0.1.9
+jsonpath-ng>=1.6.0
+faker>=20.0.0
+croniter>=2.0.0
+python-barcode>=0.15.0
+
+# 分页
+django-el-pagination>=4.1.0
+
+# 标签系统
+django-taggit>=6.1.0
+
+# SEO
+django-meta>=2.4.0
+
+# 日志
+python-json-logger>=3.3.0
+
+# 安全
+django-cors-headers>=4.7.0
+
+# 其他
+python-slugify>=8.0.0

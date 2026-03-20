@@ -1,0 +1,246 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h2>{{ user_count }}</h2>
+            <p><i class="fas fa-users"></i> 注册用户</p>
+            <small>今日新增: +{{ today_users }}</small>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <h2>{{ post_count }}</h2>
+            <p><i class="fas fa-file-alt"></i> 博客文章</p>
+            <small>今日新增: +{{ today_posts }}</small>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <h2>{{ topic_count }}</h2>
+            <p><i class="fas fa-comments"></i> 论坛主题</p>
+            <small>今日新增: +{{ today_topics|default:0 }}</small>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+            <h2>{{ comment_count }}</h2>
+            <p><i class="fas fa-comment-dots"></i> 评论/回复</p>
+            <small>今日新增: +{{ today_comments }}</small>
+        </div>
+    </div>
+
+    <!-- 第二行统计 -->
+    <div class="stats-grid">
+        <div class="stat-card stat-small" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <h3>{{ total_views }}</h3>
+            <p><i class="fas fa-eye"></i> 总浏览量</p>
+        </div>
+        <div class="stat-card stat-small" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+            <h3>{{ category_count }}</h3>
+            <p><i class="fas fa-folder"></i> 分类</p>
+        </div>
+        <div class="stat-card stat-small" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+            <h3>{{ tag_count }}</h3>
+            <p><i class="fas fa-tags"></i> 标签</p>
+        </div>
+        <div class="stat-card stat-small" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+            <h3>{{ tool_count }}</h3>
+            <p><i class="fas fa-tools"></i> 工具</p>
+        </div>
+        <div class="stat-card stat-small warning" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+            <h3>{{ pending_comments|add:pending_replies|add:pending_topics }}</h3>
+            <p><i class="fas fa-exclamation-triangle"></i> 待审核</p>
+            <small>评论: {{ pending_comments }} | 回复: {{ pending_replies }}</small>
+        </div>
+    </div>
+
+    <!-- 快捷操作 -->
+    <div class="dashboard-card">
+        <h3><i class="fas fa-bolt"></i> 快捷操作</h3>
+        <div class="quick-actions">
+            <a href="{% url 'admin:blog_post_add' %}" class="quick-action-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>发布文章</span>
+            </a>
+            <a href="{% url 'admin:forum_topic_changelist' %}" class="quick-action-btn">
+                <i class="fas fa-list"></i>
+                <span>管理主题</span>
+            </a>
+            <a href="{% url 'admin:blog_comment_changelist' %}?review_status=pending" class="quick-action-btn">
+                <i class="fas fa-check-circle"></i>
+                <span>审核评论 ({{ pending_comments }})</span>
+            </a>
+            <a href="{% url 'admin:moderation_sensitiveword_changelist' %}" class="quick-action-btn">
+                <i class="fas fa-shield-alt"></i>
+                <span>敏感词管理</span>
+            </a>
+            <a href="/admin/auth/user/" class="quick-action-btn">
+                <i class="fas fa-users-cog"></i>
+                <span>用户管理</span>
+            </a>
+            <a href="/tools/" class="quick-action-btn" target="_blank">
+                <i class="fas fa-wrench"></i>
+                <span>在线工具</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 工具管理入口 -->
+    <div class="dashboard-card">
+        <h3><i class="fas fa-tools"></i> 工具管理 ({{ tools_count }}个工具)</h3>
+        <div class="tools-grid">
+            {% for tool in tools_list %}
+            <div class="tool-item">
+                <i class="{{ tool.icon|default:'fas fa-tools' }}"></i>
+                <span>{{ tool.name }}</span>
+            </div>
+            {% empty %}
+            <p>暂无工具</p>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 15px; text-align: center;">
+            <a href="/tools/" class="button" target="_blank">
+                <i class="fas fa-external-link-alt"></i> 查看全部 {{ tools_count }} 个工具
+            </a>
+        </div>
+    </div>
+
+    <!-- 原始模块 -->
+    {% for app in app_list %}
+    <div class="dashboard-card">
+        <h3><i class="fas fa-cubes"></i> {{ app.name }}</h3>
+        <table class="module" id="module-{{ forloop.counter }}">
+            <tbody>
+                {% for model in app.models %}
+                <tr>
+                    {% if model.admin_url %}
+                    <th scope="row">
+                        <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                    </th>
+                    {% else %}
+                    <th scope="row">{{ model.name }}</th>
+                    {% endif %}
+
+                    {% if model.add_url %}
+                    <td><a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a></td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+
+                    {% if model.admin_url %}
+                    {% if model.view_only %}
+                    <td><a href="{{ model.admin_url }}" class="viewlink">{% trans 'View' %}</a></td>
+                    {% else %}
+                    <td><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
+                    {% endif %}
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% empty %}
+    <p>{% trans "You don't have permission to view or edit anything." %}</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <h2>{% trans 'Recent actions' %}</h2>
+        <h3>{% trans 'My actions' %}</h3>
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if not admin_log %}
+            <p>{% trans 'None available' %}</p>
+            {% else %}
+            <ul class="actionlist">
+            {% for entry in admin_log %}
+            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                {% if entry.is_deletion or not entry.get_admin_url %}
+                {{ entry.object_repr }}
+                {% else %}
+                <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                {% endif %}
+                <br>
+                {% if entry.content_type %}
+                <span class="mini quiet">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+                {% else %}
+                <span class="mini quiet">{% trans 'Unknown content' %}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: white;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+    
+    .stat-card h2, .stat-card h3 {
+        font-size: 28px;
+        margin: 0 0 5px 0;
+    }
+    
+    .stat-card p {
+        margin: 0;
+        opacity: 0.9;
+    }
+    
+    .stat-card small {
+        display: block;
+        margin-top: 5px;
+        opacity: 0.7;
+        font-size: 11px;
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+    }
+    
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .tool-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        background: #f8fafc;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+    
+    .tool-item i {
+        color: #4f46e5;
+    }
+</style>
+{% endblock %}

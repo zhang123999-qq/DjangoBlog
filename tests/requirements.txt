@@ -1,0 +1,17 @@
+# 测试框架
+pytest>=7.0.0
+pytest-html>=3.0.0
+pytest-xdist>=3.0.0
+pytest-playwright>=0.3.0
+
+# 浏览器自动化
+playwright>=1.40.0
+
+# 测试数据生成
+Faker>=18.0.0
+
+# 日志增强
+colorlog>=6.0.0
+
+# 报告生成
+allure-pytest>=2.13.0

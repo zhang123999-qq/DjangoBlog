@@ -1,0 +1,8 @@
+"""API 应用 - REST API 接口"""
+from django.apps import AppConfig
+
+
+class ApiConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.api'
+    verbose_name = 'API接口'

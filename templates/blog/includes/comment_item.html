@@ -1,0 +1,29 @@
+<div class="comment-item mb-4 p-3 border rounded">
+    <div class="comment-header d-flex justify-content-between align-items-center">
+        <div class="comment-author">
+            {% if comment.user %}
+                <strong>{{ comment.user.username }}</strong>
+            {% else %}
+                <strong>{{ comment.name }}</strong>
+            {% endif %}
+        </div>
+        <div class="comment-date text-muted small">
+            {{ comment.created_at|date:"Y-m-d H:i" }}
+        </div>
+    </div>
+    <div class="comment-content mt-2">
+        {{ comment.content|linebreaks }}
+    </div>
+    <div class="comment-actions mt-3 d-flex justify-content-between align-items-center">
+        <div class="like-section">
+            <button 
+                class="like-btn btn btn-sm btn-outline-primary" 
+                data-comment-id="{{ comment.id }}"
+                {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
+            >
+                <i class="bi bi-hand-thumbs-up"></i> 
+                <span class="like-count">{{ comment.like_count }}</span>
+            </button>
+        </div>
+    </div>
+</div>

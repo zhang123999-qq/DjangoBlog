@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: djangoblog-web
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-djangoblog}
+      - DB_USER=${DB_USER:-djangouser}
+      - DB_PASSWORD=${DB_PASSWORD:-djangopass}
+      - DB_PORT=3306
+      - USE_REDIS=True
+      - REDIS_URL=redis://redis:6379/1
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:8000}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    networks:
+      - djangoblog-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: mysql:8.0
+    container_name: djangoblog-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=djangoblog
+      - MYSQL_USER=djangouser
+      - MYSQL_PASSWORD=djangopass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - djangoblog-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: djangoblog-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - djangoblog-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: djangoblog-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - djangoblog-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  static_volume:
+  media_volume:
+  logs_volume:
+
+networks:
+  djangoblog-network:
+    driver: bridge

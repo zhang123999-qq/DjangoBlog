@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}执行安装 - 安装向导{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="text-center">安装向导 - 执行安装</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-4">
+                            <div class="progress-bar" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">6/6</div>
+                        </div>
+                        <h3>执行安装</h3>
+                        <p>点击下面的按钮开始执行安装过程，这可能需要几分钟时间。</p>
+                        <div class="alert alert-info mb-4">
+                            安装过程将执行以下操作：
+                            <ul>
+                                <li>写入.env配置文件</li>
+                                <li>执行数据库迁移</li>
+                                <li>创建超级管理员账号</li>
+                                <li>创建网站配置</li>
+                                <li>生成安装完成标记</li>
+                            </ul>
+                        </div>
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} mb-4">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col">
+                                    <a href="{% url 'install:step5' %}" class="btn btn-secondary btn-block">上一步</a>
+                                </div>
+                                <div class="col">
+                                    <button type="submit" class="btn btn-primary btn-block">开始安装</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

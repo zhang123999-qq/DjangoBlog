@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tool.name }} - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <h1>{{ tool.name }}</h1>
+        <p class="text-muted">{{ tool.description }}</p>
+        <a href="{% url 'tools:tool_list' %}" class="btn btn-secondary">返回工具列表</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="alert alert-danger mt-2">
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <button type="submit" class="btn btn-primary">执行</button>
+            </form>
+        </div>
+    </div>
+    
+    {% if result %}
+        <div class="mt-4">
+            <h3>执行结果</h3>
+            <div class="card">
+                <div class="card-body">
+                    {% if result.error %}
+                        <div class="alert alert-danger">{{ result.error }}</div>
+                    {% else %}
+                        {% if tool.slug == 'ip-query' %}
+                            <!-- IP 查询结果 -->
+                            <table class="table table-striped">
+                                {% for key, value in result.items %}
+                                    <tr>
+                                        <th>{{ key }}</th>
+                                        <td>{{ value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        {% elif tool.slug == 'text-counter' %}
+                            <!-- 文本统计结果 -->
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>字符数（包括空格）</th>
+                                    <td>{{ result.char_count }}</td>
+                                </tr>
+                                <tr>
+                                    <th>字符数（不包括空格）</th>
+                                    <td>{{ result.char_count_no_space }}</td>
+                                </tr>
+                                <tr>
+                                    <th>单词数</th>
+                                    <td>{{ result.word_count }}</td>
+                                </tr>
+                                <tr>
+                                    <th>行数</th>
+                                    <td>{{ result.line_count }}</td>
+                                </tr>
+                                <tr>
+                                    <th>段落数</th>
+                                    <td>{{ result.paragraph_count }}</td>
+                                </tr>
+                            </table>
+                        {% elif tool.slug == 'password-gen' %}
+                            <!-- 密码生成结果 -->
+                            <div class="form-group">
+                                <label for="generated-password" class="form-label">生成的密码</label>
+                                <input type="text" class="form-control" id="generated-password" value="{{ result.password }}" readonly>
+                                <button class="btn btn-secondary mt-2" onclick="copyToClipboard('generated-password')">复制到剪贴板</button>
+                            </div>
+                        {% elif tool.slug == 'base64-codec' %}
+                            <!-- Base64 编解码结果 -->
+                            <div class="form-group">
+                                <label for="base64-result" class="form-label">{% if result.action == 'encoded' %}编码结果{% else %}解码结果{% endif %}</label>
+                                <textarea class="form-control" id="base64-result" rows="5" readonly>{{ result.result }}</textarea>
+                                <button class="btn btn-secondary mt-2" onclick="copyToClipboard('base64-result')">复制到剪贴板</button>
+                            </div>
+                        {% elif tool.slug == 'json-formatter' %}
+                            <!-- JSON 格式化结果 -->
+                            <div class="form-group">
+                                <label for="json-result" class="form-label">格式化结果</label>
+                                <textarea class="form-control" id="json-result" rows="10" readonly>{{ result.formatted_json }}</textarea>
+                                <button class="btn btn-secondary mt-2" onclick="copyToClipboard('json-result')">复制到剪贴板</button>
+                            </div>
+                        {% else %}
+                            <!-- 通用结果显示 -->
+                            <pre>{{ result }}</pre>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

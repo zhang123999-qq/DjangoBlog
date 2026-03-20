@@ -1,0 +1,75 @@
+[project]
+name = "djangoblog"
+version = "2.1.0"
+description = "Django 4.2 博客论坛系统"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "zhang123999-qq"}
+]
+keywords = ["django", "blog", "forum", "python"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.10",
+    "pytest-playwright>=0.7",
+    "playwright>=1.50",
+    "black>=25.1",
+    "flake8>=7.1",
+    "mypy>=1.15",
+]
+prod = [
+    "gunicorn>=23.0",
+    "uvicorn[standard]>=0.34",
+    "whitenoise>=6.9",
+    "sentry-sdk>=2.22",
+]
+
+[project.urls]
+Homepage = "https://github.com/zhang123999-qq/DjangoBlog"
+Repository = "https://github.com/zhang123999-qq/DjangoBlog"
+Documentation = "https://github.com/zhang123999-qq/DjangoBlog#readme"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.development"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"

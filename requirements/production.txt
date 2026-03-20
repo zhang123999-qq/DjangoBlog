@@ -1,0 +1,22 @@
+# 基础依赖
+-r base.txt
+
+# 生产服务器 (Python 3.13+)
+gunicorn>=21.0.0
+uvicorn[standard]>=0.25.0
+
+# 静态文件
+whitenoise>=6.9.0
+
+# 性能优化
+django-compressor>=4.5.0
+
+# 监控
+sentry-sdk>=2.22.0
+django-prometheus>=2.3.0
+
+# 安全
+django-ratelimit>=4.1.0
+
+# 性能
+orjson>=3.10.0

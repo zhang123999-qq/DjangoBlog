@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}拒绝审核 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4">拒绝审核</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h4 mb-0">填写拒绝原因</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">内容摘要</label>
+                        <div class="form-control" style="background-color: #f8f9fa;" readonly>
+                            {% if content_type == 'comment' %}
+                                {{ content.content|truncatechars:200 }}
+                            {% elif content_type == 'topic' %}
+                                {{ content.title }} - {{ content.content|truncatechars:150 }}
+                            {% elif content_type == 'reply' %}
+                                {{ content.content|truncatechars:200 }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="review_note" class="form-label">拒绝原因 <span class="text-muted">(可选)</span></label>
+                        <textarea class="form-control" id="review_note" name="review_note" rows="3" placeholder="请填写拒绝的原因..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'moderation:dashboard' %}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-danger">确认拒绝</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

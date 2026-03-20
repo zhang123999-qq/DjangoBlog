@@ -1,0 +1,146 @@
+{% extends 'base_tech.html' %}
+{% load static %}
+
+{% block title %}注册 - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card-tech">
+                <div class="card-header text-center">
+                    <div class="auth-icon mx-auto mb-3">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <h4 class="mb-0">创建账号</h4>
+                    <small class="text-muted">加入 DjangoBlog 社区</small>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="form-tech">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="bi bi-person me-1"></i>用户名
+                            </label>
+                            <input type="text" name="username" id="id_username" class="form-control" 
+                                   placeholder="3-20个字符" required>
+                            {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>邮箱
+                            </label>
+                            <input type="email" name="email" id="id_email" class="form-control" 
+                                   placeholder="your@email.com" required>
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_password1" class="form-label">
+                                <i class="bi bi-lock me-1"></i>密码
+                            </label>
+                            <input type="password" name="password1" id="id_password1" class="form-control" 
+                                   placeholder="至少8个字符" required>
+                            {% if form.password1.errors %}
+                            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="id_password2" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i>确认密码
+                            </label>
+                            <input type="password" name="password2" id="id_password2" class="form-control" 
+                                   placeholder="再次输入密码" required>
+                            {% if form.password2.errors %}
+                            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                            <label class="form-check-label text-secondary" for="agreeTerms">
+                                我同意 <a href="#" class="text-tech">服务条款</a> 和 <a href="#" class="text-tech">隐私政策</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-tech-primary w-100 mb-3">
+                            <i class="bi bi-check-circle me-1"></i>立即注册
+                        </button>
+                        
+                        <div class="text-center">
+                            <span class="text-muted">已有账号？</span>
+                            <a href="{% url 'accounts:login' %}" class="text-tech text-decoration-none">立即登录</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--tech-secondary), var(--tech-accent));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+    }
+    
+    .form-tech .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        color: var(--text-primary);
+        padding: 0.75rem 1rem;
+    }
+    
+    .form-tech .form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--tech-primary);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+    
+    .form-tech .form-label {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    .form-check-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+    }
+    
+    .form-check-input:checked {
+        background: var(--tech-primary);
+        border-color: var(--tech-primary);
+    }
+    
+    .text-tech {
+        color: var(--tech-primary);
+    }
+    
+    .text-tech:hover {
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+</style>
+{% endblock %}

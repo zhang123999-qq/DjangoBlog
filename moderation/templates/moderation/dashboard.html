@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}审核中心 - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4">审核中心</h1>
+        
+        <!-- 待审核评论 -->
+        <div class="card mb-5">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">待审核评论 ({{ pending_comments|length }})</h2>
+            </div>
+            <div class="card-body">
+                {% if pending_comments %}
+                    <div class="list-group">
+                        {% for comment in pending_comments %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="mb-1">
+                                        {% if comment.user %}
+                                            {{ comment.user.username }}
+                                        {% else %}
+                                            {{ comment.name }}
+                                        {% endif %}
+                                    </h5>
+                                    <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">评论于: <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a></p>
+                                <p class="mb-3">{{ comment.content|truncatechars:100 }}</p>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'moderation:approve' 'comment' comment.id %}" class="btn btn-success btn-sm">通过</a>
+                                    <a href="{% url 'moderation:reject' 'comment' comment.id %}" class="btn btn-danger btn-sm">拒绝</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">暂无待审核评论</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 待审核主题 -->
+        <div class="card mb-5">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">待审核主题 ({{ pending_topics|length }})</h2>
+            </div>
+            <div class="card-body">
+                {% if pending_topics %}
+                    <div class="list-group">
+                        {% for topic in pending_topics %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="mb-1"><a href="{{ topic.get_absolute_url }}">{{ topic.title }}</a></h5>
+                                    <small class="text-muted">{{ topic.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">作者: {{ topic.author.username }} | 版块: <a href="{{ topic.board.get_absolute_url }}">{{ topic.board.name }}</a></p>
+                                <p class="mb-3">{{ topic.content|truncatechars:100 }}</p>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'moderation:approve' 'topic' topic.id %}" class="btn btn-success btn-sm">通过</a>
+                                    <a href="{% url 'moderation:reject' 'topic' topic.id %}" class="btn btn-danger btn-sm">拒绝</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">暂无待审核主题</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 待审核回复 -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">待审核回复 ({{ pending_replies|length }})</h2>
+            </div>
+            <div class="card-body">
+                {% if pending_replies %}
+                    <div class="list-group">
+                        {% for reply in pending_replies %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="mb-1">作者: {{ reply.author.username }}</h5>
+                                    <small class="text-muted">{{ reply.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <p class="mb-2 text-muted">回复于: <a href="{{ reply.topic.get_absolute_url }}">{{ reply.topic.title }}</a></p>
+                                <p class="mb-3">{{ reply.content|truncatechars:100 }}</p>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'moderation:approve' 'reply' reply.id %}" class="btn btn-success btn-sm">通过</a>
+                                    <a href="{% url 'moderation:reject' 'reply' reply.id %}" class="btn btn-danger btn-sm">拒绝</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">暂无待审核回复</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

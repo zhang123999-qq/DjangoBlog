@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ topic.title }} - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col">
+                    <h1 class="card-title">
+                        {% if topic.is_pinned %}<span class="badge bg-primary">置顶</span> {% endif %}
+                        {% if topic.is_locked %}<span class="badge bg-secondary">锁定</span> {% endif %}
+                        {{ topic.title }}
+                    </h1>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <div class="d-flex justify-content-between">
+                    <div class="author-info">
+                        <strong>{{ topic.author.username }}</strong>
+                        <span class="text-muted small ml-2">{{ topic.created_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    <div class="topic-stats">
+                        <span class="text-muted small">浏览：{{ topic.views_count }}</span>
+                        <span class="text-muted small ml-3">回复：{{ topic.reply_count }}</span>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {{ topic.content|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 回复列表 -->
+    <div class="mb-4">
+        <h3>回复 ({{ topic.reply_count }})</h3>
+        {% if replies %}
+            <div class="replies-list">
+                {% for reply in replies %}
+                    <div class="card mb-3" id="reply-{{ reply.id }}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div class="author-info">
+                                    <strong>{{ reply.author.username }}</strong>
+                                    <span class="text-muted small ml-2">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
+                                </div>
+                                <div class="reply-actions">
+                                    <button 
+                                        class="btn btn-sm btn-outline-primary like-btn" 
+                                        data-reply-id="{{ reply.id }}"
+                                        {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
+                                    >
+                                        <span class="like-icon">❤️</span>
+                                        <span class="like-count">{{ reply.like_count }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                {{ reply.content|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">暂无回复</div>
+        {% endif %}
+    </div>
+    
+    <!-- 回复表单 -->
+    <div class="mb-4">
+        <h3>发表回复</h3>
+        {% if user.is_authenticated %}
+            {% if topic.is_locked %}
+                <div class="alert alert-warning">主题已被锁定，无法回复</div>
+            {% else %}
+                <form method="post" action="{% url 'forum:reply_create' topic.board.slug topic.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ reply_form.content.label_tag }}
+                        {{ reply_form.content }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交回复</button>
+                </form>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">请先 <a href="{% url 'accounts:login' %}">登录</a> 后回复</div>
+        {% endif %}
+    </div>
+    
+    <script>
+        // 点赞功能
+        document.querySelectorAll('.like-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const replyId = this.dataset.replyId;
+                const likeCountElement = this.querySelector('.like-count');
+                const likeIconElement = this.querySelector('.like-icon');
+                
+                try {
+                    const response = await fetch(`/forum/reply/${replyId}/like/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            likeCountElement.textContent = data.like_count;
+                            if (data.liked) {
+                                likeIconElement.textContent = '❤️';
+                                this.classList.remove('btn-outline-primary');
+                                this.classList.add('btn-primary');
+                            } else {
+                                likeIconElement.textContent = '🤍';
+                                this.classList.remove('btn-primary');
+                                this.classList.add('btn-outline-primary');
+                            }
+                        } else {
+                            alert(data.message);
+                        }
+                    } else {
+                        alert('点赞失败，请重试');
+                    }
+                } catch (error) {
+                    console.error('点赞请求失败:', error);
+                    alert('点赞失败，请重试');
+                }
+            });
+        });
+    </script>
+{% endblock %}

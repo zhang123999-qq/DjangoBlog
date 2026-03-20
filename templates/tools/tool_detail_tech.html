@@ -1,0 +1,285 @@
+{% extends 'base_tech.html' %}
+{% load static %}
+
+{% block title %}{{ tool.name }} - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+    <!-- 面包屑 -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'core:home' %}" class="text-decoration-none text-secondary">首页</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'tools:tool_list' %}" class="text-decoration-none text-secondary">工具箱</a>
+            </li>
+            <li class="breadcrumb-item active text-light" aria-current="page">{{ tool.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- 工具主体 -->
+        <div class="col-lg-8">
+            <div class="card-tech">
+                <div class="card-header d-flex align-items-center">
+                    <div class="tool-icon-sm me-3">
+                        <i class="bi bi-{{ tool.icon|default:'gear' }}"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ tool.name }}</h4>
+                        <small class="text-muted">{{ tool.description }}</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 工具表单 -->
+                    <form method="post" class="tool-form">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-tech-primary">
+                                <i class="bi bi-play-fill me-1"></i>执行
+                            </button>
+                            <button type="reset" class="btn btn-tech-ghost">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>重置
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- 结果显示 -->
+                    {% if result %}
+                    <div class="mt-4">
+                        <h6 class="text-tech mb-3">
+                            <i class="bi bi-check-circle me-1"></i>执行结果
+                        </h6>
+                        <div class="result-box">
+                            {% if result.error %}
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                {{ result.error }}
+                            </div>
+                            {% else %}
+                            {# 检测图片输出 #}
+                            {% if result.image_base64 or result.image %}
+                            <div class="text-center">
+                                <p class="text-muted mb-2">生成成功，长按或右键保存图片</p>
+                                {% if result.image %}
+                                <img src="{{ result.image }}" alt="生成图片" class="img-fluid rounded" style="max-width: 100%; border: 1px solid var(--tech-primary);">
+                                {% else %}
+                                <img src="data:image/png;base64,{{ result.image_base64 }}" alt="生成图片" class="img-fluid rounded" style="max-width: 100%; border: 1px solid var(--tech-primary);">
+                                {% endif %}
+                            </div>
+                            {# 颜色预览 #}
+                            {% elif result.preview %}
+                            <div class="result-content">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="color-preview me-3" style="width: 60px; height: 60px; border-radius: 8px; background: {{ result.preview }}; border: 2px solid var(--border-color);"></div>
+                                    <div>
+                                        <p class="mb-1"><strong>HEX:</strong> {{ result.hex }}</p>
+                                        <p class="mb-1"><strong>RGB:</strong> {{ result.rgb }}</p>
+                                        <p class="mb-0"><strong>HSL:</strong> {{ result.hsl }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {# 二维码识别结果 #}
+                            {% elif result.results %}
+                            <div class="result-content">
+                                <p><strong>文件名:</strong> {{ result.filename }}</p>
+                                <hr class="border-secondary">
+                                {% for item in result.results %}
+                                <div class="mb-2">
+                                    <span class="badge bg-tech">{{ item.type }}</span>
+                                    <p class="mt-2 mb-0">{{ item.data }}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {# EXIF 数据 #}
+                            {% elif result.exif_data %}
+                            <div class="result-content">
+                                <p><strong>文件名:</strong> {{ result.filename }}</p>
+                                <hr class="border-secondary">
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-sm">
+                                        <tbody>
+                                            {% for key, value in result.exif_data.items %}
+                                            <tr>
+                                                <td class="text-tech" style="width: 40%;">{{ key }}</td>
+                                                <td>{{ value }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {# Base64 图片输出 #}
+                            {% elif result.base64 and result.mode == 'base64_to_image' %}
+                            <div class="text-center">
+                                <p class="text-muted mb-2">转换成功</p>
+                                <img src="{{ result.data_uri }}" alt="转换图片" class="img-fluid rounded" style="max-width: 100%; border: 1px solid var(--tech-primary);">
+                            </div>
+                            {# 普通文本输出 #}
+                            {% else %}
+                            <div class="result-content">
+                                {% if result.base64 %}
+                                <div class="mb-3">
+                                    <label class="text-muted">Base64 结果:</label>
+                                    <textarea class="form-control bg-dark text-light" rows="5" readonly>{{ result.base64 }}</textarea>
+                                    <button class="btn btn-sm btn-tech-outline mt-2" onclick="copyToClipboard(this.previousElementSibling)">
+                                        <i class="bi bi-clipboard me-1"></i>复制
+                                    </button>
+                                </div>
+                                {% endif %}
+                                {{ result.result|linebreaks }}
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 工具信息 -->
+            <div class="card-tech mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>工具说明</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary">{{ tool.description }}</p>
+                    <hr class="border-secondary">
+                    <div class="d-flex justify-content-between text-muted">
+                        <span><i class="bi bi-eye me-1"></i>{{ tool.use_count|default:0 }} 次使用</span>
+                        <span><i class="bi bi-heart me-1"></i>{{ tool.like_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 相关工具 -->
+            <div class="card-tech">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-tools me-2"></i>相关工具</h6>
+                </div>
+                <div class="card-body">
+                    {% for related_tool in related_tools %}
+                    <a href="{% url 'tools:tool_detail' related_tool.slug %}" class="d-flex align-items-center py-2 text-decoration-none border-bottom border-secondary">
+                        <div class="tool-icon-xs me-2">
+                            <i class="bi bi-{{ related_tool.icon|default:'gear' }}"></i>
+                        </div>
+                        <span class="text-light">{{ related_tool.name }}</span>
+                    </a>
+                    {% empty %}
+                    <p class="text-muted">暂无相关工具</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(element) {
+    element.select();
+    element.setSelectionRange(0, 99999); // 移动端兼容
+    navigator.clipboard.writeText(element.value).then(function() {
+        // 显示复制成功提示
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-1"></i>已复制';
+        btn.classList.add('btn-success');
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: var(--text-muted);
+    }
+    
+    .tool-icon-sm {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .tool-icon-xs {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(0, 212, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--tech-primary);
+        font-size: 0.875rem;
+    }
+    
+    .tool-form .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        color: var(--text-primary);
+    }
+    
+    .tool-form .form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--tech-primary);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+    
+    .result-box {
+        background: var(--bg-darker);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .result-content {
+        font-family: var(--font-mono);
+        color: var(--tech-primary);
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    
+    .text-tech {
+        color: var(--tech-primary);
+    }
+</style>
+{% endblock %}

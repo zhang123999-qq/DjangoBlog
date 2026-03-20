@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="jumbotron bg-light p-4 rounded mb-5">
+        <h1 class="display-4">{{ site_config.site_name }}</h1>
+        <p class="lead">{{ site_config.site_description }}</p>
+        <hr class="my-4">
+        <p>欢迎访问 Django 综合网站！</p>
+        <a class="btn btn-primary btn-lg" href="/blog/" role="button">浏览博客</a>
+        <a class="btn btn-secondary btn-lg ml-2" href="/forum/" role="button">访问论坛</a>
+        <a class="btn btn-success btn-lg ml-2" href="/tools/" role="button">使用工具栏</a>
+    </div>
+
+    <div class="row">
+        <!-- 最新博客文章 -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">最新博客</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for post in latest_posts %}
+                            <li class="mb-2">
+                                <a href="{{ post.get_absolute_url }}" class="text-decoration-none">{{ post.title }}</a>
+                                <small class="text-muted d-block">{{ post.published_at|date:"Y-m-d" }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="text-muted">暂无文章</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="/blog/" class="text-decoration-none">查看全部</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最新论坛主题 -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">最新论坛主题</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for topic in latest_topics %}
+                            <li class="mb-2">
+                                <a href="{{ topic.get_absolute_url }}" class="text-decoration-none">{{ topic.title }}</a>
+                                <small class="text-muted d-block">{{ topic.created_at|date:"Y-m-d" }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="text-muted">暂无主题</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="/forum/" class="text-decoration-none">查看全部</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工具栏功能 -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">工具栏</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for tool in tools %}
+                            <li class="mb-2">
+                                <a href="/tools/{{ tool.slug }}/" class="text-decoration-none">
+                                    <i class="bi bi-{{ tool.icon }} me-1"></i>
+                                    {{ tool.name }}
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li class="text-muted">暂无工具</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="/tools/" class="text-decoration-none">查看全部</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 网站统计 -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ post_count }}</h4>
+                    <p class="card-text">博客文章</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ topic_count }}</h4>
+                    <p class="card-text">论坛主题</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ comment_count }}</h4>
+                    <p class="card-text">评论回复</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h4 class="card-title">{{ user_count }}</h4>
+                    <p class="card-text">注册用户</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

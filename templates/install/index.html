@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}安装向导 - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="install-container fade-in">
+    <!-- 安装向导标题 -->
+    <div class="install-header text-center py-6 mb-6">
+        <div class="icon mb-4">
+            <div class="tool-icon mx-auto" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                <i class="bi bi-rocket-takeoff"></i>
+            </div>
+        </div>
+        <h1 class="display-4 fw-bold">欢迎安装 DjangoBlog</h1>
+        <p class="lead text-muted mt-3">选择适合您的安装方式，快速开始您的网站之旅</p>
+    </div>
+
+    <!-- 安装方式选择 -->
+    <div class="row justify-content-center g-4 mb-8">
+        <!-- 快速安装 -->
+        <div class="col-md-5">
+            <div class="card h-100 tool-card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-bolt-fill me-3" style="font-size: 1.5rem;"></i>
+                        <h4 class="mb-0 fw-semibold">快速安装</h4>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-4">适合新手</h5>
+                    <ul class="list-unstyled space-y-2">
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>只需填写基本信息</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>自动配置SQLite数据库</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>一键完成安装</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>约1分钟完成</span>
+                        </li>
+                    </ul>
+                    <hr class="my-4">
+                    <p class="text-muted small">
+                        <strong>适用场景：</strong>本地开发、测试环境、个人博客
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <a href="{% url 'install:quick' %}" class="btn btn-primary btn-lg w-100">
+                        开始快速安装
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 向导安装 -->
+        <div class="col-md-5">
+            <div class="card h-100 tool-card">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-sliders me-3" style="font-size: 1.5rem;"></i>
+                        <h4 class="mb-0 fw-semibold">自定义安装</h4>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-4">适合进阶用户</h5>
+                    <ul class="list-unstyled space-y-2">
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>自定义网站信息</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>选择数据库类型</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>配置Redis缓存</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <span>完整安装向导</span>
+                        </li>
+                    </ul>
+                    <hr class="my-4">
+                    <p class="text-muted small">
+                        <strong>适用场景：</strong>生产环境、团队协作、自定义配置
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <a href="{% url 'install:step1' %}" class="btn btn-info btn-lg w-100">
+                        开始向导安装
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统环境 -->
+    <div class="row justify-content-center mb-6">
+        <div class="col-md-10">
+            <div class="card tool-card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-laptop me-3"></i>
+                        <h5 class="mb-0 fw-semibold">系统环境</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-3 bg-light rounded-lg">
+                            <p class="text-sm text-muted">Python 版本</p>
+                            <p class="font-medium">{{ system_info.python_version }}</p>
+                        </div>
+                        <div class="p-3 bg-light rounded-lg">
+                            <p class="text-sm text-muted">Django 版本</p>
+                            <p class="font-medium">{{ system_info.django_version }}</p>
+                        </div>
+                        <div class="p-3 bg-light rounded-lg">
+                            <p class="text-sm text-muted">操作系统</p>
+                            <p class="font-medium">{{ system_info.os }} {{ system_info.os_version }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 安装要求 -->
+    <div class="row justify-content-center mb-8">
+        <div class="col-md-10">
+            <div class="card tool-card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-list-check me-3"></i>
+                        <h5 class="mb-0 fw-semibold">安装要求</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h6 class="mb-3 fw-medium">必需环境</h6>
+                            <ul class="list-unstyled space-y-2">
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-asterisk text-primary me-2"></i>
+                                    <span>Python 3.8+</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-asterisk text-primary me-2"></i>
+                                    <span>Django 4.2 LTS</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-asterisk text-primary me-2"></i>
+                                    <span>至少 100MB 磁盘空间</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h6 class="mb-3 fw-medium">可选组件</h6>
+                            <ul class="list-unstyled space-y-2">
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-plus-circle text-info me-2"></i>
+                                    <span>MySQL 8.0+（生产环境推荐）</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-plus-circle text-info me-2"></i>
+                                    <span>Redis（用于缓存和会话）</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="bi bi-plus-circle text-info me-2"></i>
+                                    <span>Nginx（生产环境部署）</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.install-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.install-header {
+    background: var(--primary-gradient);
+    color: white;
+    margin: -20px -20px 40px -20px;
+    padding: 60px 20px;
+    border-radius: 12px 12px 0 0;
+    box-shadow: var(--card-shadow);
+}
+
+.install-header h1 {
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.grid {
+    display: grid;
+}
+
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+.gap-6 {
+    gap: 1.5rem;
+}
+
+.space-y-2 > * + * {
+    margin-top: 0.5rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+    margin-bottom: 2rem;
+}
+
+.py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.fw-bold {
+    font-weight: 700;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.fw-medium {
+    font-weight: 500;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.bg-transparent {
+    background-color: transparent;
+}
+
+.border-top {
+    border-top: 1px solid #e9ecef;
+}
+
+.p-3 {
+    padding: 0.75rem;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .install-header {
+        padding: 40px 20px;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

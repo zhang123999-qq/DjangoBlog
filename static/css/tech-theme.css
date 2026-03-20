@@ -1,0 +1,573 @@
+/**
+ * DjangoBlog 科技风格主题 - 基础样式
+ * Tech Theme Base Styles
+ */
+
+/* ============================================
+   1. CSS 变量定义
+   ============================================ */
+
+:root {
+    /* 主色调 - 科技蓝 */
+    --tech-primary: #00d4ff;
+    --tech-primary-dark: #0099cc;
+    --tech-primary-light: #80e5ff;
+    
+    /* 辅助色 */
+    --tech-secondary: #7c3aed;
+    --tech-accent: #f472b6;
+    --tech-success: #10b981;
+    --tech-warning: #f59e0b;
+    --tech-danger: #ef4444;
+    
+    /* 背景色 */
+    --bg-dark: #0a0e1a;
+    --bg-darker: #050810;
+    --bg-card: #111827;
+    --bg-elevated: #1f2937;
+    
+    /* 文字色 */
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    
+    /* 边框和阴影 */
+    --border-color: rgba(0, 212, 255, 0.2);
+    --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
+    --glow-secondary: 0 0 30px rgba(124, 58, 237, 0.2);
+    
+    /* 字体 */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    
+    /* 过渡 */
+    --transition: all 0.3s ease;
+}
+
+/* ============================================
+   2. 基础重置
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-primary);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* 粒子背景 */
+.particles-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.02) 0%, transparent 70%);
+}
+
+/* ============================================
+   3. 导航栏样式 (Glassmorphism)
+   ============================================ */
+
+.navbar-tech {
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    padding: 0.75rem 0;
+    transition: var(--transition);
+}
+
+.navbar-tech.scrolled {
+    background: rgba(17, 24, 39, 0.95);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.navbar-tech .navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+    transition: var(--transition);
+}
+
+.navbar-tech .navbar-brand:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+}
+
+.navbar-tech .nav-link {
+    position: relative;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.navbar-tech .nav-link:hover,
+.navbar-tech .nav-link.active {
+    color: var(--tech-primary);
+    background: rgba(0, 212, 255, 0.1);
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.navbar-tech .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--tech-primary), var(--tech-secondary));
+    transition: var(--transition);
+    transform: translateX(-50%);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.navbar-tech .nav-link:hover::after,
+.navbar-tech .nav-link.active::after {
+    width: 80%;
+}
+
+/* 搜索框 */
+.navbar-tech .search-box {
+    position: relative;
+}
+
+.navbar-tech .search-box input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 25px;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    color: var(--text-primary);
+    width: 200px;
+    transition: var(--transition);
+}
+
+.navbar-tech .search-box input:focus {
+    outline: none;
+    border-color: var(--tech-primary);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+    width: 250px;
+}
+
+.navbar-tech .search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+/* ============================================
+   4. 卡片组件
+   ============================================ */
+
+.card-tech {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: var(--transition);
+    position: relative;
+}
+
+.card-tech::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 212, 255, 0.05),
+        transparent
+    );
+    transition: left 0.6s ease;
+}
+
+.card-tech:hover::before {
+    left: 100%;
+}
+
+.card-tech:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 212, 255, 0.3);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(0, 212, 255, 0.1);
+}
+
+.card-tech .card-header {
+    background: linear-gradient(135deg, 
+        rgba(0, 212, 255, 0.1), 
+        rgba(124, 58, 237, 0.1)
+    );
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+    color: var(--tech-primary);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+.card-tech .card-body {
+    padding: 1.5rem;
+}
+
+.card-tech .card-footer {
+    background: transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem 1.5rem;
+}
+
+/* ============================================
+   5. 按钮组件
+   ============================================ */
+
+.btn-tech {
+    position: relative;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-tech-primary {
+    background: linear-gradient(135deg, var(--tech-primary), var(--tech-primary-dark));
+    color: var(--bg-dark);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.btn-tech-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+    filter: brightness(1.1);
+}
+
+.btn-tech-outline {
+    background: transparent;
+    border: 2px solid var(--tech-primary);
+    color: var(--tech-primary);
+}
+
+.btn-tech-outline:hover {
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-tech-ghost {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+}
+
+.btn-tech-ghost:hover {
+    color: var(--tech-primary);
+    background: rgba(0, 212, 255, 0.05);
+}
+
+/* 脉冲动画 */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(0, 212, 255, 0.6);
+    }
+}
+
+.btn-tech-pulse {
+    animation: pulse-glow 2s infinite;
+}
+
+/* ============================================
+   6. 工具卡片
+   ============================================ */
+
+.tool-card-tech {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.tool-card-tech::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--tech-primary), var(--tech-secondary));
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.tool-card-tech:hover::before {
+    opacity: 1;
+}
+
+.tool-card-tech .tool-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg, 
+        rgba(0, 212, 255, 0.1), 
+        rgba(124, 58, 237, 0.1)
+    );
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    font-size: 1.75rem;
+    color: var(--tech-primary);
+    transition: var(--transition);
+}
+
+.tool-card-tech:hover {
+    border-color: rgba(0, 212, 255, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.tool-card-tech:hover .tool-icon {
+    background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+    color: white;
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.tool-card-tech .tool-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.tool-card-tech .tool-desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   7. 表单样式
+   ============================================ */
+
+.form-tech .form-control {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.form-tech .form-control:focus {
+    outline: none;
+    border-color: var(--tech-primary);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-tech .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.form-tech .form-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-tech .form-text {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   8. 页脚样式
+   ============================================ */
+
+.footer-tech {
+    background: linear-gradient(180deg, var(--bg-darker), #000);
+    border-top: 1px solid rgba(0, 212, 255, 0.1);
+    padding: 3rem 0 2rem;
+    margin-top: 4rem;
+    position: relative;
+}
+
+.footer-tech::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        var(--tech-primary), 
+        transparent
+    );
+}
+
+.footer-tech h5 {
+    color: var(--tech-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.footer-tech a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-tech a:hover {
+    color: var(--tech-primary);
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.footer-tech .social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    margin-right: 0.5rem;
+    transition: var(--transition);
+}
+
+.footer-tech .social-links a:hover {
+    background: var(--tech-primary);
+    border-color: var(--tech-primary);
+    color: var(--bg-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}
+
+/* ============================================
+   9. 动画效果
+   ============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+.scanline::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--tech-primary), transparent);
+    animation: scanline 3s linear infinite;
+    opacity: 0.5;
+}
+
+/* ============================================
+   10. 响应式调整
+   ============================================ */
+
+@media (max-width: 768px) {
+    .navbar-tech .navbar-collapse {
+        background: rgba(17, 24, 39, 0.98);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-top: 0.5rem;
+    }
+    
+    .navbar-tech .search-box input {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .tool-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--tech-primary), var(--tech-secondary));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--tech-primary);
+}
+
+/* 选中文字样式 */
+::selection {
+    background: rgba(0, 212, 255, 0.3);
+    color: var(--text-primary);
+}

@@ -1,0 +1,10 @@
+# DjangoBlog 依赖文件
+# 
+# 安装方式:
+#   开发环境: pip install -r requirements/development.txt
+#   生产环境: pip install -r requirements/production.txt
+#   快速安装: pip install -r requirements.txt
+#
+# 推荐: pip install -r requirements/production.txt
+
+-r requirements/production.txt

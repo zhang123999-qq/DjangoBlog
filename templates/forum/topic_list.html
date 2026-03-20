@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ board.name }} - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <h1>{{ board.name }}</h1>
+        {% if board.description %}
+            <p class="text-muted">{{ board.description }}</p>
+        {% endif %}
+        <a href="{% url 'forum:topic_create' board.slug %}" class="btn btn-primary">发布主题</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if topics %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>主题</th>
+                            <th>作者</th>
+                            <th>回复数</th>
+                            <th>浏览数</th>
+                            <th>最后回复</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for topic in topics %}
+                            <tr>
+                                <td>
+                                    {% if topic.is_pinned %}<span class="badge bg-primary">置顶</span> {% endif %}
+                                    {% if topic.is_locked %}<span class="badge bg-secondary">锁定</span> {% endif %}
+                                    <a href="{{ topic.get_absolute_url }}" class="text-decoration-none">{{ topic.title }}</a>
+                                </td>
+                                <td>{{ topic.author.username }}</td>
+                                <td>{{ topic.reply_count }}</td>
+                                <td>{{ topic.views_count }}</td>
+                                <td>
+                                    {% if topic.last_reply_at %}
+                                        {{ topic.last_reply_at|date:"Y-m-d H:i" }}
+                                    {% else %}
+                                        {{ topic.created_at|date:"Y-m-d H:i" }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <!-- 分页 -->
+                {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for i in paginator.page_range %}
+                                {% if page_obj.number == i %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">暂无主题</div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

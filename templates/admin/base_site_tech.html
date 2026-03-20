@@ -1,0 +1,460 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* ============================================
+       科技风格后台主题 - Tech Admin Theme
+       ============================================ */
+    
+    :root {
+        --tech-primary: #00d4ff;
+        --tech-secondary: #7c3aed;
+        --tech-accent: #f472b6;
+        --tech-success: #10b981;
+        --tech-warning: #f59e0b;
+        --tech-danger: #ef4444;
+        --bg-dark: #0a0e1a;
+        --bg-darker: #050810;
+        --bg-card: #111827;
+        --bg-elevated: #1f2937;
+        --text-primary: #f9fafb;
+        --text-secondary: #9ca3af;
+        --text-muted: #6b7280;
+        --border-color: rgba(0, 212, 255, 0.2);
+        --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+    
+    /* 全局样式 */
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+    }
+    
+    /* 头部 */
+    #header {
+        background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        padding: 15px 20px;
+    }
+    
+    #header a:link, #header a:visited {
+        color: var(--tech-primary);
+    }
+    
+    #branding h1 {
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    #user-tools {
+        font-size: 0.9rem;
+    }
+    
+    #user-tools a {
+        color: var(--text-secondary) !important;
+        transition: all 0.3s ease;
+    }
+    
+    #user-tools a:hover {
+        color: var(--tech-primary) !important;
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    
+    /* 面包屑 */
+    div.breadcrumbs {
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 20px;
+        color: var(--text-secondary);
+    }
+    
+    div.breadcrumbs a {
+        color: var(--tech-primary);
+        transition: all 0.3s ease;
+    }
+    
+    div.breadcrumbs a:hover {
+        color: var(--tech-primary-light);
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    
+    /* 主内容区 */
+    #content {
+        background: var(--bg-dark);
+        padding: 20px;
+    }
+    
+    #content-main {
+        background: transparent;
+    }
+    
+    /* 侧边栏 */
+    #content-related {
+        background: transparent;
+    }
+    
+    /* 模块卡片 */
+    .module {
+        background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .module caption {
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.1), 
+            rgba(124, 58, 237, 0.1)
+        );
+        color: var(--tech-primary);
+        padding: 15px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .module caption a {
+        color: var(--tech-primary) !important;
+    }
+    
+    .module table {
+        width: 100%;
+    }
+    
+    .module th, .module td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .module tr:hover {
+        background: rgba(0, 212, 255, 0.05);
+    }
+    
+    /* 表格样式 */
+    #result_list {
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    
+    #result_list thead th {
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.1), 
+            rgba(124, 58, 237, 0.1)
+        );
+        color: var(--tech-primary);
+        font-weight: 600;
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    #result_list tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+    }
+    
+    #result_list tbody tr:hover {
+        background: rgba(0, 212, 255, 0.05);
+    }
+    
+    #result_list tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    /* 按钮样式 */
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        color: var(--bg-dark);
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    }
+    
+    .button:hover, input[type=submit]:hover, a.button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+        filter: brightness(1.1);
+    }
+    
+    .button.default {
+        background: linear-gradient(135deg, var(--tech-success), #059669);
+    }
+    
+    .button.default:hover {
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+    }
+    
+    /* 危险按钮 */
+    .button.deletelink {
+        background: linear-gradient(135deg, var(--tech-danger), #dc2626);
+    }
+    
+    .button.deletelink:hover {
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+    }
+    
+    /* 次要按钮 */
+    .button.secondary {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        box-shadow: none;
+    }
+    
+    .button.secondary:hover {
+        border-color: var(--tech-primary);
+        color: var(--tech-primary);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    }
+    
+    /* 表单样式 */
+    .aligned label {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    input[type=text], input[type=email], input[type=password], 
+    input[type=number], input[type=url], textarea, select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 15px;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+    }
+    
+    input[type=text]:focus, input[type=email]:focus, 
+    input[type=password]:focus, textarea:focus, select:focus {
+        outline: none;
+        border-color: var(--tech-primary);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    /* 帮助文本 */
+    .help {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    
+    /* 错误提示 */
+    .errornote {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--tech-danger);
+        border-radius: 8px;
+        padding: 12px 20px;
+    }
+    
+    /* 成功提示 */
+    .successnote {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: var(--tech-success);
+        border-radius: 8px;
+        padding: 12px 20px;
+    }
+    
+    /* 警告提示 */
+    .warningnote {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: var(--tech-warning);
+        border-radius: 8px;
+        padding: 12px 20px;
+    }
+    
+    /* 信息提示 */
+    .infonote {
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        color: var(--tech-primary);
+        border-radius: 8px;
+        padding: 12px 20px;
+    }
+    
+    /* 分页 */
+    .paginator {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .paginator a, .paginator .this-page {
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .paginator a:hover {
+        background: rgba(0, 212, 255, 0.1);
+        border-color: var(--tech-primary);
+        color: var(--tech-primary);
+    }
+    
+    .paginator .this-page {
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        border-color: var(--tech-primary);
+        color: var(--bg-dark);
+        font-weight: 600;
+    }
+    
+    /* 过滤器 */
+    #changelist-filter {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    #changelist-filter h2 {
+        color: var(--tech-primary);
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    #changelist-filter ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    #changelist-filter li {
+        margin-bottom: 8px;
+    }
+    
+    #changelist-filter a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    #changelist-filter a:hover {
+        color: var(--tech-primary);
+    }
+    
+    #changelist-filter .selected a {
+        color: var(--tech-primary);
+        font-weight: 600;
+    }
+    
+    /* 操作按钮 */
+    .actions {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .actions select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+    
+    /* 日期选择器 */
+    .vDateField, .vTimeField {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-primary) !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+    }
+    
+    /* 选择器 */
+    .selector .selector-available, .selector .selector-chosen {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+    }
+    
+    .selector .selector-available h2, .selector .selector-chosen h2 {
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.1), 
+            rgba(124, 58, 237, 0.1)
+        );
+        color: var(--tech-primary);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+        #header {
+            padding: 10px 15px;
+        }
+        
+        #content {
+            padding: 15px;
+        }
+        
+        .module {
+            margin-bottom: 15px;
+        }
+    }
+    
+    /* 滚动条 */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--bg-darker);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--tech-primary), var(--tech-secondary));
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--tech-primary);
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <i class="fas fa-cube me-2"></i>
+    <a href="{% url 'admin:index' %}">DjangoBlog 管理后台</a>
+</h1>
+{% endblock %}
+
+{% block userlinks %}
+{% if site_url %}
+<a href="{{ site_url }}" target="_blank">
+    <i class="fas fa-external-link-alt me-1"></i>查看网站
+</a> /
+{% endif %}
+{% if user.is_active and user.is_staff %}
+<a href="{% url 'admin:password_change' %}">
+    <i class="fas fa-key me-1"></i>修改密码
+</a> /
+{% endif %}
+<a href="{% url 'admin:logout' %}">
+    <i class="fas fa-sign-out-alt me-1"></i>退出
+</a>
+{% endblock %}

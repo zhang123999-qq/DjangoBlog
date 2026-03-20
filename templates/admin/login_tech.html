@@ -1,0 +1,217 @@
+{% extends "admin/base_site_tech.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* 登录页面样式 */
+    body.login {
+        background: linear-gradient(135deg, var(--bg-dark), var(--bg-darker));
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #container {
+        background: transparent;
+        min-width: auto;
+    }
+    
+    #content {
+        background: transparent;
+        padding: 0;
+    }
+    
+    .login-form-container {
+        background: linear-gradient(145deg, var(--bg-card), var(--bg-elevated));
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 40px;
+        width: 400px;
+        max-width: 90vw;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    
+    .login-logo {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .login-logo i {
+        font-size: 4rem;
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+    }
+    
+    .login-logo h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .login-logo p {
+        color: var(--text-secondary);
+        margin: 10px 0 0;
+    }
+    
+    .form-row {
+        margin-bottom: 20px;
+    }
+    
+    .form-row label {
+        display: block;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    
+    .form-row input {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-row input:focus {
+        outline: none;
+        border-color: var(--tech-primary);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .form-row input::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .submit-row {
+        margin-top: 30px;
+    }
+    
+    .submit-row input {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--tech-primary), var(--tech-secondary));
+        border: none;
+        border-radius: 8px;
+        color: var(--bg-dark);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+    
+    .submit-row input:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+    }
+    
+    .errornote {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: var(--tech-danger);
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+    
+    .password-reset-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .password-reset-link a {
+        color: var(--tech-primary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .password-reset-link a:hover {
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    
+    /* 隐藏默认的头部和面包屑 */
+    #header, .breadcrumbs {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+{% if form.errors and not form.non_field_errors %}
+<p class="errornote">
+{% if form.errors.items|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="errornote">
+    {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+
+<div id="content-main">
+    <div class="login-form-container">
+        <div class="login-logo">
+            <i class="fas fa-cube"></i>
+            <h1>DjangoBlog</h1>
+            <p>管理后台登录</p>
+        </div>
+        
+        <form action="{{ app_path }}" method="post" id="login-form">
+            {% csrf_token %}
+            <div class="form-row">
+                {{ form.username.errors }}
+                <label for="id_username" class="required">
+                    <i class="fas fa-user me-2"></i>{% translate 'Username:' %}
+                </label>
+                <input type="text" name="username" id="id_username" 
+                       placeholder="请输入用户名" autofocus required>
+            </div>
+            <div class="form-row">
+                {{ form.password.errors }}
+                <label for="id_password" class="required">
+                    <i class="fas fa-lock me-2"></i>{% translate 'Password:' %}
+                </label>
+                <input type="password" name="password" id="id_password" 
+                       placeholder="请输入密码" required>
+                <input type="hidden" name="next" value="{{ next }}">
+            </div>
+            
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+            <div class="password-reset-link">
+                <a href="{{ password_reset_url }}">
+                    <i class="fas fa-key me-1"></i>{% translate 'Forgotten your password or username?' %}
+                </a>
+            </div>
+            {% endif %}
+            
+            <div class="submit-row">
+                <input type="submit" value="{% translate 'Log in' %}">
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
