@@ -55,23 +55,22 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # =============================================================================
-# 调试工具（可选）
+# 调试工具（可选）- 已禁用
 # =============================================================================
 
-# 如果安装了 debug_toolbar 则启用
-try:
-    import debug_toolbar
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-    INTERNAL_IPS = ['127.0.0.1', '0.0.0.0']
-    
-    # Debug Toolbar 配置 - 禁用重定向拦截
-    DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': lambda request: True,
-        'INTERCEPT_REDIRECTS': False,  # 关键：禁用重定向拦截
-    }
-except ImportError:
-    pass
+# Debug Toolbar 已禁用
+# try:
+#     import debug_toolbar
+#     INSTALLED_APPS += ['debug_toolbar']
+#     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+#     INTERNAL_IPS = ['127.0.0.1', '0.0.0.0']
+#     
+#     DEBUG_TOOLBAR_CONFIG = {
+#         'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+#         'INTERCEPT_REDIRECTS': False,
+#     }
+# except ImportError:
+#     pass
 
 # =============================================================================
 # 日志配置 - 开发环境更详细
