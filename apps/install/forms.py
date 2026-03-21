@@ -298,6 +298,11 @@ class QuickInstallForm(forms.Form):
         min_length=8,
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
+    admin_password_confirm = forms.CharField(
+        label='确认密码',
+        min_length=8,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
     allowed_hosts = forms.CharField(
         label='允许访问的主机',
         max_length=500,
@@ -309,3 +314,13 @@ class QuickInstallForm(forms.Form):
         }),
         help_text='允许局域网访问请保持默认，或填写*允许所有'
     )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('admin_password')
+        password_confirm = cleaned_data.get('admin_password_confirm')
+        
+        if password and password_confirm and password != password_confirm:
+            self.add_error('admin_password_confirm', '两次输入的密码不一致')
+        
+        return cleaned_data

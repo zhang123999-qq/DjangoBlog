@@ -169,6 +169,12 @@
                     <input type="password" name="admin_password" id="id_admin_password" class="form-control" required minlength="8">
                     <div class="form-text">至少8个字符</div>
                 </div>
+                
+                <div class="mb-3">
+                    <label for="id_admin_password_confirm" class="form-label">确认密码 <span class="text-danger">*</span></label>
+                    <input type="password" name="admin_password_confirm" id="id_admin_password_confirm" class="form-control" required minlength="8">
+                    <div class="form-text">请再次输入密码</div>
+                </div>
             </div>
 
             <!-- 错误提示 -->
@@ -288,7 +294,19 @@
     });
     
     // 表单提交
-    document.getElementById('quick-install-form').addEventListener('submit', function() {
+    document.getElementById('quick-install-form').addEventListener('submit', function(e) {
+        // 验证密码
+        const password = document.getElementById('id_admin_password').value;
+        const passwordConfirm = document.getElementById('id_admin_password_confirm').value;
+        
+        if (password !== passwordConfirm) {
+            e.preventDefault();
+            alert('两次输入的密码不一致！');
+            document.getElementById('submit-btn').innerHTML = '🚀 开始安装';
+            document.getElementById('submit-btn').disabled = false;
+            return;
+        }
+        
         document.getElementById('submit-btn').innerHTML = '⏳ 安装中...';
         document.getElementById('submit-btn').disabled = true;
     });

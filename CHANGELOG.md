@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.5] - 2026-03-21
+
+### Fixed
+- **安装向导深度优化**
+  - 修复中间件路径不一致问题（相对路径 → 绝对路径）
+  - 修复 `BASE_DIR` 定义位置问题（移到文件顶部）
+  - 快速安装添加密码确认字段
+  - 前端添加密码一致性验证
+  - 中间件豁免登录/登出路径，避免重定向问题
+
+### Changed
+- `middleware.py` 使用 `Path` 对象获取项目根目录
+- `views.py` 将 `BASE_DIR` 移到文件顶部
+- `forms.py` QuickInstallForm 添加密码确认字段
+- `quick_install.html` 添加密码确认输入框
+
 ## [2.4.4] - 2026-03-21
 
 ### Fixed

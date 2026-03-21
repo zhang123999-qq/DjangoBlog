@@ -21,6 +21,9 @@ from .forms import (
 
 logger = logging.getLogger(__name__)
 
+# 全局变量 - 必须在函数定义之前
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
 
 def get_system_info():
     """获取系统信息"""
@@ -118,10 +121,6 @@ def create_install_lock():
     with open(lock_path, 'w', encoding='utf-8') as f:
         f.write(f"Installed at: {datetime.now().isoformat()}\n")
         f.write(f"Python: {sys.version}\n")
-
-
-# 全局变量
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 def install_context(request):
