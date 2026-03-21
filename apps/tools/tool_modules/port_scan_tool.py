@@ -1,6 +1,7 @@
 """
 端口扫描工具 - 优化版
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import socket
@@ -80,6 +81,7 @@ class PortScanTool(BaseTool):
     slug = "port-scan"
     description = "检查指定IP或域名的端口开放情况，支持单端口、常用端口和端口范围扫描"
     icon = "fa fa-network-wired"
+    category = ToolCategory.NETWORK
     form_class = PortScanForm
 
     def handle(self, request, form):

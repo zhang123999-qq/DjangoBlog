@@ -1,6 +1,7 @@
 """
 人民币大写转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -25,6 +26,7 @@ class RMBUpperTool(BaseTool):
     slug = "rmb-upper"
     description = "将数字金额转换为人民币大写（壹贰叁肆伍陆柒捌玖零）"
     icon = "fa fa-money-bill"
+    category = ToolCategory.ENCODE
     form_class = RMBUpperForm
 
     def handle(self, request, form):

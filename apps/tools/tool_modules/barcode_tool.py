@@ -1,6 +1,7 @@
 """
 条形码生成工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import base64
@@ -47,6 +48,7 @@ class BarcodeTool(BaseTool):
     slug = "barcode"
     description = "根据输入的文本生成条形码图片（如Code128、EAN-13）"
     icon = "fa fa-barcode"
+    category = ToolCategory.GENERATE
     form_class = BarcodeForm
 
     def handle(self, request, form):

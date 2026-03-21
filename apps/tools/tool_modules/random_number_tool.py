@@ -1,6 +1,7 @@
 """
 随机数生成器工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import random
@@ -40,6 +41,7 @@ class RandomNumberTool(BaseTool):
     slug = "random-number"
     description = "生成指定范围内的随机整数或浮点数，支持多个结果"
     icon = "fa fa-dice"
+    category = ToolCategory.CALC
     form_class = RandomNumberForm
 
     def handle(self, request, form):

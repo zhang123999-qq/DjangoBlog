@@ -2,6 +2,7 @@
 哈希工具 - MD5, SHA1, SHA256, SHA512
 """
 import hashlib
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -32,6 +33,7 @@ class HashTool(BaseTool):
     slug = "hash"
     description = "计算文本的MD5、SHA-1、SHA-256、SHA-512哈希值"
     icon = "fa fa-lock"
+    category = ToolCategory.ENCRYPT
     form_class = HashForm
 
     def handle(self, request, form):

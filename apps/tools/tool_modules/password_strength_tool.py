@@ -1,6 +1,7 @@
 """
 密码强度检测工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import re
@@ -21,6 +22,7 @@ class PasswordStrengthTool(BaseTool):
     slug = "password-strength"
     description = "检测密码强度等级，给出安全建议"
     icon = "fa fa-shield-alt"
+    category = ToolCategory.SECURITY
     form_class = PasswordStrengthForm
 
     def handle(self, request, form):

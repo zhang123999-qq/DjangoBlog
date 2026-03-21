@@ -1,6 +1,7 @@
 """
 二维码生成工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -38,6 +39,7 @@ class QRCodeTool(BaseTool):
     slug = "qrcode"
     description = "生成二维码图片"
     icon = "fa fa-qrcode"
+    category = ToolCategory.GENERATE
     form_class = QRCodeForm
 
     def handle(self, request, form):

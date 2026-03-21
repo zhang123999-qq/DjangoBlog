@@ -1,6 +1,7 @@
 """
 图片压缩工具
 """
+from ..categories import ToolCategory
 from django import forms
 from django.core.exceptions import ValidationError
 from apps.tools.base_tool import BaseTool
@@ -69,6 +70,7 @@ class ImageCompressTool(BaseTool):
     slug = "image-compress"
     description = "上传图片后自动压缩，支持调整质量和尺寸"
     icon = "fa fa-compress-alt"
+    category = ToolCategory.IMAGE
     form_class = ImageCompressForm
 
     def get_form(self, data=None, files=None):

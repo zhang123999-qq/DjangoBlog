@@ -1,6 +1,7 @@
 """
 字符串转义/去转义工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -29,6 +30,7 @@ class StringEscapeTool(BaseTool):
     slug = "string-escape"
     description = "对字符串中的特殊字符进行转义，或恢复转义"
     icon = "fa fa-code"
+    category = ToolCategory.ENCODE
     form_class = StringEscapeForm
 
     def handle(self, request, form):

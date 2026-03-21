@@ -1,6 +1,7 @@
 """
 字节转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -37,6 +38,7 @@ class ByteConverterTool(BaseTool):
     slug = "byte-converter"
     description = "字节(B)、KB、MB、GB、TB等单位相互转换"
     icon = "fa fa-database"
+    category = ToolCategory.CALC
     form_class = ByteConverterForm
 
     def handle(self, request, form):

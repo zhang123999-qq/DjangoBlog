@@ -1,3 +1,4 @@
+from ..categories import ToolCategory
 from django import forms
 import random
 import string
@@ -19,6 +20,7 @@ class PasswordGenTool(BaseTool):
     slug = "password-gen"
     description = "生成安全的随机密码"
     icon = "key"
+    category = ToolCategory.GENERATE
     form_class = PasswordGenForm
 
     def handle(self, request, form):

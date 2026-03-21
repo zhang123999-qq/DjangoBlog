@@ -2,6 +2,7 @@
 UUID Generator Tool
 Generate UUID/GUID with different versions
 """
+from ..categories import ToolCategory
 from django import forms
 import uuid
 from apps.tools.base_tool import BaseTool
@@ -129,6 +130,7 @@ class UUIDGeneratorTool(BaseTool):
     slug = "uuid"
     description = "生成UUID/GUID，支持多种版本"
     icon = "key"
+    category = ToolCategory.GENERATE
     form_class = UUIDForm
 
     def handle(self, request, form):

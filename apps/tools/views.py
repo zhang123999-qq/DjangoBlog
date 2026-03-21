@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from .registry import registry
 from .models import ToolConfig
+from .categories import TOOL_CATEGORIES
 
 logger = logging.getLogger(__name__)
 
@@ -12,30 +13,29 @@ def tool_list(request):
     # 重置工具发现状态，确保发现所有工具
     registry.reset_discovered()
     
-    # 获取所有工具
+    # 获取分类后的工具
+    categories = registry.get_categories_with_tools()
+    
+    # 获取所有工具（兼容旧版）
     all_tools = registry.get_all_tools()
     
-    # 直接使用所有工具，不进行过滤
-    # 这样可以确保所有工具都能显示
-    tools = all_tools
-    
     # 记录日志（开发调试使用）
-    logger.debug(f'工具列表视图：发现 {len(tools)} 个工具')
-    for i, tool in enumerate(tools, 1):
-        logger.debug(f'{i}. {tool.name} ({tool.slug})')
+    logger.debug(f'工具列表视图：发现 {len(all_tools)} 个工具')
     
     # 渲染响应
     response = render(request, 'tools/tool_list.html', {
-        'tools': tools,
-        'total_tools': len(tools),
-        'enabled_tools_count': len(tools),
+        'categories': categories,
+        'tools': all_tools,
+        'total_tools': len(all_tools),
+        'enabled_tools_count': len(all_tools),
+        'category_info': TOOL_CATEGORIES,
     })
     
     # 添加缓存控制头，确保浏览器每次都获取最新的页面
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
-    response['ETag'] = str(hash(str(tools)))
+    response['ETag'] = str(hash(str(all_tools)))
     
     return response
 

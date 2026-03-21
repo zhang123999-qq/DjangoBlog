@@ -1,6 +1,7 @@
 """
 摩斯密码编解码工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -61,6 +62,7 @@ class MorseCodeTool(BaseTool):
     slug = "morse-code"
     description = "文本与摩斯密码互转"
     icon = "fa fa-tty"
+    category = ToolCategory.OTHER
     form_class = MorseCodeForm
 
     def handle(self, request, form):

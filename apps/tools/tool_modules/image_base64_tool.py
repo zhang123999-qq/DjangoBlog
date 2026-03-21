@@ -2,6 +2,7 @@
 Image to Base64 Converter Tool
 Convert image to Base64 string and vice versa
 """
+from ..categories import ToolCategory
 from django import forms
 from django.core.exceptions import ValidationError
 import base64
@@ -178,6 +179,7 @@ class ImageBase64Tool(BaseTool):
     slug = "image-base64"
     description = "图片与Base64字符串互转"
     icon = "image"
+    category = ToolCategory.IMAGE
     form_class = ImageBase64Form
 
     def get_form(self, data=None, files=None):

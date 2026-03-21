@@ -1,6 +1,7 @@
 """
 AES 加密解密工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -44,6 +45,7 @@ class AESTool(BaseTool):
     slug = "aes"
     description = "AES对称加密解密工具"
     icon = "fa fa-key"
+    category = ToolCategory.ENCRYPT
     form_class = AESForm
 
     def handle(self, request, form):

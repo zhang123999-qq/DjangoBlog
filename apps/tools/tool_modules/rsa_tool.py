@@ -1,6 +1,7 @@
 """
 RSA 加密解密工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -34,6 +35,7 @@ class RSATool(BaseTool):
     slug = "rsa"
     description = "RSA非对称加密解密工具"
     icon = "fa fa-lock"
+    category = ToolCategory.ENCRYPT
     form_class = RSAForm
 
     def handle(self, request, form):

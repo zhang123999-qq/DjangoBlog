@@ -1,6 +1,7 @@
 """
 HMAC 生成验证工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import hmac
@@ -48,6 +49,7 @@ class HMACTool(BaseTool):
     slug = "hmac"
     description = "基于哈希函数生成消息认证码"
     icon = "fa fa-shield"
+    category = ToolCategory.ENCRYPT
     form_class = HMACForm
 
     def handle(self, request, form):

@@ -1,6 +1,7 @@
 """
 邮箱格式验证工具
 """
+from ..categories import ToolCategory
 from django import forms
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -26,6 +27,7 @@ class EmailValidatorTool(BaseTool):
     slug = "email-validator"
     description = "验证邮箱地址格式是否正确"
     icon = "fa fa-envelope"
+    category = ToolCategory.SECURITY
     form_class = EmailValidatorForm
 
     def handle(self, request, form):

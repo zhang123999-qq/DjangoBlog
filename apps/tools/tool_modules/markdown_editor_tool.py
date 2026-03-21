@@ -1,6 +1,7 @@
 """
 Markdown编辑器工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import markdown
@@ -32,6 +33,7 @@ class MarkdownEditorTool(BaseTool):
     slug = "markdown-editor"
     description = "实时预览Markdown，支持导出HTML"
     icon = "fa fa-file-alt"
+    category = ToolCategory.DATA
     form_class = MarkdownEditorForm
 
     def handle(self, request, form):

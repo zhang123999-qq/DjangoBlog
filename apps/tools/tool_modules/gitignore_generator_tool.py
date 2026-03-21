@@ -1,6 +1,7 @@
 """
 .gitignore生成器工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -596,6 +597,7 @@ class GitignoreGeneratorTool(BaseTool):
     slug = "gitignore-generator"
     description = "根据项目类型自动生成.gitignore文件"
     icon = "git-alt"
+    category = ToolCategory.GENERATE
     form_class = GitignoreGeneratorForm
     template_name = "tools/gitignore_generator.html"
 

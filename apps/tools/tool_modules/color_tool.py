@@ -1,6 +1,7 @@
 """
 颜色转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -24,6 +25,7 @@ class ColorTool(BaseTool):
     slug = "color"
     description = "颜色格式转换工具"
     icon = "fa fa-palette"
+    category = ToolCategory.IMAGE
     form_class = ColorForm
 
     def hex_to_rgb(self, hex_color):

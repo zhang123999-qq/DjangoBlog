@@ -1,6 +1,7 @@
 """
 身份证号码生成/校验工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import random
@@ -41,6 +42,7 @@ class IDCardTool(BaseTool):
     slug = "id-card"
     description = "根据规则生成虚拟身份证号码，或校验输入的身份证号码是否合法"
     icon = "fa fa-id-card"
+    category = ToolCategory.SECURITY
     form_class = IDCardForm
 
     def handle(self, request, form):

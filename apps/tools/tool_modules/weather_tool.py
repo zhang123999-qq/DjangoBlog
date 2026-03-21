@@ -1,6 +1,7 @@
 """
 天气查询工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import requests
@@ -30,6 +31,7 @@ class WeatherTool(BaseTool):
     slug = "weather"
     description = "查询指定城市的天气信息"
     icon = "fa fa-cloud"
+    category = ToolCategory.NETWORK
     form_class = WeatherForm
 
     def handle(self, request, form):

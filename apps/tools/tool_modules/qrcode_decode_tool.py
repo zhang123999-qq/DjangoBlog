@@ -1,6 +1,7 @@
 """
 二维码识别/解码工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -19,6 +20,7 @@ class QRCodeDecodeTool(BaseTool):
     slug = "qrcode-decode"
     description = "上传二维码图片，识别并解码其中的文本内容"
     icon = "fa fa-qrcode"
+    category = ToolCategory.GENERATE
     form_class = QRCodeDecodeForm
 
     def handle(self, request, form):

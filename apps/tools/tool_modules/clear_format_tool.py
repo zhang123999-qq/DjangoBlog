@@ -1,6 +1,7 @@
 """
 清除文本格式工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import re
@@ -58,6 +59,7 @@ class ClearFormatTool(BaseTool):
     slug = "clear-format"
     description = "一键去除富文本格式，得到纯文本"
     icon = "fa fa-eraser"
+    category = ToolCategory.TEXT
     form_class = ClearFormatForm
 
     def handle(self, request, form):

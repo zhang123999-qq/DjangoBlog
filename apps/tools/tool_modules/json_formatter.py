@@ -1,3 +1,4 @@
+from ..categories import ToolCategory
 from django import forms
 import json
 from ..base_tool import BaseTool
@@ -14,6 +15,7 @@ class JSONFormatterTool(BaseTool):
     slug = "json-formatter"
     description = "格式化 JSON 文本，使其更易阅读"
     icon = "file-code"
+    category = ToolCategory.DATA
     form_class = JSONFormatterForm
 
     def handle(self, request, form):

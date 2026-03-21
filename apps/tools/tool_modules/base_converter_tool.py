@@ -1,6 +1,7 @@
 """
 进制转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -31,6 +32,7 @@ class BaseConverterTool(BaseTool):
     slug = "base-converter"
     description = "二进制、八进制、十进制、十六进制互转"
     icon = "fa fa-exchange-alt"
+    category = ToolCategory.ENCODE
     form_class = BaseConverterForm
 
     def handle(self, request, form):

@@ -1,6 +1,7 @@
 """
 IP 检测工具 - 自动检测访问者IP地址
 """
+from ..categories import ToolCategory
 from django import forms
 import requests
 from ..base_tool import BaseTool
@@ -17,6 +18,7 @@ class IPDetectorTool(BaseTool):
     slug = "my-ip"
     description = "自动检测您的IP地址，显示位置、运营商等信息"
     icon = "bi bi-geo-alt"
+    category = ToolCategory.NETWORK
     form_class = IPDetectorForm
     template_name = "tools/ip_detector.html"
 

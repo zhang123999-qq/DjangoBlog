@@ -1,6 +1,7 @@
 """
 时间差计算器
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 from datetime import datetime
@@ -32,6 +33,7 @@ class TimeDiffTool(BaseTool):
     slug = "time-diff"
     description = "计算两个日期时间之间的时间差"
     icon = "fa fa-calendar-alt"
+    category = ToolCategory.TIME
     form_class = TimeDiffForm
 
     def handle(self, request, form):

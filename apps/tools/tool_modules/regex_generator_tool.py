@@ -1,6 +1,7 @@
 """
 正则表达式生成器工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -33,6 +34,7 @@ class RegexGeneratorTool(BaseTool):
     slug = "regex-generator"
     description = "根据示例文本生成简单的正则表达式"
     icon = "fa fa-code"
+    category = ToolCategory.GENERATE
     form_class = RegexGeneratorForm
 
     def handle(self, request, form):

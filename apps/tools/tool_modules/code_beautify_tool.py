@@ -2,6 +2,7 @@
 Code Beautifier / Formatter Tool
 Format and beautify code (JSON, CSS, HTML, SQL)
 """
+from ..categories import ToolCategory
 from django import forms
 import json
 import re
@@ -274,6 +275,7 @@ class CodeBeautifyTool(BaseTool):
     slug = "code-format"
     description = "美化/压缩 JSON/CSS/HTML/SQL 代码"
     icon = "code"
+    category = ToolCategory.DATA
     form_class = CodeBeautifyForm
 
     def handle(self, request, form):

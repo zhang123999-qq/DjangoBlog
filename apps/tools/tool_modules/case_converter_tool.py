@@ -1,6 +1,7 @@
 """
 大小写转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -24,6 +25,7 @@ class CaseConverterTool(BaseTool):
     slug = "case-converter"
     description = "文本大小写转换（英文）"
     icon = "fa fa-font"
+    category = ToolCategory.ENCODE
     form_class = CaseConverterForm
 
     def handle(self, request, form):

@@ -1,6 +1,7 @@
 """
 拼音转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -30,6 +31,7 @@ class PinyinConverterTool(BaseTool):
     slug = "pinyin-converter"
     description = "将中文汉字转换为汉语拼音，支持带声调"
     icon = "fa fa-font"
+    category = ToolCategory.ENCODE
     form_class = PinyinConverterForm
 
     # 拼音映射表（简化版）

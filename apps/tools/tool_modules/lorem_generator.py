@@ -2,6 +2,7 @@
 Lorem Ipsum Generator Tool
 Generate placeholder text for various languages
 """
+from ..categories import ToolCategory
 from django import forms
 import random
 from apps.tools.base_tool import BaseTool
@@ -175,6 +176,7 @@ class LoremGeneratorTool(BaseTool):
     slug = "lorem"
     description = "生成占位文本，支持多种语言"
     icon = "text"
+    category = ToolCategory.TEXT
     form_class = LoremForm
 
     def handle(self, request, form):

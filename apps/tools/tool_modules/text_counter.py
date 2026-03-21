@@ -1,3 +1,4 @@
+from ..categories import ToolCategory
 from django import forms
 from ..base_tool import BaseTool
 
@@ -13,6 +14,7 @@ class TextCounterTool(BaseTool):
     slug = "text-counter"
     description = "统计文本的字符数、单词数、行数等信息"
     icon = "file-text"
+    category = ToolCategory.TEXT
     form_class = TextCounterForm
 
     def handle(self, request, form):

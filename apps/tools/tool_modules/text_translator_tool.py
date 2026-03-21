@@ -1,6 +1,7 @@
 """
 文本翻译工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import requests
@@ -50,6 +51,7 @@ class TextTranslatorTool(BaseTool):
     slug = "text-translator"
     description = "将文本从一种语言翻译为另一种语言"
     icon = "fa fa-language"
+    category = ToolCategory.TEXT
     form_class = TextTranslatorForm
 
     def handle(self, request, form):

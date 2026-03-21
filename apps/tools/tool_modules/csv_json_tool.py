@@ -1,6 +1,7 @@
 """
 CSV与JSON互转工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import csv
@@ -32,6 +33,7 @@ class CSVJSONTool(BaseTool):
     slug = "csv-json"
     description = "将CSV数据转换为JSON数组/对象，或将JSON数组转换为CSV"
     icon = "fa fa-exchange-alt"
+    category = ToolCategory.DATA
     form_class = CSVJSONForm
 
     def handle(self, request, form):

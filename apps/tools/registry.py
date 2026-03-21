@@ -2,6 +2,7 @@ import importlib
 import logging
 import os
 from .base_tool import BaseTool
+from .categories import ToolCategory, TOOL_CATEGORIES, CATEGORY_ORDER
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,45 @@ class ToolRegistry:
         self.tools = {}
         self.discover_tools()
         return list(self.tools.values())
+    
+    def get_tools_by_category(self):
+        """按分类获取工具"""
+        if not self._discovered:
+            self.discover_tools()
+        
+        # 按分类组织工具
+        categorized = {}
+        for tool in self.tools.values():
+            cat = tool.category
+            if cat not in categorized:
+                categorized[cat] = []
+            categorized[cat].append(tool)
+        
+        # 对每个分类内的工具按名称排序
+        for cat in categorized:
+            categorized[cat].sort(key=lambda t: t.name)
+        
+        return categorized
+    
+    def get_categories_with_tools(self):
+        """获取包含工具的分类列表（按排序顺序）"""
+        categorized = self.get_tools_by_category()
+        
+        result = []
+        for cat_key in CATEGORY_ORDER:
+            if cat_key in categorized and categorized[cat_key]:
+                cat_info = TOOL_CATEGORIES.get(cat_key, {})
+                result.append({
+                    'key': cat_key,
+                    'name': cat_info.get('name', cat_key),
+                    'icon': cat_info.get('icon', 'bi-folder'),
+                    'color': cat_info.get('color', '#999'),
+                    'description': cat_info.get('description', ''),
+                    'tools': categorized[cat_key],
+                    'count': len(categorized[cat_key]),
+                })
+        
+        return result
     
     def reset_discovered(self):
         """重置发现状态"""

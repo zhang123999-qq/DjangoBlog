@@ -1,6 +1,7 @@
 """
 IP查询工具 - 优化版
 """
+from ..categories import ToolCategory
 from django import forms
 import requests
 from ..base_tool import BaseTool
@@ -25,6 +26,7 @@ class IPQueryTool(BaseTool):
     slug = "ip-query"
     description = "查询IP地址或域名的详细信息，包括地理位置、运营商、AS号等"
     icon = "fa fa-globe"
+    category = ToolCategory.NETWORK
     form_class = IPQueryForm
 
     def handle(self, request, form):

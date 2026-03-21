@@ -2,6 +2,7 @@
 URL 编码解码工具
 """
 from urllib.parse import quote, unquote
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -36,6 +37,7 @@ class URLEncodeTool(BaseTool):
     slug = "urlencode"
     description = "URL编码和解码工具"
     icon = "fa fa-link"
+    category = ToolCategory.ENCODE
     form_class = URLEncodeForm
 
     def handle(self, request, form):

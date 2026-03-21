@@ -1,6 +1,7 @@
 """
 URL缩短工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import hashlib
@@ -27,6 +28,7 @@ class URLShortenerTool(BaseTool):
     slug = "url-shortener"
     description = "将长URL缩短为短链接"
     icon = "fa fa-link"
+    category = ToolCategory.NETWORK
     form_class = URLShortenerForm
 
     def handle(self, request, form):

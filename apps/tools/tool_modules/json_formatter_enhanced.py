@@ -1,6 +1,7 @@
 """
 增强版 JSON 格式化工具（使用 Monaco Editor）
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import json
@@ -43,6 +44,7 @@ class JsonFormatterEnhancedTool(BaseTool):
     slug = "json-formatter-enhanced"
     description = "使用Monaco编辑器的JSON格式化工具，支持语法高亮和错误提示"
     icon = "fa fa-code"
+    category = ToolCategory.DATA
     form_class = JsonFormatterEnhancedForm
     template_name = "tools/json_formatter_enhanced.html"
 

@@ -1,6 +1,7 @@
 """
 假数据生成器工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -46,6 +47,7 @@ class FakeDataTool(BaseTool):
     slug = "fake-data"
     description = "生成随机姓名、地址、电话、邮箱、公司名等假数据"
     icon = "fa fa-random"
+    category = ToolCategory.GENERATE
     form_class = FakeDataForm
 
     def handle(self, request, form):

@@ -1,6 +1,7 @@
 """
 HTTP请求模拟器工具 - 优化版
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import json
@@ -83,6 +84,7 @@ class HTTPRequestTool(BaseTool):
     slug = "http-request"
     description = "发送HTTP/HTTPS请求，支持多种方法、自定义头部和请求体"
     icon = "fa fa-paper-plane"
+    category = ToolCategory.NETWORK
     form_class = HTTPRequestForm
 
     def handle(self, request, form):

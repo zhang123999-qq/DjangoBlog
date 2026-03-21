@@ -1,6 +1,7 @@
 """
 字符画生成器工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -258,6 +259,7 @@ class AsciiArtTool(BaseTool):
     slug = "ascii-art"
     description = "将文本转换为ASCII艺术字"
     icon = "fa fa-font"
+    category = ToolCategory.GENERATE
     form_class = AsciiArtForm
 
     def handle(self, request, form):

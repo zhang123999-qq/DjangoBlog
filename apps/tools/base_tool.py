@@ -1,9 +1,13 @@
+from .categories import ToolCategory, TOOL_CATEGORIES
+
+
 class BaseTool:
     """工具基类"""
     name = "工具"
     slug = "tool"
     description = "工具描述"
-    icon = "tools"
+    icon = "bi-tools"
+    category = ToolCategory.OTHER  # 默认分类
     template_name = "tools/tool_detail.html"
     form_class = None
 
@@ -19,6 +23,7 @@ class BaseTool:
             'tool': self,
             'form': form,
             'result': result,
+            'category_info': TOOL_CATEGORIES.get(self.category, TOOL_CATEGORIES[ToolCategory.OTHER]),
         }
 
     def handle(self, request, form):

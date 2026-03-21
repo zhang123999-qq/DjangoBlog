@@ -1,3 +1,4 @@
+from ..categories import ToolCategory
 from django import forms
 import base64
 from ..base_tool import BaseTool
@@ -18,6 +19,7 @@ class Base64CodecTool(BaseTool):
     slug = "base64-codec"
     description = "对文本进行 Base64 编码或解码"
     icon = "code"
+    category = ToolCategory.ENCRYPT
     form_class = Base64CodecForm
 
     def handle(self, request, form):

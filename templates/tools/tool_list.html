@@ -32,8 +32,8 @@
         <div class="col-md-4">
             <div class="card border-0 bg-light">
                 <div class="card-body text-center">
-                    <h3 class="mb-0 text-success">{{ enabled_tools_count }}</h3>
-                    <small class="text-muted">可用工具</small>
+                    <h3 class="mb-0 text-success">{{ categories|length }}</h3>
+                    <small class="text-muted">工具分类</small>
                 </div>
             </div>
         </div>
@@ -47,43 +47,65 @@
         </div>
     </div>
     
-    <!-- 工具分类 -->
-    <h5 class="mb-3 text-muted">
-        <i class="bi bi-grid-3x3-gap me-1"></i>全部工具
-    </h5>
+    <!-- 分类快捷导航 -->
+    <div class="mb-4">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            {% for cat in categories %}
+            <a href="#cat-{{ cat.key }}" class="btn btn-outline-secondary btn-sm">
+                <i class="{{ cat.icon }} me-1" style="color: {{ cat.color }}"></i>
+                {{ cat.name }}
+                <span class="badge bg-secondary ms-1">{{ cat.count }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
     
-    <div class="row">
-        {% for tool in tools %}
-            <div class="col-md-6 col-lg-4 mb-4">
+    <!-- 按分类显示工具 -->
+    {% for cat in categories %}
+    <div class="mb-5" id="cat-{{ cat.key }}">
+        <div class="d-flex align-items-center mb-3">
+            <div class="category-icon me-3" style="background: {{ cat.color }}20; color: {{ cat.color }}">
+                <i class="{{ cat.icon }}"></i>
+            </div>
+            <div>
+                <h5 class="mb-0">{{ cat.name }}</h5>
+                <small class="text-muted">{{ cat.description }}</small>
+            </div>
+            <span class="badge bg-light text-dark ms-auto">{{ cat.count }} 个工具</span>
+        </div>
+        
+        <div class="row">
+            {% for tool in cat.tools %}
+            <div class="col-md-6 col-lg-4 col-xl-3 mb-3">
                 <div class="card h-100 shadow-sm hover-card">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="tool-icon me-3">
-                                <i class="bi bi-{{ tool.icon|default:'gear' }} text-primary"></i>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="tool-icon-sm me-2">
+                                <i class="bi bi-{{ tool.icon|default:'gear' }}" style="color: {{ cat.color }}"></i>
                             </div>
-                            <div>
-                                <h5 class="card-title mb-0">
-                                    <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark">
-                                        {{ tool.name }}
-                                    </a>
-                                </h5>
-                            </div>
+                            <h6 class="card-title mb-0">
+                                <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark">
+                                    {{ tool.name }}
+                                </a>
+                            </h6>
                         </div>
-                        <p class="card-text text-muted small">{{ tool.description }}</p>
-                        <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-play-fill me-1"></i>使用工具
+                        <p class="card-text text-muted small mb-2" style="font-size: 0.8rem;">
+                            {{ tool.description|truncatechars:50 }}
+                        </p>
+                        <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-outline-primary btn-sm btn-block">
+                            <i class="bi bi-play-fill me-1"></i>使用
                         </a>
                     </div>
                 </div>
             </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle me-2"></i>暂无可用工具
-                </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
+    {% empty %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle me-2"></i>暂无可用工具
+    </div>
+    {% endfor %}
     
     <!-- 使用提示 -->
     <div class="mt-5">
@@ -105,15 +127,26 @@
 
 {% block extra_css %}
 <style>
-    .tool-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-        border-radius: 12px;
+    .category-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+    
+    .tool-icon-sm {
+        width: 32px;
+        height: 32px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
     }
     
     .hover-card {
@@ -121,12 +154,26 @@
     }
     
     .hover-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-3px);
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
     }
     
     .card-title a:hover {
         color: #0d6efd !important;
+    }
+    
+    .btn-block {
+        width: 100%;
+    }
+    
+    /* 平滑滚动 */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* 分类导航按钮 */
+    .btn-outline-secondary:hover {
+        background: #f8f9fa;
     }
 </style>
 {% endblock %}

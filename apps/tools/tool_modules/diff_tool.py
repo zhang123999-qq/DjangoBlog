@@ -2,6 +2,7 @@
 Diff / Text Compare Tool
 Compare two texts and show differences
 """
+from ..categories import ToolCategory
 from django import forms
 import difflib
 from apps.tools.base_tool import BaseTool
@@ -165,6 +166,7 @@ class DiffTool(BaseTool):
     slug = "diff"
     description = "对比两段文本的差异"
     icon = "diff"
+    category = ToolCategory.TEXT
     form_class = DiffForm
 
     def handle(self, request, form):

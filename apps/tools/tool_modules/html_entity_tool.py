@@ -1,6 +1,7 @@
 """
 HTML实体编码/解码工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import html
@@ -30,6 +31,7 @@ class HTMLEntityTool(BaseTool):
     slug = "html-entity"
     description = "将HTML特殊字符转义为实体，或解码回原字符"
     icon = "fa fa-code"
+    category = ToolCategory.ENCODE
     form_class = HTMLEntityForm
 
     def handle(self, request, form):

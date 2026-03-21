@@ -2,6 +2,7 @@
 Number Converter Tool
 Convert between different number formats and bases
 """
+from ..categories import ToolCategory
 from django import forms
 import struct
 from apps.tools.base_tool import BaseTool
@@ -181,6 +182,7 @@ class NumberConverterTool(BaseTool):
     slug = "number-converter"
     description = "二进制/八进制/十进制/十六进制互转"
     icon = "number"
+    category = ToolCategory.ENCODE
     form_class = NumberConverterForm
 
     def handle(self, request, form):

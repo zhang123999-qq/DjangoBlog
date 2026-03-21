@@ -1,6 +1,7 @@
 """
 哈希文件校验工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import hashlib
@@ -30,6 +31,7 @@ class FileHashTool(BaseTool):
     slug = "file-hash"
     description = "计算上传文件的MD5/SHA1/SHA256哈希值"
     icon = "fa fa-file-check"
+    category = ToolCategory.FILE
     form_class = FileHashForm
 
     def handle(self, request, form):

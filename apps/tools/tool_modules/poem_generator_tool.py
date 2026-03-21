@@ -1,6 +1,7 @@
 """
 古诗生成器
 """
+from ..categories import ToolCategory
 from django import forms
 from django.http import HttpResponse
 from apps.tools.base_tool import BaseTool

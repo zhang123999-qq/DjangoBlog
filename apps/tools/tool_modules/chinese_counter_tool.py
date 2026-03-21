@@ -1,6 +1,7 @@
 """
 中文字数统计工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import re
@@ -25,6 +26,7 @@ class ChineseCounterTool(BaseTool):
     slug = "chinese-counter"
     description = "精确统计中文字数、行数、段落数"
     icon = "fa fa-calculator"
+    category = ToolCategory.TEXT
     form_class = ChineseCounterForm
 
     def handle(self, request, form):

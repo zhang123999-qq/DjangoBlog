@@ -1,6 +1,7 @@
 """
 JSON Path测试工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import json
@@ -26,6 +27,7 @@ class JSONPathTool(BaseTool):
     slug = "json-path"
     description = "根据JSON Path表达式提取JSON数据中的值"
     icon = "fa fa-search"
+    category = ToolCategory.DATA
     form_class = JSONPathForm
 
     def handle(self, request, form):

@@ -2,6 +2,7 @@
 图片格式转换工具（增强版）
 支持 PNG/JPG/WEBP/GIF/BMP/TIFF 互转
 """
+from ..categories import ToolCategory
 from django import forms
 from django.core.exceptions import ValidationError
 from apps.tools.base_tool import BaseTool
@@ -94,6 +95,7 @@ class ImageFormatConvertTool(BaseTool):
     slug = "image-format-convert"
     description = "PNG/JPG/WEBP/GIF/BMP/TIFF 互转，支持调整尺寸"
     icon = "fa fa-image"
+    category = ToolCategory.IMAGE
     form_class = ImageFormatConvertForm
 
     def get_form(self, data=None, files=None):

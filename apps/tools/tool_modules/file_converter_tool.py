@@ -1,6 +1,7 @@
 """
 文件格式转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import os
@@ -33,6 +34,7 @@ class FileConverterTool(BaseTool):
     slug = "file-converter"
     description = "将不同格式的文件转换为其他格式"
     icon = "fa fa-file-convert"
+    category = ToolCategory.FILE
     form_class = FileConverterForm
 
     def handle(self, request, form):

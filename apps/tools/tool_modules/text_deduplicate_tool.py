@@ -1,6 +1,7 @@
 """
 文本去重工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import re
@@ -55,6 +56,7 @@ class TextDeduplicateTool(BaseTool):
     slug = "text-deduplicate"
     description = "去除重复行/重复词，支持多行文本"
     icon = "fa fa-filter"
+    category = ToolCategory.TEXT
     form_class = TextDeduplicateForm
 
     def handle(self, request, form):

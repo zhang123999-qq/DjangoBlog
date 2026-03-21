@@ -3,6 +3,7 @@
 """
 import time
 from datetime import datetime
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -32,6 +33,7 @@ class TimestampTool(BaseTool):
     slug = "timestamp"
     description = "时间戳与日期时间互转"
     icon = "fa fa-clock"
+    category = ToolCategory.TIME
     form_class = TimestampForm
 
     def handle(self, request, form):

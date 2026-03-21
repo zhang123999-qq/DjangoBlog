@@ -1,6 +1,7 @@
 """
 HTML/Markdown互转工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import markdown
@@ -138,6 +139,7 @@ class HTMLMarkdownTool(BaseTool):
     slug = "html-markdown"
     description = "HTML与Markdown格式相互转换"
     icon = "fa fa-exchange-alt"
+    category = ToolCategory.DATA
     form_class = HTMLMarkdownForm
 
     def handle(self, request, form):

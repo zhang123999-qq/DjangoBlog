@@ -1,6 +1,7 @@
 """
 Unicode 编码解码工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -29,6 +30,7 @@ class UnicodeTool(BaseTool):
     slug = "unicode"
     description = "Unicode编码和解码工具"
     icon = "fa fa-font"
+    category = ToolCategory.ENCODE
     form_class = UnicodeForm
 
     def handle(self, request, form):

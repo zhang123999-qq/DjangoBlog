@@ -1,6 +1,7 @@
 """
 番茄钟工具 - 工作学习计时器
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -34,6 +35,7 @@ class PomodoroTool(BaseTool):
     slug = "pomodoro"
     description = "简洁的番茄工作法计时器，帮助你专注工作或学习"
     icon = "fa fa-clock"
+    category = ToolCategory.TIME
     form_class = PomodoroForm
 
     def handle(self, request, form):

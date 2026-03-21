@@ -3,6 +3,7 @@ JWT 工具 - 解码和生成
 """
 import json
 import base64
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -42,6 +43,7 @@ class JWTTool(BaseTool):
     slug = "jwt"
     description = "JWT解码和生成工具"
     icon = "fa fa-id-card"
+    category = ToolCategory.ENCRYPT
     form_class = JWTForm
 
     def base64url_decode(self, data):

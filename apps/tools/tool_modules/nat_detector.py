@@ -1,6 +1,7 @@
 """
 NAT 检测工具 - 检测网络地址转换状态
 """
+from ..categories import ToolCategory
 from django import forms
 from ..base_tool import BaseTool
 
@@ -16,6 +17,7 @@ class NATDetectorTool(BaseTool):
     slug = "nat-detector"
     description = "检测您的网络地址转换(NAT)状态，了解您的网络连接类型"
     icon = "bi bi-diagram-3"
+    category = ToolCategory.NETWORK
     form_class = NATDetectorForm
     template_name = "tools/nat_detector.html"
 

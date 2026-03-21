@@ -1,6 +1,7 @@
 """
 凯撒密码加密解密工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -36,6 +37,7 @@ class CaesarTool(BaseTool):
     slug = "caesar"
     description = "对英文字母进行凯撒位移加密/解密"
     icon = "fa fa-exchange"
+    category = ToolCategory.ENCRYPT
     form_class = CaesarForm
 
     def handle(self, request, form):

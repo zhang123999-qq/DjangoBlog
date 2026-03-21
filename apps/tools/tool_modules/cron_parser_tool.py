@@ -1,6 +1,7 @@
 """
 Cron表达式解析工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -20,6 +21,7 @@ class CronParserTool(BaseTool):
     slug = "cron-parser"
     description = "解析Cron表达式，显示下次执行时间或人类可读描述"
     icon = "fa fa-clock"
+    category = ToolCategory.GENERATE
     form_class = CronParserForm
 
     def handle(self, request, form):

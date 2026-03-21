@@ -2,6 +2,7 @@
 正则表达式测试工具
 """
 import re
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -36,6 +37,7 @@ class RegexTool(BaseTool):
     slug = "regex"
     description = "测试正则表达式匹配"
     icon = "fa fa-code"
+    category = ToolCategory.OTHER
     form_class = RegexForm
 
     def handle(self, request, form):

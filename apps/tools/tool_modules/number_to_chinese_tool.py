@@ -1,6 +1,7 @@
 """
 数字转中文大写工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -25,6 +26,7 @@ class NumberToChineseTool(BaseTool):
     slug = "number-to-chinese"
     description = "将阿拉伯数字转换为中文数字（零一二三四五六七八九）"
     icon = "fa fa-sort-numeric-up"
+    category = ToolCategory.ENCODE
     form_class = NumberToChineseForm
 
     NUMBERS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']

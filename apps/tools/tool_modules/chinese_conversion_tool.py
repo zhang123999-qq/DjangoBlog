@@ -1,6 +1,7 @@
 """
 简繁体转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import unicodedata
@@ -49,6 +50,7 @@ class ChineseConversionTool(BaseTool):
     slug = "chinese-conversion"
     description = "简体中文与繁体中文相互转换"
     icon = "fa fa-language"
+    category = ToolCategory.ENCODE
     form_class = ChineseConversionForm
 
     # 扩展的简繁对照表

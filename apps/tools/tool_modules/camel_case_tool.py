@@ -1,6 +1,7 @@
 """
 驼峰命名转换工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import re
@@ -31,6 +32,7 @@ class CamelCaseTool(BaseTool):
     slug = "camel-case"
     description = "将下划线命名转换为驼峰命名，或反之"
     icon = "fa fa-exchange-alt"
+    category = ToolCategory.ENCODE
     form_class = CamelCaseForm
 
     def handle(self, request, form):

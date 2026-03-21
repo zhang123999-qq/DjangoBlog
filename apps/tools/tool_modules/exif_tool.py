@@ -1,6 +1,7 @@
 """
 图片元数据查看器（EXIF）工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -19,6 +20,7 @@ class EXIFTool(BaseTool):
     slug = "exif"
     description = "上传图片，提取并显示其EXIF元数据（如拍摄时间、相机型号、GPS坐标）"
     icon = "fa fa-image"
+    category = ToolCategory.IMAGE
     form_class = EXIFForm
 
     def handle(self, request, form):

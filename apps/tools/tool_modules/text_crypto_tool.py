@@ -1,6 +1,7 @@
 """
 文本加密/解密工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -35,6 +36,7 @@ class TextCryptoTool(BaseTool):
     slug = "text-crypto"
     description = "使用简单的加密算法对文本进行加密和解密"
     icon = "fa fa-lock"
+    category = ToolCategory.ENCRYPT
     form_class = TextCryptoForm
 
     def handle(self, request, form):

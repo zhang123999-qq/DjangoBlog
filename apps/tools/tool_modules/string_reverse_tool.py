@@ -1,6 +1,7 @@
 """
 字符串反转工具
 """
+from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -20,6 +21,7 @@ class StringReverseTool(BaseTool):
     slug = "string-reverse"
     description = "将输入的字符串反转"
     icon = "fa fa-arrows-rotate"
+    category = ToolCategory.ENCODE
     form_class = StringReverseForm
 
     def handle(self, request, form):
