@@ -4,7 +4,7 @@ class BaseTool:
     slug = "tool"
     description = "工具描述"
     icon = "tools"
-    template_name = "tools/tool_detail_tech.html"
+    template_name = "tools/tool_detail.html"
     form_class = None
 
     def get_form(self, data=None, files=None):

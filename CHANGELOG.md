@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2026-03-21
+
+### Added
+- **Celery 异步队列**
+  - 异步任务处理
+  - 定时任务调度
+  - Flower 监控界面
+- **用户信誉系统**
+  - 信誉积分（0-100）
+  - 三级信誉等级（高信誉/正常/低信誉）
+  - 自动信誉分调整
+  - 连续无违规天数统计
+- **AI 内容审核**
+  - 百度内容审核 API 集成
+  - 文本审核（色情、暴恐、政治敏感、广告、辱骂）
+  - 图片审核
+  - 模拟审核服务（开发环境）
+- **多级审核策略**
+  - 高信誉用户自动发布
+  - 低信誉用户强制人工审核
+  - 普通用户敏感词 + AI 双重检测
+- **异步审核任务**
+  - 异步文本审核
+  - 异步图片审核
+  - 定时检查待审核内容
+  - 自动通过超时无敏感词内容
+- **启动脚本**
+  - Windows: `start_celery.bat`
+  - Linux/macOS: `start_celery.sh`
+
+### Changed
+- 开发环境使用 Redis 缓存
+- 配置文件添加 Celery 相关设置
+- 更新依赖（celery、redis、baidu-aip、flower）
+- 更新 README 添加审核系统说明
+- 更新 .env.example 添加新配置项
+
+### Dependencies Added
+- celery 5.4+
+- redis 5.2+
+- baidu-aip 4.16+
+- flower 2.0+
+
 ## [2.1.0] - 2026-03-15
 
 ### Changed

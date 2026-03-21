@@ -103,6 +103,7 @@ MIDDLEWARE = [
     'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.security_middleware.SecurityMiddleware',
     'apps.install.middleware.InstallMiddleware',
 ]
 
@@ -212,6 +213,12 @@ LOGOUT_REDIRECT_URL = '/'
 SITE_NAME = env('SITE_NAME', default='Django Blog')
 SITE_TITLE = env('SITE_TITLE', default='Django Blog')
 
+# 百度内容审核 API 配置
+BAIDU_APP_ID = env('BAIDU_APP_ID', default='')
+BAIDU_API_KEY = env('BAIDU_API_KEY', default='')
+BAIDU_SECRET_KEY = env('BAIDU_SECRET_KEY', default='')
+BAIDU_MODERATION_ENABLED = bool(BAIDU_APP_ID and BAIDU_API_KEY and BAIDU_SECRET_KEY)
+
 # Caches - 将在环境配置中定义
 CACHES = {}
 
@@ -305,3 +312,69 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+# =============================================================================
+# Celery 配置
+# =============================================================================
+
+# Celery Broker (Redis)
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+
+# Celery 配置
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# 任务结果过期时间（秒）
+CELERY_RESULT_EXPIRES = 3600
+
+# 任务重试配置
+CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5分钟软超时
+CELERY_TASK_TIME_LIMIT = 600  # 10分钟硬超时
+
+# Beat 定时任务
+CELERY_BEAT_SCHEDULE = {
+    # 每 6 小时检查待审核内容
+    'check-pending-moderation': {
+        'task': 'moderation.tasks.check_pending_moderation',
+        'schedule': 21600.0,  # 6 小时 = 6 * 60 * 60 = 21600 秒
+    },
+    # 每天凌晨 2 点自动通过旧待审核内容
+    'auto-approve-old-pending': {
+        'task': 'moderation.tasks.auto_approve_old_pending',
+        'schedule': 86400.0,  # 1 天 = 24 * 60 * 60 = 86400 秒
+        'options': {'queue': 'low_priority'},
+    },
+    # 每天凌晨 3 点更新用户信誉连续无违规天数
+    'update-reputation-clean-days': {
+        'task': 'moderation.tasks.update_reputation_clean_days',
+        'schedule': 86400.0,
+        'options': {'queue': 'low_priority'},
+    },
+}
+
+# =============================================================================
+# 审核系统配置
+# =============================================================================
+
+# 审核模式
+MODERATION_MODE = env('MODERATION_MODE', default='hybrid')  # auto/manual/hybrid
+
+# AI 审核权重（0-1，越高越严格）
+MODERATION_AI_THRESHOLD = env.float('MODERATION_AI_THRESHOLD', default=0.8)
+
+# 用户信誉配置
+REPUTATION_MIN_SCORE = 0
+REPUTATION_MAX_SCORE = 100
+REPUTATION_INITIAL_SCORE = 50
+REPUTATION_TRUSTED_THRESHOLD = 80  # 高信誉阈值
+REPUTATION_LOW_THRESHOLD = 30  # 低信誉阈值
+
+# 信誉分变化规则
+REPUTATION_APPROVE_BONUS = 1  # 内容通过 +1
+REPUTATION_REJECT_PENALTY = 5  # 内容拒绝 -5
+REPUTATION_REPORT_PENALTY = 10  # 被举报 -10
+REPUTATION_WEEKLY_BONUS = 5  # 连续一周无违规 +5

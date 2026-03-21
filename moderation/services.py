@@ -1,7 +1,11 @@
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.conf import settings
+import logging
 from .models import ModerationLog, ModerationAdmin, ModerationReminder
 from .utils import check_sensitive_content
+
+logger = logging.getLogger(__name__)
 
 
 def approve_instance(instance, operator, note=""):
@@ -196,3 +200,110 @@ def create_moderation_reminder(target_type, target_id):
     )
     
     return reminder
+
+
+def smart_moderate_instance(instance, content=None):
+    """
+    智能审核实例：敏感词 + AI 双重检测
+    
+    流程：
+    1. 敏感词检测（本地，快速）
+    2. AI 语义审核（百度内容审核）
+    
+    结果：
+    - AI 通过 → 自动发布
+    - AI 拒绝 → 自动拒绝
+    - AI 疑似/敏感词命中 → 待人工审核
+    
+    Args:
+        instance: 审核对象（Comment/Topic/Reply）
+        content: 要审核的内容，默认从实例中提取
+    
+    Returns:
+        tuple: (status, message)
+            - status: 'approved' | 'rejected' | 'pending'
+            - message: 审核结果说明
+    """
+    from .baidu_moderation import smart_moderate, get_moderation_summary
+    
+    # 获取要审核的内容
+    if content is None:
+        # 根据实例类型获取内容
+        instance_type = instance.__class__.__name__.lower()
+        if instance_type == 'topic':
+            content = f"{instance.title} {instance.content}"
+        else:
+            content = getattr(instance, 'content', '')
+    
+    # 执行智能审核
+    status, details = smart_moderate(content)
+    
+    # 生成审核摘要
+    summary = get_moderation_summary(status, details)
+    
+    # 根据结果处理
+    if status == 'approved':
+        # AI 审核通过，自动发布
+        auto_approve_instance(instance, summary)
+        logger.info(f'{instance.__class__.__name__} {instance.id} AI审核通过')
+        return 'approved', summary
+    
+    elif status == 'rejected':
+        # AI 识别违规，自动拒绝
+        instance.review_status = 'rejected'
+        instance.reviewed_by = None  # 系统自动拒绝
+        instance.reviewed_at = timezone.now()
+        instance.review_note = summary
+        instance.save()
+        
+        # 创建审核日志
+        target_type = get_target_type(instance)
+        ModerationLog.objects.create(
+            target_type=target_type,
+            target_id=instance.id,
+            action='rejected',
+            operator=None,
+            note=summary
+        )
+        
+        logger.warning(f'{instance.__class__.__name__} {instance.id} AI识别违规，已自动拒绝')
+        return 'rejected', summary
+    
+    else:
+        # 疑似或敏感词命中，进入人工审核队列
+        instance.review_status = 'pending'
+        instance.review_note = summary
+        instance.save()
+        
+        logger.info(f'{instance.__class__.__name__} {instance.id} 进入人工审核队列: {summary}')
+        return 'pending', summary
+
+
+def ai_batch_moderate(model_class, batch_size=100):
+    """
+    批量 AI 审核
+    
+    对所有待审核内容进行 AI 审核，适合定时任务调用
+    
+    Args:
+        model_class: 模型类（Comment/Topic/Reply）
+        batch_size: 每批处理数量
+    
+    Returns:
+        dict: 统计结果 {'approved': n, 'rejected': n, 'pending': n}
+    """
+    stats = {'approved': 0, 'rejected': 0, 'pending': 0, 'error': 0}
+    
+    # 获取待审核内容
+    pending_queryset = model_class.objects.filter(review_status='pending')[:batch_size]
+    
+    for instance in pending_queryset:
+        try:
+            status, _ = smart_moderate_instance(instance)
+            stats[status] += 1
+        except Exception as e:
+            logger.error(f'审核 {model_class.__name__} {instance.id} 失败: {e}')
+            stats['error'] += 1
+    
+    logger.info(f'{model_class.__name__} 批量审核完成: {stats}')
+    return stats

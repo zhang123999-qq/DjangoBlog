@@ -29,18 +29,18 @@ DATABASES = {
 }
 
 # =============================================================================
-# 缓存配置 - 虚拟缓存（开发环境不缓存）
+# 缓存配置 - Redis（开发环境）
 # =============================================================================
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
     }
 }
 
-# 开发环境使用文件会话
-SESSION_ENGINE = 'django.contrib.sessions.backends.file'
-SESSION_FILE_PATH = BASE_DIR / 'tmp' / 'session'
+# 使用数据库会话（开发环境更简单）
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # =============================================================================
 # 邮件配置 - 开发环境打印到控制台

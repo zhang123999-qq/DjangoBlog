@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.contrib import messages
-from moderation.utils import check_sensitive_content
+from moderation.services import smart_moderate_instance
 from .models import Board, Topic, Reply, ReplyLike
 from .forms import TopicForm, ReplyForm
 
@@ -73,21 +73,24 @@ def topic_create_view(request, board_slug):
             topic.board = board
             topic.author = request.user
             
-            # 敏感词检测
-            content = f"{topic.title} {topic.content}"
-            has_sensitive, hit_words = check_sensitive_content(content)
-            if has_sensitive:
-                topic.review_status = 'pending'
-                topic.review_note = f'命中敏感词: {", ".join(hit_words)}'
-            else:
-                # 即使未命中敏感词，也保持默认 pending 状态
-                topic.review_status = 'pending'
-            
+            # 先保存为 pending 状态
+            topic.review_status = 'pending'
             topic.save()
+            
+            # 智能审核：敏感词 + AI 双重检测
+            status, message = smart_moderate_instance(topic)
+            
             # 更新版块统计信息
             board.update_counts()
-            # 显示审核提示
-            messages.success(request, '主题已提交，等待审核后显示')
+            
+            # 根据审核结果显示提示
+            if status == 'approved':
+                messages.success(request, '主题已发布')
+            elif status == 'rejected':
+                messages.warning(request, f'主题未通过审核：{message}')
+            else:
+                messages.success(request, '主题已提交，等待审核后显示')
+            
             return redirect(board.get_absolute_url())
     else:
         form = TopicForm()
@@ -111,20 +114,24 @@ def reply_create_view(request, board_slug, topic_id):
             reply.topic = topic
             reply.author = request.user
             
-            # 敏感词检测
-            has_sensitive, hit_words = check_sensitive_content(reply.content)
-            if has_sensitive:
-                reply.review_status = 'pending'
-                reply.review_note = f'命中敏感词: {", ".join(hit_words)}'
-            else:
-                # 即使未命中敏感词，也保持默认 pending 状态
-                reply.review_status = 'pending'
-            
+            # 先保存为 pending 状态
+            reply.review_status = 'pending'
             reply.save()
+            
+            # 智能审核：敏感词 + AI 双重检测
+            status, message = smart_moderate_instance(reply)
+            
             # 更新主题回复数和最后回复时间
             topic.update_reply_count()
-            # 显示审核提示
-            messages.success(request, '回复已提交，等待审核后显示')
+            
+            # 根据审核结果显示提示
+            if status == 'approved':
+                messages.success(request, '回复已发布')
+            elif status == 'rejected':
+                messages.warning(request, f'回复未通过审核：{message}')
+            else:
+                messages.success(request, '回复已提交，等待审核后显示')
+            
             return redirect(topic.get_absolute_url())
     
     return redirect(topic.get_absolute_url())

@@ -101,3 +101,16 @@ class ModerationLog(models.Model):
     def __str__(self):
         operator_name = self.operator.username if self.operator else '系统'
         return f'{self.get_target_type_display()} {self.target_id} - {self.get_action_display()} by {operator_name}'
+
+
+# 导入信誉模型
+from .reputation import UserReputation, ReputationLog
+
+__all__ = [
+    'SensitiveWord',
+    'ModerationAdmin',
+    'ModerationReminder',
+    'ModerationLog',
+    'UserReputation',
+    'ReputationLog',
+]

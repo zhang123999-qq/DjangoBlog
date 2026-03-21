@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import Count
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from moderation.utils import check_sensitive_content
+from moderation.services import smart_moderate_instance
 from .models import Post, Category, Tag, Comment, CommentLike
 from .forms import CommentForm
 
@@ -118,19 +118,21 @@ def comment_create_view(request, post_slug):
             comment.ip_address = request.META.get('REMOTE_ADDR')
             comment.user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
             
-            # 敏感词检测
-            has_sensitive, hit_words = check_sensitive_content(comment.content)
-            if has_sensitive:
-                comment.review_status = 'pending'
-                comment.review_note = f'命中敏感词: {", ".join(hit_words)}'
-            else:
-                # 即使未命中敏感词，也保持默认 pending 状态
-                comment.review_status = 'pending'
-            
+            # 先保存为 pending 状态
+            comment.review_status = 'pending'
             comment.save()
             
-            # 显示审核提示
-            messages.success(request, '评论已提交，等待审核后显示')
+            # 智能审核：敏感词 + AI 双重检测
+            status, message = smart_moderate_instance(comment)
+            
+            # 根据审核结果显示提示
+            if status == 'approved':
+                messages.success(request, '评论已发布')
+            elif status == 'rejected':
+                messages.warning(request, f'评论未通过审核：{message}')
+            else:
+                messages.success(request, '评论已提交，等待审核后显示')
+            
             return redirect(post.get_absolute_url())
     
     return redirect(post.get_absolute_url())

@@ -1,34 +1,132 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}工具栏 - {{ site_config.site_title }}{% endblock %}
+{% block title %}工具箱 - {{ site_config.site_title }}{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">工具栏</h1>
+<div class="container py-4">
+    <!-- 页面标题 -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-tools me-2 text-primary"></i>工具箱
+        </h1>
+        <p class="text-muted">在线实用工具，助力您的日常工作</p>
+    </div>
     
     {% if error %}
-        <div class="alert alert-danger mb-4">{{ error }}</div>
+        <div class="alert alert-danger mb-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+        </div>
     {% endif %}
     
-    <div class="alert alert-info mb-4">
-        <p>总工具数: {{ total_tools }}</p>
-        <p>启用工具数: {{ enabled_tools_count }}</p>
+    <!-- 工具统计 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-primary">{{ total_tools }}</h3>
+                    <small class="text-muted">工具总数</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-success">{{ enabled_tools_count }}</h3>
+                    <small class="text-muted">可用工具</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <h3 class="mb-0 text-info">免费</h3>
+                    <small class="text-muted">永久免费使用</small>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- 工具分类 -->
+    <h5 class="mb-3 text-muted">
+        <i class="bi bi-grid-3x3-gap me-1"></i>全部工具
+    </h5>
     
     <div class="row">
         {% for tool in tools %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm hover-card">
                     <div class="card-body">
-                        <h3 class="card-title"><a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark">{{ tool.name }}</a></h3>
-                        <p class="card-text">{{ tool.description }}</p>
-                        <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-primary">使用工具</a>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="tool-icon me-3">
+                                <i class="bi bi-{{ tool.icon|default:'gear' }} text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">
+                                    <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark">
+                                        {{ tool.name }}
+                                    </a>
+                                </h5>
+                            </div>
+                        </div>
+                        <p class="card-text text-muted small">{{ tool.description }}</p>
+                        <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-play-fill me-1"></i>使用工具
+                        </a>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-info">暂无可用工具</div>
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle me-2"></i>暂无可用工具
+                </div>
             </div>
         {% endfor %}
     </div>
+    
+    <!-- 使用提示 -->
+    <div class="mt-5">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>使用提示
+                </h5>
+                <ul class="mb-0 text-muted">
+                    <li>所有工具均为在线使用，无需下载安装</li>
+                    <li>数据在本地处理，安全可靠</li>
+                    <li>如有问题或建议，欢迎反馈</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tool-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .hover-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .card-title a:hover {
+        color: #0d6efd !important;
+    }
+</style>
 {% endblock %}

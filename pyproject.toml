@@ -1,7 +1,7 @@
 [project]
 name = "djangoblog"
-version = "2.1.0"
-description = "Django 4.2 博客论坛系统"
+version = "2.2.0"
+description = "Django 4.2 博客论坛系统，集成智能审核、60+在线工具"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -27,6 +27,12 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 
+dependencies = [
+    "celery>=5.4",
+    "redis>=5.2",
+    "baidu-aip>=4.16",
+]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3",
@@ -36,12 +42,14 @@ dev = [
     "black>=25.1",
     "flake8>=7.1",
     "mypy>=1.15",
+    "flower>=2.0",
 ]
 prod = [
     "gunicorn>=23.0",
     "uvicorn[standard]>=0.34",
     "whitenoise>=6.9",
     "sentry-sdk>=2.22",
+    "flower>=2.0",
 ]
 
 [project.urls]

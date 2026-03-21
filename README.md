@@ -1,10 +1,11 @@
-# DjangoBlog v2.1.0
+# DjangoBlog v2.2.0
 
-🚀 一个基于 Django 4.2 LTS 的现代化博客论坛系统，集成 60+ 在线工具
+🚀 一个基于 Django 4.2 LTS 的现代化博客论坛系统，集成 60+ 在线工具，支持智能内容审核
 
 [![Django](https://img.shields.io/badge/Django-4.2%20LTS-green.svg)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Celery](https://img.shields.io/badge/Celery-5.4-orange.svg)](https://docs.celeryq.dev/)
 
 ## ✨ 功能特性
 
@@ -19,7 +20,15 @@
 - 多版块讨论区
 - 话题创建和回复
 - 用户互动
-- 内容审核
+- 智能内容审核
+
+### 🛡️ 智能审核系统（NEW!）
+- **用户信誉系统** - 基于行为的智能分级
+- **AI 内容审核** - 百度内容审核 API 集成
+- **多级审核策略** - 高信誉自动发布，低信誉强制人工审核
+- **敏感词检测** - 支持分类、缓存
+- **图片审核** - AI 图片违规检测
+- **异步处理** - Celery 异步队列，不阻塞请求
 
 ### 🔧 在线工具栏（60+ 工具）
 - **加密解密**: AES、RSA、Base64、MD5、SHA、HMAC
@@ -37,6 +46,7 @@
 - 第三方登录（可扩展）
 - 个人资料管理
 - 头像上传
+- 信誉积分
 
 ### 🔒 安全特性
 - CSRF 防护
@@ -51,12 +61,15 @@
 | 类别 | 技术 |
 |------|------|
 | **后端框架** | Django 4.2 LTS |
+| **异步队列** | Celery 5.4 |
+| **消息队列** | Redis |
 | **数据库** | SQLite / MySQL |
 | **缓存** | Redis |
 | **API** | Django REST Framework |
 | **前端** | Bootstrap 5.3 |
 | **图标** | Bootstrap Icons |
 | **富文本** | CKEditor |
+| **AI 审核** | 百度内容审核 API |
 
 ## 📦 快速开始
 
