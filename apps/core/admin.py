@@ -28,6 +28,10 @@ class DjangoBlogAdminSite(admin.AdminSite):
     
     def index(self, request, extra_context=None):
         """自定义首页，添加统计数据"""
+        import sys
+ import platform
+ from django.utils import timezone
+ from django.conf import settings
         from apps.accounts.models import User
         from apps.blog.models import Post, Comment
         from apps.forum.models import Topic, Reply
@@ -39,8 +43,63 @@ class DjangoBlogAdminSite(admin.AdminSite):
         tools = tool_registry.get_all_tools()
         tool_count = len(tools)
         
-        # 基础统计
+        # 系统信息
+        db_backend = settings.DATABASES['default']['ENGINE'].split('.')[-1]
+        if db_backend == 'mysql':
+            db_engine_display = 'MySQL'
+        elif db_backend == 'sqlite3':
+            db_engine_display = 'SQLite'
+        elif db_backend == 'postgresql':
+            db_engine_display = 'PostgreSQL'
+        else:
+            db_engine_display = db_backend.upper()
+        
+        # 数据库版本
+        db_version = ''
+        try:
+            with settings.DATABASES['default'] as db_config:
+                if 'mysql' in db_config.get('ENGINE', ''):
+                    import pymysql
+                    conn = pymysql.connect(
+                        host=db_config.get('HOST', 'localhost'),
+                        port=int(db_config.get('PORT', 3306)),
+                        user=db_config.get('USER', ''),
+                        password=db_config.get('PASSWORD', ''),
+                        database=db_config.get('NAME', ''),
+                    )
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT VERSION()')
+                    db_version = cursor.fetchone()[0]
+                    conn.close()
+                elif 'sqlite3' in db_config.get('ENGINE', ''):
+                    import sqlite3
+                    db_version = '3.x'
+        except:
+            pass
+        
+        # Redis 信息
+        redis_info = ''
+        try:
+            import redis
+            r = redis.Redis(host='localhost', port=6379, socket_connect_timeout=2)
+            info = r.info()
+            redis_info = f"Redis {info.get('redis_version', 'Unknown')}"
+        except:
+            redis_info = '未启用'
+        
         extra_context.update({
+            # 系统信息
+            'django_version': __import__('django').VERSION,
+            'django_version_str': '.'.join(map(str, __import__('django').VERSION[:2])),
+            'python_version': f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+            'python_version_full': platform.python_version(),
+            'db_engine': db_engine_display,
+            'db_version': db_version,
+            'redis_info': redis_info,
+            'server_time': timezone.now(),
+            'os_info': f"{platform.system()} {platform.release()}",
+            
+            # 业务统计
             'user_count': User.objects.count(),
             'post_count': Post.objects.filter(status='published').count(),
             'topic_count': Topic.objects.count(),

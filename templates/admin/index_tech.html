@@ -254,15 +254,24 @@
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
                         <i class="fas fa-code-branch me-2 text-primary"></i>
-                        Django {{ django_version }}
+                        Django {{ django_version_str|default:"4.2" }}
                     </li>
                     <li class="mb-2">
                         <i class="fas fa-python me-2 text-primary"></i>
-                        Python {{ python_version }}
+                        Python {{ python_version|default:"3.x" }}
                     </li>
                     <li class="mb-2">
                         <i class="fas fa-database me-2 text-primary"></i>
-                        {{ db_engine }}
+                        {{ db_engine|default:"SQLite" }}
+                        {% if db_version %}<small class="text-muted">({{ db_version }})</small>{% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-memory me-2 text-primary"></i>
+                        {{ redis_info|default:"未启用" }}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-desktop me-2 text-primary"></i>
+                        {{ os_info|default:"Unknown" }}
                     </li>
                     <li>
                         <i class="fas fa-clock me-2 text-primary"></i>
