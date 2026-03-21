@@ -21,11 +21,6 @@ class DjangoBlogAdminSite(admin.AdminSite):
     site_title = 'DjangoBlog Admin'
     index_title = '仪表盘'
     
-    # 使用科技风格模板
-    index_template = 'admin/index_tech.html'
-    app_index_template = 'admin/app_index_tech.html'
-    login_template = 'admin/login_tech.html'
-    
     def index(self, request, extra_context=None):
         """自定义首页，添加统计数据"""
         import sys

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.1] - 2026-03-21
+
+### Changed
+- **统一UI风格** - 移除科技主题（tech-theme），全部使用浅色Bootstrap主题
+- **.gitignore生成器优化** - 新增专用模板，左右分栏布局，支持复制/下载
+
+### Removed
+- 删除 `templates/base_tech.html` 及所有 `*_tech.html` 模板（14个文件）
+- 删除 `static/css/tech-theme.css` 和 `static/js/tech-effects.js`
+
+### Fixed
+- 解决网站风格不一致问题
+
 ## [2.3.0] - 2026-03-21
 
 ### Added

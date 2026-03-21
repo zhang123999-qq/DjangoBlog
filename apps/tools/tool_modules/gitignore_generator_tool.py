@@ -595,8 +595,9 @@ class GitignoreGeneratorTool(BaseTool):
     name = ".gitignore生成器"
     slug = "gitignore-generator"
     description = "根据项目类型自动生成.gitignore文件"
-    icon = "fa fa-git-alt"
+    icon = "git-alt"
     form_class = GitignoreGeneratorForm
+    template_name = "tools/gitignore_generator.html"
 
     def handle(self, request, form):
         project_types = form.cleaned_data.get('project_types', [])
