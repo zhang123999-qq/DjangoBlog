@@ -251,6 +251,25 @@ footer a:hover {
 /* 主容器样式 */
 main {
     min-height: 80vh;
+    padding-top: 30px;
+}
+
+/* 确保页面内容不被导航栏遮挡 */
+body {
+    padding-top: 70px; /* 为固定导航栏预留空间 */
+}
+
+/* 导航栏固定在顶部 */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
 }
 
 /* 动画效果 */
