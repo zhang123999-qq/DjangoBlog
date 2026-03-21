@@ -11,7 +11,7 @@ class RegexForm(forms.Form):
     """正则表达式表单"""
     pattern = forms.CharField(
         label='正则表达式',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '例如: \d+'}),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': r'例如: \d+'}),
         required=True
     )
     text = forms.CharField(
