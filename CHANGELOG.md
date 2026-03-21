@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.3] - 2026-03-21
+
+### Fixed
+- **安装向导修复** - 修复快速安装失败问题
+  - 修复 `BASE_DIR` 字符串与 `/` 操作符不兼容问题
+  - 将 `BASE_DIR` 从字符串改为 `Path` 对象
+  - 添加 `pathlib` 导入
+
 ## [2.4.2] - 2026-03-21
 
 ### Fixed

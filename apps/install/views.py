@@ -6,6 +6,7 @@ import sys
 import platform
 import logging
 from datetime import datetime
+from pathlib import Path
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.management import call_command
@@ -120,7 +121,7 @@ def create_install_lock():
 
 
 # 全局变量
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 def install_context(request):
