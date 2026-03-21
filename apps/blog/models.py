@@ -1,17 +1,3 @@
-"""
-博客应用模型模块
-
-提供博客系统的数据模型，包括：
-- Category: 文章分类
-- Tag: 文章标签
-- Post: 博客文章
-- Comment: 文章评论
-- Link: 友链
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify

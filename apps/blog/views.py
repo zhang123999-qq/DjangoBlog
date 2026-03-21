@@ -1,17 +1,3 @@
-"""
-博客应用视图模块
-
-处理博客相关的HTTP请求，包括：
-- 文章列表/详情页
-- 文章分类/标签筛选
-- 评论系统
-- 文章搜索
-- 点赞功能
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.http import HttpResponseForbidden, JsonResponse

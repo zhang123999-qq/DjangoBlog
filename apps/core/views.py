@@ -1,12 +1,40 @@
 """核心视图"""
+import os
+import json
 from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib import messages
+from django.conf import settings
 from apps.blog.models import Post, Category, Comment
 from apps.forum.models import Topic, Board
 from apps.accounts.models import User
 from apps.tools.registry import registry as tool_registry
+
+# .env 文件路径
+ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
+
+
+def get_env_config():
+    """读取 .env 配置"""
+    config = {}
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    config[key.strip()] = value.strip()
+    return config
+
+
+def save_env_config(config):
+    """保存 .env 配置"""
+    with open(ENV_FILE, 'w', encoding='utf-8') as f:
+        f.write('# Django 配置\n')
+        f.write(f'# 生成时间: 2026-03-20\n\n')
+        for key, value in config.items():
+            f.write(f'{key}={value}\n')
 
 
 def home_view(request):
@@ -41,8 +69,8 @@ def home_view(request):
         'view_count': view_count,
     }
     
-    # 使用科技风格模板
-    return render(request, 'home_tech.html', context)
+    # 使用与博客论坛一致的模板
+    return render(request, 'home.html', context)
 
 
 def search_view(request):
@@ -85,3 +113,37 @@ def contact_view(request):
         messages.success(request, '感谢您的留言，我们会尽快回复！')
         return redirect('core:contact')
     return render(request, 'core/contact.html')
+
+
+def settings_view(request):
+    """系统设置页面"""
+    if request.method == 'POST':
+        # 保存设置
+        config = get_env_config()
+        
+        config['SITE_NAME'] = request.POST.get('site_name', 'Django Blog')
+        config['SITE_DESCRIPTION'] = request.POST.get('site_description', '')
+        config['SITE_URL'] = request.POST.get('site_url', '')
+        
+        # 允许局域网访问
+        if request.POST.get('allow_lan') == 'on':
+            config['ALLOWED_HOSTS'] = 'localhost,127.0.0.1,0.0.0.0,*'
+        else:
+            config['ALLOWED_HOSTS'] = 'localhost,127.0.0.1'
+        
+        save_env_config(config)
+        messages.success(request, '设置已保存！')
+        return redirect('core:settings')
+    
+    # 读取当前配置
+    config = get_env_config()
+    
+    context = {
+        'site_name': config.get('SITE_NAME', 'Django Blog'),
+        'site_description': config.get('SITE_DESCRIPTION', ''),
+        'site_url': config.get('SITE_URL', ''),
+        'allow_lan': '*' in config.get('ALLOWED_HOSTS', '') or '0.0.0.0' in config.get('ALLOWED_HOSTS', ''),
+        'debug': config.get('DEBUG', 'True') == 'True',
+    }
+    
+    return render(request, 'core/settings.html', context)

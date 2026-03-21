@@ -1,20 +1,3 @@
-"""
-DjangoBlog 项目基础配置文件
-
-包含所有环境通用的配置：
-- 项目路径配置
-- 应用列表
-- 中间件配置
-- 数据库配置
-- 静态/媒体文件配置
-- 缓存配置
-- 密码验证器配置
-- AXES防暴力破解配置等
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 """Base settings for project."""
 
 import os

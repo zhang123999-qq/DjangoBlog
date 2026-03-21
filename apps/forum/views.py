@@ -1,17 +1,3 @@
-"""
-论坛应用视图模块
-
-处理论坛相关的HTTP请求，包括：
-- 版块列表/详情
-- 主题发布/编辑/删除
-- 回复功能
-- 点赞功能
-- 热门主题统计
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import login_required
@@ -39,16 +25,13 @@ class TopicListView(ListView):
 
     def get_queryset(self):
         """获取查询集，按版块筛选"""
-        try:
-            self.board = get_object_or_404(Board, slug=self.kwargs.get('board_slug'))
-            return Topic.objects.filter(board=self.board, review_status='approved').select_related('author', 'board').order_by('-is_pinned', '-last_reply_at', '-created_at')
-        except Exception:
-            return Topic.objects.none()
+        self.board = get_object_or_404(Board, slug=self.kwargs.get('board_slug'))
+        return Topic.objects.filter(board=self.board, review_status='approved').select_related('author', 'board').order_by('-is_pinned', '-last_reply_at', '-created_at')
 
     def get_context_data(self, **kwargs):
         """获取上下文数据"""
         context = super().get_context_data(**kwargs)
-        context['board'] = getattr(self, 'board', None)
+        context['board'] = self.board
         return context
 
 
@@ -61,36 +44,20 @@ class TopicDetailView(DetailView):
 
     def get_queryset(self):
         """获取查询集，按版块筛选"""
-        try:
-            board = get_object_or_404(Board, slug=self.kwargs.get('board_slug'))
-            return Topic.objects.filter(board=board, review_status='approved').select_related('author', 'board').prefetch_related('replies__author')
-        except Exception:
-            return Topic.objects.none()
+        board = get_object_or_404(Board, slug=self.kwargs.get('board_slug'))
+        return Topic.objects.filter(board=board, review_status='approved').select_related('author', 'board').prefetch_related('replies__author')
 
     def get_object(self, queryset=None):
         """获取主题对象并增加浏览量"""
-        try:
-            obj = super().get_object(queryset)
-            obj.increase_views()
-            return obj
-        except Exception:
-            return None
+        obj = super().get_object(queryset)
+        obj.increase_views()
+        return obj
 
     def get_context_data(self, **kwargs):
         """获取上下文数据"""
-        try:
-            context = super().get_context_data(**kwargs)
-            if self.object:
-                context['replies'] = self.object.replies.filter(is_deleted=False, review_status='approved')
-            else:
-                context['replies'] = []
-            context['reply_form'] = ReplyForm()
-            return context
-        except Exception as e:
-            context = super().get_context_data(**kwargs)
-            context['replies'] = []
-            context['reply_form'] = ReplyForm()
-            return context
+        context = super().get_context_data(**kwargs)
+        context['replies'] = self.object.replies.filter(is_deleted=False, review_status='approved')
+        context['reply_form'] = ReplyForm()
         return context
 
 

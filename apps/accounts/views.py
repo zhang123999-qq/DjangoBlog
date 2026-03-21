@@ -1,17 +1,3 @@
-"""
-用户账户应用视图模块
-
-处理用户相关的HTTP请求，包括：
-- 用户注册
-- 用户登录/登出
-- 个人资料查看/编辑
-- 头像管理
-- 验证码生成
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect
@@ -21,95 +7,74 @@ from .captcha import generate_captcha
 
 def register_view(request):
     """用户注册视图"""
-    try:
-        if request.method == 'POST':
-            form = UserRegisterForm(request.POST, request=request)
-            if form.is_valid():
-                user = form.save()
-                # 指定认证后端
-                from django.conf import settings
-                backend = settings.AUTHENTICATION_BACKENDS[0]
-                user.backend = backend
-                login(request, user, backend=backend)
-                return redirect('core:home')
-        else:
-            # 只在GET请求时生成验证码
-            captcha_code, captcha_image = generate_captcha()
-            request.session['captcha_code'] = captcha_code
-            form = UserRegisterForm(request=request)
-        # 确保POST请求时也有captcha_image变量
-        if 'captcha_image' not in locals():
-            captcha_code, captcha_image = generate_captcha()
-            request.session['captcha_code'] = captcha_code
-    except Exception as e:
-        from django.contrib import messages
-        messages.error(request, f'注册过程出错: {str(e)}')
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST, request=request)
+        if form.is_valid():
+            user = form.save()
+            # 指定认证后端
+            from django.conf import settings
+            backend = settings.AUTHENTICATION_BACKENDS[0]
+            user.backend = backend
+            login(request, user, backend=backend)
+            return redirect('core:home')
+    else:
+        # 只在GET请求时生成验证码
         captcha_code, captcha_image = generate_captcha()
         request.session['captcha_code'] = captcha_code
         form = UserRegisterForm(request=request)
-    
+    # 确保POST请求时也有captcha_image变量
+    if 'captcha_image' not in locals():
+        captcha_code, captcha_image = generate_captcha()
+        request.session['captcha_code'] = captcha_code
     return render(request, 'accounts/register.html', {'form': form, 'captcha_image': captcha_image})
 
 
 @login_required
 def profile_view(request):
     """个人中心视图"""
-    try:
-        # 获取用户的待审核内容
-        from apps.blog.models import Comment
-        from apps.forum.models import Topic, Reply
-        
-        pending_comments = Comment.objects.filter(
-            user=request.user,
-            review_status='pending'
-        ).select_related('post', 'user').order_by('-created_at')[:10]
-        
-        pending_topics = Topic.objects.filter(
-            author=request.user,
-            review_status='pending'
-        ).select_related('author', 'board').order_by('-created_at')[:10]
-        
-        pending_replies = Reply.objects.filter(
-            author=request.user,
-            review_status='pending'
-        ).select_related('author', 'topic').order_by('-created_at')[:10]
-        
-        # 获取用户的已拒绝内容
-        rejected_comments = Comment.objects.filter(
-            user=request.user,
-            review_status='rejected'
-        ).select_related('post', 'user').order_by('-created_at')[:10]
-        
-        rejected_topics = Topic.objects.filter(
-            author=request.user,
-            review_status='rejected'
-        ).select_related('author', 'board').order_by('-created_at')[:10]
-        
-        rejected_replies = Reply.objects.filter(
-            author=request.user,
-            review_status='rejected'
-        ).select_related('author', 'topic').order_by('-created_at')[:10]
-        
-        context = {
-            'pending_comments': pending_comments,
-            'pending_topics': pending_topics,
-            'pending_replies': pending_replies,
-            'rejected_comments': rejected_comments,
-            'rejected_topics': rejected_topics,
-            'rejected_replies': rejected_replies,
-        }
-        
-    except Exception as e:
-        from django.contrib import messages
-        messages.error(request, f'加载个人资料时出错: {str(e)}')
-        context = {
-            'pending_comments': [],
-            'pending_topics': [],
-            'pending_replies': [],
-            'rejected_comments': [],
-            'rejected_topics': [],
-            'rejected_replies': [],
-        }
+    # 获取用户的待审核内容
+    from apps.blog.models import Comment
+    from apps.forum.models import Topic, Reply
+    
+    pending_comments = Comment.objects.filter(
+        user=request.user,
+        review_status='pending'
+    ).order_by('-created_at')
+    
+    pending_topics = Topic.objects.filter(
+        author=request.user,
+        review_status='pending'
+    ).order_by('-created_at')
+    
+    pending_replies = Reply.objects.filter(
+        author=request.user,
+        review_status='pending'
+    ).order_by('-created_at')
+    
+    # 获取用户的已拒绝内容
+    rejected_comments = Comment.objects.filter(
+        user=request.user,
+        review_status='rejected'
+    ).order_by('-created_at')
+    
+    rejected_topics = Topic.objects.filter(
+        author=request.user,
+        review_status='rejected'
+    ).order_by('-created_at')
+    
+    rejected_replies = Reply.objects.filter(
+        author=request.user,
+        review_status='rejected'
+    ).order_by('-created_at')
+    
+    context = {
+        'pending_comments': pending_comments,
+        'pending_topics': pending_topics,
+        'pending_replies': pending_replies,
+        'rejected_comments': rejected_comments,
+        'rejected_topics': rejected_topics,
+        'rejected_replies': rejected_replies,
+    }
     
     return render(request, 'accounts/profile.html', context)
 

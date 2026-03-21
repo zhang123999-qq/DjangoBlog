@@ -1,15 +1,3 @@
-"""
-论坛应用模型模块
-
-提供论坛系统的数据模型，包括：
-- Board: 论坛版块
-- Topic: 主题帖子
-- Reply: 回复评论
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify

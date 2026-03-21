@@ -1,0 +1,92 @@
+{% extends 'base_tech.html' %}
+
+{% block title %}系统设置 - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-gear me-2"></i>系统设置</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3 border-bottom pb-2">
+                            <i class="bi bi-info-circle me-2"></i>网站信息
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">网站名称</label>
+                            <input type="text" name="site_name" class="form-control" value="{{ site_name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">网站描述</label>
+                            <textarea name="site_description" class="form-control" rows="2">{{ site_description }}</textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">网站 URL</label>
+                            <input type="url" name="site_url" class="form-control" value="{{ site_url }}" placeholder="https://example.com">
+                        </div>
+
+                        <h5 class="mb-3 border-bottom pb-2">
+                            <i class="bi bi-wifi me-2"></i>访问设置
+                        </h5>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="allow_lan" class="form-check-input" id="allowLan" {% if allow_lan %}checked{% endif %}>
+                            <label class="form-check-label" for="allowLan">
+                                允许局域网访问
+                                <span class="text-muted small">(允许其他设备通过 IP 地址访问)</span>
+                            </label>
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" name="debug" class="form-check-input" id="debugMode" {% if debug %}checked{% endif %}>
+                            <label class="form-check-label" for="debugMode">
+                                调试模式
+                                <span class="text-muted small">(显示详细错误信息，仅开发环境建议开启)</span>
+                            </label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>保存设置
+                            </button>
+                            <a href="{% url 'core:home' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>提示</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>修改设置后如未生效，请重启服务</li>
+                        <li>局域网访问地址：<code>http://你的IP地址:18789</code></li>
+                        <li>调试模式开启后可在页面底部看到性能信息</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

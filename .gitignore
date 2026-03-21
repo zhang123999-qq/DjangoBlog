@@ -1,0 +1,76 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+*.pyo
+.pytest_cache/
+
+# Distribution
+dist/
+build/
+*.egg-info/
+
+# Installer lock
+installed.lock
+
+# Test coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Docker
+*.log
+
+# Backup files
+*.bak
+*.backup
+
+# Test outputs
+tests/logs/
+tests/screenshots/
+!tests/logs/.gitkeep
+!tests/screenshots/.gitkeep
+
+# Temporary files
+tmp/
+*.tmp
+*.temp
+
+# Screenshots (keep README)
+screenshots/*
+!screenshots/README.md
+
+# Allure reports
+allure-results/
+allure-report/

@@ -1,15 +1,3 @@
-"""
-工具栏应用视图模块
-
-处理工具相关的HTTP请求，包括：
-- 工具列表展示
-- 工具详情/执行
-- 工具分类筛选
-
-Author: zhang123999-qq
-Date: 2026-03-20
-"""
-
 import logging
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
