@@ -339,13 +339,13 @@ class SensitiveWordAdmin(admin.ModelAdmin):
 # ========== 网站配置 ==========
 @admin.register(SiteConfig, site=admin_site)
 class SiteConfigAdmin(admin.ModelAdmin):
-    list_display = ['site_name', 'is_installed', 'created_at']
+    list_display = ['site_name', 'is_installed', 'allow_registration', 'created_at']
     fieldsets = (
         ('网站信息', {
-            'fields': ('site_name', 'site_title', 'site_description', 'site_keywords')
+            'fields': ('site_name', 'site_title', 'site_description', 'logo')
         }),
         ('系统设置', {
-            'fields': ('is_installed', 'allow_registration', 'require_email_verification')
+            'fields': ('is_installed', 'allow_registration')
         }),
     )
 
