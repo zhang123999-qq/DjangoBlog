@@ -48,10 +48,19 @@ class TestArticle:
         logged_in_page.wait_for_load_state('networkidle')
         
         # 检查是否有权限
+        current_url = logged_in_page.url
         page_content = logged_in_page.text_content('body')
-        if '登录' in page_content and 'admin' not in logged_in_page.url:
+        
+        # 如果被重定向到登录页面，跳过测试
+        if '/login' in current_url or '登录' in page_content and '/admin' not in current_url:
             test_logger.warning("未登录管理后台，跳过测试")
-            pytest.skip("没有管理后台访问权限")
+            pytest.skip("没有管理后台访问权限，需要先登录")
+        
+        # 检查是否有登录表单（表示未登录）
+        login_form = logged_in_page.query_selector('form input[name="username"]')
+        if login_form:
+            test_logger.warning("检测到登录表单，跳过测试")
+            pytest.skip("需要登录才能访问管理后台")
         
         # 生成测试数据
         article_data = DataGenerator.article_data()

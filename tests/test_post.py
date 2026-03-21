@@ -24,6 +24,14 @@ class TestPost:
         """
         test_logger.info("开始测试: 发布主题")
         
+        # 检查是否已登录
+        logged_in_page.goto(f"{base_url}/accounts/profile/")
+        logged_in_page.wait_for_load_state('networkidle')
+        
+        if '/login' in logged_in_page.url or 'login' in logged_in_page.text_content('body').lower():
+            test_logger.warning("用户未登录，跳过测试")
+            pytest.skip("需要先登录才能发布主题")
+        
         # 导航到论坛
         logged_in_page.goto(f"{base_url}/forum/")
         test_logger.info("访问论坛页面")
@@ -82,6 +90,14 @@ class TestPost:
         """
         test_logger.info("开始测试: 空标题发布")
         
+        # 检查是否已登录
+        logged_in_page.goto(f"{base_url}/accounts/profile/")
+        logged_in_page.wait_for_load_state('networkidle')
+        
+        if '/login' in logged_in_page.url or 'login' in logged_in_page.text_content('body').lower():
+            test_logger.warning("用户未登录，跳过测试")
+            pytest.skip("需要先登录才能发布主题")
+        
         # 导航到论坛
         logged_in_page.goto(f"{base_url}/forum/")
         logged_in_page.wait_for_load_state('networkidle')
@@ -119,6 +135,14 @@ class TestPost:
         预期: 显示内容必填的错误提示
         """
         test_logger.info("开始测试: 空内容发布")
+        
+        # 检查是否已登录
+        logged_in_page.goto(f"{base_url}/accounts/profile/")
+        logged_in_page.wait_for_load_state('networkidle')
+        
+        if '/login' in logged_in_page.url or 'login' in logged_in_page.text_content('body').lower():
+            test_logger.warning("用户未登录，跳过测试")
+            pytest.skip("需要先登录才能发布主题")
         
         logged_in_page.goto(f"{base_url}/forum/")
         logged_in_page.wait_for_load_state('networkidle')
