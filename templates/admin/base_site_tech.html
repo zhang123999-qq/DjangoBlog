@@ -65,15 +65,32 @@
     #user-tools {
         font-size: 0.9rem;
         color: #6c757d;
+        padding: 8px 0;
+        line-height: 1.8;
     }
     
     #user-tools a {
         color: var(--primary-color) !important;
         transition: var(--transition);
+        white-space: nowrap;
+        display: inline-block;
+        padding: 4px 8px;
     }
     
     #user-tools a:hover {
         color: var(--primary-dark) !important;
+    }
+    
+    /* 头部高度 */
+    #header {
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+    }
+    
+    #branding {
+        display: flex;
+        align-items: center;
     }
     
     /* 面包屑 */
