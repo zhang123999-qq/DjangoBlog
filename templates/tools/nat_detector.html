@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tool.name }} - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 面包屑 -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tools:tool_list' %}" class="text-decoration-none">工具箱</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ tool.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- 主内容 -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-diagram-3 fs-4 me-3"></i>
+                        <div>
+                            <h4 class="mb-0">NAT 检测工具</h4>
+                            <small>检测您的网络地址转换状态</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 检测状态 -->
+                    <div id="detection-status" class="text-center py-4">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">检测中...</span>
+                        </div>
+                        <p class="text-muted mb-0">正在检测您的网络状态...</p>
+                    </div>
+
+                    <!-- 检测结果 -->
+                    <div id="detection-result" style="display: none;">
+                        <!-- NAT 状态卡片 -->
+                        <div class="card bg-light border-0 mb-4">
+                            <div class="card-body text-center py-4">
+                                <h6 class="text-muted mb-2">NAT 状态</h6>
+                                <h2 id="nat-status" class="mb-2">-</h2>
+                                <span id="nat-type" class="badge bg-primary fs-6">检测中...</span>
+                            </div>
+                        </div>
+
+                        <!-- IP 信息 -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="card h-100 border">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">
+                                            <i class="bi bi-house me-2"></i>本地 IP 地址
+                                        </h6>
+                                        <div id="local-ips" class="font-monospace">
+                                            <p class="text-muted mb-0">检测中...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">
+                                            <i class="bi bi-globe me-2"></i>公网 IP 地址
+                                        </h6>
+                                        <div id="public-ip" class="font-monospace">
+                                            <p class="text-muted mb-0">检测中...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 详细信息 -->
+                        <div class="card border mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-list-check me-2"></i>检测详情</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm mb-0">
+                                    <tbody id="details-table">
+                                        <tr>
+                                            <td class="text-muted" style="width: 200px;">本地 IP 数量</td>
+                                            <td id="local-ip-count">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">公网 IP</td>
+                                            <td id="public-ip-value">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">是否使用 NAT</td>
+                                            <td id="using-nat">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">NAT 类型</td>
+                                            <td id="nat-type-detail">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">WebRTC 支持</td>
+                                            <td id="webrtc-support">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 端口信息 -->
+                        <div class="card border mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-ethernet me-2"></i>端口检测</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="port-info" class="small">
+                                    <p class="text-muted mb-0">检测中...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 重新检测按钮 -->
+                        <div class="text-center">
+                            <button class="btn btn-primary" onclick="startDetection()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>重新检测
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NAT 介绍 -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-book me-2"></i>什么是 NAT？</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>NAT（Network Address Translation，网络地址转换）</strong>是一种让多台设备共享一个公网IP地址的技术。</p>
+                    
+                    <h6 class="mt-4 mb-2">NAT 的作用</h6>
+                    <ul class="mb-3">
+                        <li><strong>节省IP地址</strong>：IPv4地址有限，NAT让多个设备共享一个公网IP</li>
+                        <li><strong>增强安全</strong>：隐藏内网真实IP，提供一定的安全保护</li>
+                        <li><strong>解决IP短缺</strong>：是IPv4向IPv6过渡的重要技术</li>
+                    </ul>
+
+                    <h6 class="mt-4 mb-2">NAT 类型</h6>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>类型</th>
+                                <th>特点</th>
+                                <th>适用场景</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">完全锥形</span></td>
+                                <td>最宽松，任何外网主机都可以发送数据</td>
+                                <td>P2P应用友好</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-info">受限锥形</span></td>
+                                <td>只有内网主机通信过的IP才能发送</td>
+                                <td>一般应用</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning">端口受限</span></td>
+                                <td>IP和端口都要匹配才能通信</td>
+                                <td>安全性较高</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">对称型</span></td>
+                                <td>最严格，每个目标都有不同端口</td>
+                                <td>P2P应用受限</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h6 class="mt-4 mb-2">为什么需要检测 NAT？</h6>
+                    <ul class="mb-0">
+                        <li>排查网络连接问题（如视频通话、游戏联机）</li>
+                        <li>P2P应用需要了解NAT类型以建立连接</li>
+                        <li>端口映射配置参考</li>
+                        <li>了解网络安全状况</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 检测说明 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>检测说明</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">本工具使用 WebRTC 技术检测您的网络状态：</p>
+                    <ul class="list-unstyled mb-0 text-muted small">
+                        <li class="mb-2"><i class="bi bi-1-circle me-2"></i>检测本地网络接口IP</li>
+                        <li class="mb-2"><i class="bi bi-2-circle me-2"></i>获取公网IP地址</li>
+                        <li class="mb-2"><i class="bi bi-3-circle me-2"></i>判断NAT使用状态</li>
+                        <li><i class="bi bi-4-circle me-2"></i>分析NAT类型特征</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 隐私提示 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>隐私保护</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-check-circle text-success me-1"></i>
+                        所有检测在您的浏览器本地完成，不会上传任何数据到服务器。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 常见问题 -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-question-circle me-2"></i>常见问题</h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion accordion-flush" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    <small>为什么显示多个本地IP？</small>
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-muted py-2">
+                                    您的设备可能有多个网络接口（WiFi、以太网、虚拟网卡等），每个接口都有自己的IP地址。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    <small>检测失败怎么办？</small>
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-muted py-2">
+                                    请确保浏览器支持WebRTC，并检查是否有隐私保护插件阻止了检测。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let localIPs = [];
+let publicIP = null;
+
+async function startDetection() {
+    // 显示检测中状态
+    document.getElementById('detection-status').style.display = 'block';
+    document.getElementById('detection-result').style.display = 'none';
+    
+    localIPs = [];
+    publicIP = null;
+    
+    try {
+        // 检测WebRTC支持
+        const webrtcSupport = checkWebRTCSupport();
+        document.getElementById('webrtc-support').innerHTML = webrtcSupport 
+            ? '<span class="text-success">✓ 支持</span>' 
+            : '<span class="text-danger">✗ 不支持</span>';
+        
+        if (!webrtcSupport) {
+            throw new Error('您的浏览器不支持WebRTC');
+        }
+        
+        // 获取本地IP
+        await getLocalIPs();
+        
+        // 获取公网IP
+        await getPublicIP();
+        
+        // 分析NAT状态
+        analyzeNAT();
+        
+        // 显示结果
+        document.getElementById('detection-status').style.display = 'none';
+        document.getElementById('detection-result').style.display = 'block';
+        
+    } catch (error) {
+        document.getElementById('detection-status').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${error.message}
+            </div>
+            <button class="btn btn-primary" onclick="startDetection()">
+                <i class="bi bi-arrow-clockwise me-1"></i>重新检测
+            </button>
+        `;
+    }
+}
+
+function checkWebRTCSupport() {
+    return !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+}
+
+async function getLocalIPs() {
+    return new Promise((resolve, reject) => {
+        const pc = new RTCPeerConnection({
+            iceServers: []
+        });
+        
+        pc.createDataChannel('');
+        
+        pc.onicecandidate = (e) => {
+            if (!e.candidate) {
+                pc.close();
+                resolve();
+                return;
+            }
+            
+            const candidate = e.candidate.candidate;
+            const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+            
+            if (ipMatch) {
+                const ip = ipMatch[1];
+                if (!localIPs.includes(ip)) {
+                    localIPs.push(ip);
+                }
+            }
+        };
+        
+        pc.createOffer()
+            .then(offer => pc.setLocalDescription(offer))
+            .catch(reject);
+        
+        // 设置超时
+        setTimeout(() => {
+            pc.close();
+            resolve();
+        }, 3000);
+    });
+}
+
+async function getPublicIP() {
+    // 使用多个服务获取公网IP
+    const services = [
+        'https://api.ipify.org?format=json',
+        'https://api.ip.sb/jsonip',
+        'https://api4.my-ip.io/ip.json'
+    ];
+    
+    for (const service of services) {
+        try {
+            const response = await fetch(service, { timeout: 5000 });
+            if (response.ok) {
+                const data = await response.json();
+                publicIP = data.ip;
+                break;
+            }
+        } catch (e) {
+            continue;
+        }
+    }
+}
+
+function analyzeNAT() {
+    // 更新本地IP显示
+    const localIPsDiv = document.getElementById('local-ips');
+    const localIPCount = document.getElementById('local-ip-count');
+    
+    if (localIPs.length > 0) {
+        localIPsDiv.innerHTML = localIPs.map(ip => {
+            const type = isPrivateIP(ip) ? '<span class="badge bg-secondary ms-2">内网</span>' : '<span class="badge bg-info ms-2">公网</span>';
+            return `<div class="mb-1"><code>${ip}</code>${type}</div>`;
+        }).join('');
+        localIPCount.textContent = localIPs.length;
+    } else {
+        localIPsDiv.innerHTML = '<p class="text-danger mb-0">无法获取</p>';
+        localIPCount.textContent = '0';
+    }
+    
+    // 更新公网IP显示
+    const publicIPDiv = document.getElementById('public-ip');
+    const publicIPValue = document.getElementById('public-ip-value');
+    
+    if (publicIP) {
+        publicIPDiv.innerHTML = `<code class="fs-5">${publicIP}</code>`;
+        publicIPValue.innerHTML = `<code>${publicIP}</code>`;
+    } else {
+        publicIPDiv.innerHTML = '<p class="text-danger mb-0">无法获取</p>';
+        publicIPValue.textContent = '无法获取';
+    }
+    
+    // 分析NAT状态
+    const hasPrivateIP = localIPs.some(ip => isPrivateIP(ip));
+    const hasPublicIP = localIPs.some(ip => !isPrivateIP(ip));
+    
+    const usingNAT = document.getElementById('using-nat');
+    const natStatus = document.getElementById('nat-status');
+    const natType = document.getElementById('nat-type');
+    const natTypeDetail = document.getElementById('nat-type-detail');
+    
+    if (hasPrivateIP && publicIP) {
+        // 使用NAT
+        usingNAT.innerHTML = '<span class="text-success">是</span>';
+        natStatus.innerHTML = '<span class="text-success">正在使用 NAT</span>';
+        
+        // 尝试判断NAT类型
+        const natTypeInfo = detectNATType();
+        natType.textContent = natTypeInfo.type;
+        natType.className = `badge ${natTypeInfo.class} fs-6`;
+        natTypeDetail.innerHTML = `<span class="badge ${natTypeInfo.class}">${natTypeInfo.type}</span>`;
+        
+        // 端口信息
+        document.getElementById('port-info').innerHTML = `
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>${natTypeInfo.type}</strong>：${natTypeInfo.description}
+            </div>
+        `;
+        
+    } else if (hasPublicIP && !hasPrivateIP) {
+        // 公网IP，可能没有NAT
+        usingNAT.innerHTML = '<span class="text-warning">否（或未知）</span>';
+        natStatus.innerHTML = '<span class="text-warning">可能未使用 NAT</span>';
+        natType.textContent = '未知';
+        natType.className = 'badge bg-secondary fs-6';
+        natTypeDetail.textContent = '无法确定';
+        
+        document.getElementById('port-info').innerHTML = `
+            <div class="alert alert-success mb-0">
+                <i class="bi bi-check-circle me-2"></i>
+                您的设备可能直接连接到公网，未使用NAT。
+            </div>
+        `;
+    } else {
+        usingNAT.innerHTML = '<span class="text-muted">未知</span>';
+        natStatus.innerHTML = '<span class="text-muted">检测失败</span>';
+        natType.textContent = '未知';
+        natType.className = 'badge bg-secondary fs-6';
+        natTypeDetail.textContent = '无法确定';
+    }
+}
+
+function isPrivateIP(ip) {
+    const parts = ip.split('.').map(Number);
+    // 10.0.0.0/8
+    if (parts[0] === 10) return true;
+    // 172.16.0.0/12
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+    // 192.168.0.0/16
+    if (parts[0] === 192 && parts[1] === 168) return true;
+    // 169.254.0.0/16 (Link-local)
+    if (parts[0] === 169 && parts[1] === 254) return true;
+    return false;
+}
+
+function detectNATType() {
+    // 简化的NAT类型检测（真正的检测需要STUN服务器）
+    // 根据本地IP数量和特征进行推测
+    
+    if (localIPs.length > 2) {
+        return {
+            type: '可能为锥形NAT',
+            class: 'bg-success',
+            description: '检测到多个网络接口，可能使用较宽松的NAT配置，P2P应用兼容性较好。'
+        };
+    } else if (localIPs.length === 2) {
+        return {
+            type: '可能为受限NAT',
+            class: 'bg-info',
+            description: 'NAT配置适中，大部分应用可正常使用，部分P2P应用可能需要端口映射。'
+        };
+    } else {
+        return {
+            type: '可能为对称NAT',
+            class: 'bg-warning',
+            description: 'NAT配置较严格，P2P应用可能受限，建议使用UPnP或手动端口映射。'
+        };
+    }
+}
+
+// 页面加载后自动检测
+document.addEventListener('DOMContentLoaded', startDetection);
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: transparent;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+    }
+</style>
+{% endblock %}

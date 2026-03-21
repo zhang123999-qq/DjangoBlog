@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.3] - 2026-03-21
+
+### Added
+- **NAT 检测工具** - 检测网络地址转换状态
+  - 自动检测本地IP地址（多网卡支持）
+  - 自动获取公网IP地址
+  - 判断是否使用NAT
+  - 推测NAT类型（锥形/受限/对称）
+  - 完整的NAT知识介绍
+  - 隐私保护：所有检测在浏览器本地完成
+
 ## [2.3.2] - 2026-03-21
 
 ### Added
