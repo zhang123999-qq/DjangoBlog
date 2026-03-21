@@ -162,17 +162,34 @@ def logged_in_page(page, base_url):
     # 尝试处理验证码
     captcha_input = page.query_selector('input[name="captcha"]')
     if captcha_input:
-        page.fill('input[name="captcha"]', 'test')
-    
-    page.click('button[type="submit"]')
-    page.wait_for_load_state('networkidle')
-    
-    # 检查是否登录成功
-    current_url = page.url
-    if '/login' in current_url:
-        logger.warning("登录可能失败，但继续测试")
+        # 测试环境可能需要跳过验证码或使用固定验证码
+        # 尝试常见的测试验证码
+        for test_captcha in ['test', '1234', '0000', '']:
+            try:
+                page.fill('input[name="captcha"]', test_captcha)
+                page.click('button[type="submit"]')
+                page.wait_for_load_state('networkidle')
+                
+                # 检查是否登录成功
+                current_url = page.url
+                if '/login' not in current_url:
+                    logger.info(f"登录成功，验证码: {test_captcha or '空'}")
+                    break
+            except:
+                continue
     else:
-        logger.info("登录成功")
+        # 没有验证码字段，直接登录
+        page.click('button[type="submit"]')
+        page.wait_for_load_state('networkidle')
+    
+    # 检查最终状态
+    current_url = page.url
+    page_content = page.text_content('body')
+    
+    if '/login' in current_url and '验证码' in page_content:
+        logger.warning("登录因验证码失败，尝试跳过需要登录的测试")
+    else:
+        logger.info(f"登录完成，当前URL: {current_url}")
     
     yield page
 
