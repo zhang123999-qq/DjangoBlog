@@ -251,33 +251,38 @@
                     <i class="fas fa-server me-2 text-primary"></i>
                     系统信息
                 </h3>
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="fas fa-code-branch me-2 text-primary"></i>
-                        Django {{ django_version_str|default:"4.2" }}
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-python me-2 text-primary"></i>
-                        Python {{ python_version|default:"3.x" }}
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-database me-2 text-primary"></i>
-                        {{ db_engine|default:"SQLite" }}
-                        {% if db_version %}<small class="text-muted">({{ db_version }})</small>{% endif %}
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-memory me-2 text-primary"></i>
-                        {{ redis_info|default:"未启用" }}
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-desktop me-2 text-primary"></i>
-                        {{ os_info|default:"Unknown" }}
-                    </li>
-                    <li>
-                        <i class="fas fa-clock me-2 text-primary"></i>
-                        {{ server_time|date:"Y-m-d H:i:s" }}
-                    </li>
-                </ul>
+                <div class="system-info-list">
+                    <div class="system-info-item">
+                        <i class="fas fa-code-branch"></i>
+                        <span class="info-label">Django</span>
+                        <span class="info-value">{{ django_version_str|default:"4.2" }}</span>
+                    </div>
+                    <div class="system-info-item">
+                        <i class="fas fa-python"></i>
+                        <span class="info-label">Python</span>
+                        <span class="info-value">{{ python_version|default:"3.x" }}</span>
+                    </div>
+                    <div class="system-info-item">
+                        <i class="fas fa-database"></i>
+                        <span class="info-label">数据库</span>
+                        <span class="info-value">{{ db_engine|default:"SQLite" }}{% if db_version %} <small class="text-muted">{{ db_version }}</small>{% endif %}</span>
+                    </div>
+                    <div class="system-info-item">
+                        <i class="fas fa-memory"></i>
+                        <span class="info-label">缓存</span>
+                        <span class="info-value">{{ redis_info|default:"未启用" }}</span>
+                    </div>
+                    <div class="system-info-item">
+                        <i class="fas fa-desktop"></i>
+                        <span class="info-label">系统</span>
+                        <span class="info-value">{{ os_info|default:"Unknown" }}</span>
+                    </div>
+                    <div class="system-info-item">
+                        <i class="fas fa-clock"></i>
+                        <span class="info-label">时间</span>
+                        <span class="info-value">{{ server_time|date:"Y-m-d H:i" }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -542,6 +547,49 @@
     .btn-outline-primary:hover {
         background: var(--primary-gradient);
         color: white;
+    }
+    
+    /* 系统信息列表 */
+    .system-info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .system-info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: var(--transition);
+    }
+    
+    .system-info-item:hover {
+        background: #e9ecef;
+    }
+    
+    .system-info-item i {
+        width: 24px;
+        color: var(--primary-color);
+        font-size: 1rem;
+        text-align: center;
+    }
+    
+    .system-info-item .info-label {
+        min-width: 50px;
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .system-info-item .info-value {
+        color: #212529;
+        margin-left: auto;
+    }
+    
+    .system-info-item .info-value small {
+        font-size: 0.75rem;
     }
 </style>
 {% endblock %}
