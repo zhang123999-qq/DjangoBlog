@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.2] - 2026-03-21
+
+### Fixed
+- **NAT检测工具修复** - 修复检测失败问题
+  - 修复 `fetch` 超时参数问题（使用 `AbortController`）
+  - 添加更好的错误处理和提示
+  - 优化本地IP检测逻辑
+  - 添加公网IP获取失败的友好提示
+  - 并行执行本地IP和公网IP检测
+  - 添加控制台日志便于调试
+
 ## [2.4.1] - 2026-03-21
 
 ### Added
