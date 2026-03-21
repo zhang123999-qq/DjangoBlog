@@ -92,13 +92,6 @@ python manage.py runserver
 
 访问 http://127.0.0.1:8000 即可看到网站
 
-### 默认端口
-
-```bash
-# 使用 18789 端口
-python manage.py runserver 0.0.0.0:18789
-```
-
 ## 📁 项目结构
 
 ```
