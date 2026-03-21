@@ -199,10 +199,32 @@ def quick_install(request):
                 env_data['DB_PASSWORD'] = db_password
                 env_data['DB_HOST'] = db_host
                 env_data['DB_PORT'] = db_port
+                
+                # 【关键】立即更新 Django 的数据库配置
+                from django.conf import settings
+                settings.DATABASES['default'] = {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': db_name,
+                    'USER': db_user,
+                    'PASSWORD': db_password,
+                    'HOST': db_host,
+                    'PORT': db_port,
+                    'OPTIONS': {
+                        'charset': 'utf8mb4',
+                        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                    },
+                }
             else:
                 db_name = request.POST.get('db_name', 'db.sqlite3')
                 env_data['DB_ENGINE'] = 'django.db.backends.sqlite3'
                 env_data['DB_NAME'] = db_name
+                
+                # 【关键】立即更新 Django 的数据库配置
+                from django.conf import settings
+                settings.DATABASES['default'] = {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': str(BASE_DIR / db_name),
+                }
             
             # Redis 配置
             if use_redis:
@@ -229,7 +251,7 @@ def quick_install(request):
             # 1. 写入.env
             write_env_file(env_data, BASE_DIR)
             
-            # 2. 执行迁移
+            # 2. 执行迁移（现在会使用正确的数据库配置）
             call_command('migrate', '--run-syncdb', verbosity=0)
             
             # 3. 创建管理员
@@ -421,12 +443,47 @@ def step6_execute(request):
             
             # 数据库配置
             db_config = request.session.get('install_step4', {})
-            if db_config.get('db_engine') == 'django.db.backends.sqlite3':
-                env_data['DATABASE_URL'] = f"sqlite://{db_config.get('db_name', 'db.sqlite3')}"
+            db_engine = db_config.get('db_engine', 'django.db.backends.sqlite3')
+            
+            if 'mysql' in db_engine:
+                # MySQL 配置
+                env_data['DB_ENGINE'] = 'django.db.backends.mysql'
+                env_data['DB_NAME'] = db_config.get('db_name', 'djangoblog')
+                env_data['DB_USER'] = db_config.get('db_user', 'root')
+                env_data['DB_PASSWORD'] = db_config.get('db_password', '')
+                env_data['DB_HOST'] = db_config.get('db_host', 'localhost')
+                env_data['DB_PORT'] = db_config.get('db_port', '3306')
+                
+                # 【关键】立即更新 Django 的数据库配置
+                from django.conf import settings
+                settings.DATABASES['default'] = {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': env_data['DB_NAME'],
+                    'USER': env_data['DB_USER'],
+                    'PASSWORD': env_data['DB_PASSWORD'],
+                    'HOST': env_data['DB_HOST'],
+                    'PORT': env_data['DB_PORT'],
+                    'OPTIONS': {
+                        'charset': 'utf8mb4',
+                        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                    },
+                }
+            else:
+                # SQLite 配置
+                env_data['DB_ENGINE'] = 'django.db.backends.sqlite3'
+                env_data['DB_NAME'] = db_config.get('db_name', 'db.sqlite3')
+                
+                # 【关键】立即更新 Django 的数据库配置
+                from django.conf import settings
+                settings.DATABASES['default'] = {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': str(BASE_DIR / env_data['DB_NAME']),
+                }
             
             # Redis配置
             redis_config = request.session.get('install_step5', {})
             if redis_config.get('use_redis'):
+                env_data['USE_REDIS'] = 'True'
                 env_data['REDIS_URL'] = f"redis://{redis_config.get('redis_host', 'localhost')}:{redis_config.get('redis_port', '6379')}/{redis_config.get('redis_db', 0)}"
             
             # 写入.env
