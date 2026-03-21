@@ -160,7 +160,7 @@
                 port: document.getElementById('id_db_port').value,
             });
             
-            fetch('/install/test-db/?' + params)
+            fetch('/install/ajax/test-db/?' + params)
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {

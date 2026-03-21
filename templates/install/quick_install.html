@@ -255,7 +255,7 @@
         const result = document.getElementById('test-db-result');
         result.innerHTML = ' <span class="text-muted">测试中...</span>';
         
-        fetch('/install/test-db/?engine=mysql&name=' + document.getElementById('id_db_name_mysql').value + 
+        fetch('/install/ajax/test-db/?engine=mysql&name=' + document.getElementById('id_db_name_mysql').value + 
               '&user=' + document.getElementById('id_db_user').value + 
               '&password=' + document.getElementById('id_db_password').value +
               '&host=' + document.getElementById('id_db_host').value +
@@ -274,7 +274,7 @@
         const result = document.getElementById('test-redis-result');
         result.innerHTML = ' <span class="text-muted">测试中...</span>';
         
-        fetch('/install/test-redis/?host=' + document.getElementById('id_redis_host').value + 
+        fetch('/install/ajax/test-redis/?host=' + document.getElementById('id_redis_host').value + 
               '&port=' + document.getElementById('id_redis_port').value +
               '&password=' + document.getElementById('id_redis_password').value +
               '&db=' + document.getElementById('id_redis_db').value)
