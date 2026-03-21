@@ -29,9 +29,9 @@ class DjangoBlogAdminSite(admin.AdminSite):
     def index(self, request, extra_context=None):
         """自定义首页，添加统计数据"""
         import sys
- import platform
- from django.utils import timezone
- from django.conf import settings
+        import platform
+        from django.utils import timezone
+        from django.conf import settings
         from apps.accounts.models import User
         from apps.blog.models import Post, Comment
         from apps.forum.models import Topic, Reply
