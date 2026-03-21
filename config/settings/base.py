@@ -131,9 +131,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - 将在环境配置中定义
+# Database - 默认使用 SQLite，可在环境配置中覆盖
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DATABASES = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

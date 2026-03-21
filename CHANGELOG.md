@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.4] - 2026-03-21
+
+### Fixed
+- **数据库配置修复** - 修复 `KeyError: 'ATOMIC_REQUESTS'` 错误
+  - `base.py` 中 `DATABASES` 设置为空字典导致错误
+  - 添加默认 SQLite 数据库配置到 `base.py`
+  - 确保即使环境配置未加载也有默认数据库
+
 ## [2.4.3] - 2026-03-21
 
 ### Fixed
