@@ -168,6 +168,3 @@ if __name__ == "__main__":
         print(f"❌ 未知命令: {command}")
         help()
         sys.exit(1)
-�令: {command}")
-        help()
-        sys.exit(1)

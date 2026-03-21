@@ -17,6 +17,8 @@
    install.bat         # Windows
    ```
 
+或访问网站自动进入安装向导
+
 ## 安装方式
 
 ### 使用 pyproject.toml（推荐）
@@ -112,6 +114,37 @@ USE_REDIS=True
 REDIS_URL=redis://localhost:6379/0
 ```
 
+## 编辑器配置
+
+### TinyMCE 富文本编辑器
+
+博客文章编辑使用 TinyMCE 7，通过 CDN 加载：
+
+- 自动从 CDN 加载
+- 支持中文界面
+- 图片上传到 `/api/upload/image/`
+
+### Monaco Editor
+
+代码编辑器用于工具页面，通过 CDN 加载：
+
+- VS Code 同款编辑体验
+- 支持语法高亮
+- 自动检测语言类型
+
+### 图片上传
+
+上传路径配置在 `settings.py`:
+
+```python
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+```
+
+上传API:
+- 图片上传: `POST /api/upload/image/`
+- 文件上传: `POST /api/upload/file/`
+
 ## 邮件配置（可选）
 
 用于发送通知邮件。
@@ -143,7 +176,7 @@ SECURE_HSTS_SECONDS=31536000
 ```bash
 SECRET_KEY=your-secret-key-here
 DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,*
 DB_ENGINE=sqlite
 ENABLE_INSTALLER=True
 ```
@@ -176,3 +209,7 @@ ENABLE_INSTALLER=False
 3. **ALLOWED_HOSTS 必须包含实际域名**
    - 否则 Django 会拒绝请求
    - 已默认包含 `0.0.0.0` 方便开发调试
+
+4. **编辑器通过 CDN 加载**
+   - 需要网络连接
+   - 首次加载可能较慢

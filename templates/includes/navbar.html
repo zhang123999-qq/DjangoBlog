@@ -44,6 +44,9 @@
                             <span>{{ user.username }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="border-radius: 12px; box-shadow: var(--card-shadow); border: none;">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'blog:post_create' %}"><i class="bi bi-pencil-square"></i> 写文章</a></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'blog:my_posts' %}"><i class="bi bi-file-text"></i> 我的文章</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> 个人中心</a></li>
                             <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile_edit' %}"><i class="bi bi-pencil"></i> 编辑资料</a></li>
                             {% if user.is_staff or user.is_superuser %}

@@ -1,0 +1,163 @@
+{% extends "admin/base_site_tech.html" %}
+{% load i18n admin_urls static %}
+
+{% block bodyclass %}{{ block.super }} app-{{ app_label }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">首页</a>
+    &rsaquo; 
+    {{ app.name }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="dashboard-card">
+        <h3 class="card-title">
+            <i class="fas fa-cubes me-2 text-primary"></i>
+            {{ app.name }}
+        </h3>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">模型名称</th>
+                        <th class="text-center" style="width: 15%;">添加</th>
+                        <th class="text-center" style="width: 15%;">修改</th>
+                        <th class="text-center" style="width: 20%;">数量</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in app.models %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-{% if '文章' in model.name %}file-alt{% elif '分类' in model.name %}folder{% elif '标签' in model.name %}tags{% elif '评论' in model.name %}comments{% elif '用户' in model.name %}user{% elif '主题' in model.name %}comment-dots{% elif '版块' in model.name %}th-large{% else %}cube{% endif %} me-2 text-primary"></i>
+                                {% if model.admin_url %}
+                                <a href="{{ model.admin_url }}" class="text-decoration-none">
+                                    {{ model.name }}
+                                </a>
+                                {% else %}
+                                {{ model.name }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if model.add_url %}
+                            <a href="{{ model.add_url }}" class="btn btn-sm btn-outline-primary" title="添加">
+                                <i class="fas fa-plus"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if model.admin_url %}
+                            <a href="{{ model.admin_url }}" class="btn btn-sm btn-primary" title="修改">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if model.admin_url and model.view_only != True %}
+                            <a href="{{ model.admin_url }}" class="text-primary">
+                                {{ model.object_count|default:'-' }}
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div class="dashboard-card">
+    <h3 class="card-title">
+        <i class="fas fa-info-circle me-2 text-primary"></i>
+        快捷操作
+    </h3>
+    <div class="d-grid gap-2">
+        <a href="{% url 'admin:index' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>返回仪表盘
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .dashboard-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(5px);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .card-title {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .text-primary { color: #007bff !important; }
+    .text-muted { color: #6c757d !important; }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table thead th {
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        border-bottom: none;
+    }
+    
+    .table td, .table th {
+        padding: 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .table tbody tr:hover {
+        background: rgba(0, 123, 255, 0.05);
+    }
+    
+    .table a {
+        color: #333;
+    }
+    
+    .table a:hover {
+        color: var(--primary-color);
+    }
+    
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+    }
+    
+    .btn-outline-primary {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+        background: var(--primary-gradient);
+        color: white;
+    }
+</style>
+{% endblock %}

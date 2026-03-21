@@ -1,97 +1,515 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}安装成功 - DjangoBlog{% endblock %}
 
 {% block content %}
-<div class="install-container">
-    <div class="text-center py-5">
-        <div class="success-icon mb-4">
-            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-success">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
+<div class="install-wrapper">
+    <div class="success-container">
+        <!-- 成功动画 -->
+        <div class="success-animation">
+            <div class="success-checkmark">
+                <div class="check-icon">
+                    <span class="icon-line line-tip"></span>
+                    <span class="icon-line line-long"></span>
+                    <div class="icon-circle"></div>
+                    <div class="icon-fix"></div>
+                </div>
+            </div>
+            <div class="success-emoji">🎉</div>
         </div>
-        
-        <h1 class="display-4 text-success mb-4">🎉 安装成功！</h1>
-        <p class="lead text-muted mb-5">DjangoBlog 已成功安装并配置完成</p>
-        
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">📋 安装信息</h5>
+
+        <h1 class="success-title">安装成功！</h1>
+        <p class="success-subtitle">DjangoBlog 已成功安装并配置完成</p>
+
+        <!-- 安装信息卡片 -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <i class="fas fa-clipboard-list me-2"></i>
+                安装信息
+            </div>
+            <div class="info-card-body">
+                <div class="info-row">
+                    <div class="info-label">
+                        <i class="fas fa-user"></i>
+                        <span>管理员账户</span>
                     </div>
-                    <div class="card-body text-start">
-                        <table class="table table-borderless mb-0">
-                            <tr>
-                                <td width="30%"><strong>管理员用户名：</strong></td>
-                                <td>{{ admin_username }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>管理后台：</strong></td>
-                                <td><a href="/admin/" target="_blank">/admin/</a></td>
-                            </tr>
-                            <tr>
-                                <td><strong>数据库：</strong></td>
-                                <td>SQLite (db.sqlite3)</td>
-                            </tr>
-                        </table>
+                    <div class="info-value">
+                        <code>{{ admin_username }}</code>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">
+                        <i class="fas fa-cogs"></i>
+                        <span>管理后台</span>
+                    </div>
+                    <div class="info-value">
+                        <a href="/admin/" target="_blank" class="link">
+                            /admin/ <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">
+                        <i class="fas fa-database"></i>
+                        <span>数据库</span>
+                    </div>
+                    <div class="info-value">
+                        <span class="badge bg-success">SQLite</span>
+                        <code class="ms-2">db.sqlite3</code>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="row justify-content-center g-3">
-            <div class="col-auto">
-                <a href="/" class="btn btn-outline-primary btn-lg">
-                    🏠 访问首页
-                </a>
-            </div>
-            <div class="col-auto">
-                <a href="/admin/" class="btn btn-primary btn-lg">
-                    🔐 进入后台
-                </a>
-            </div>
+
+        <!-- 快捷入口 -->
+        <div class="quick-actions">
+            <a href="/" class="action-card">
+                <div class="action-icon home">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div class="action-content">
+                    <h5>访问首页</h5>
+                    <p>查看您的全新网站</p>
+                </div>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+            <a href="/admin/" class="action-card">
+                <div class="action-icon admin">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="action-content">
+                    <h5>进入后台</h5>
+                    <p>管理您的网站内容</p>
+                </div>
+                <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
-        
-        <div class="row justify-content-center mt-5">
-            <div class="col-md-8">
-                <div class="card bg-light">
-                    <div class="card-body">
-                        <h6 class="card-title">💡 后续建议</h6>
-                        <ol class="mb-0">
-                            <li>登录管理后台完善网站配置</li>
-                            <li>创建文章分类和标签</li>
-                            <li>发布第一篇博客文章</li>
-                            <li>配置论坛版块</li>
-                            <li>如需生产部署，请参考项目文档</li>
-                        </ol>
+
+        <!-- 后续建议 -->
+        <div class="next-steps">
+            <div class="steps-header">
+                <i class="fas fa-lightbulb"></i>
+                <span>后续建议</span>
+            </div>
+            <div class="steps-list">
+                <div class="step-item completed">
+                    <div class="step-check"><i class="fas fa-check"></i></div>
+                    <div class="step-content">
+                        <h6>完成安装</h6>
+                        <p>系统已自动完成数据库初始化</p>
                     </div>
                 </div>
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h6>完善网站配置</h6>
+                        <p>登录管理后台，设置网站名称、描述等信息</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h6>创建分类和标签</h6>
+                        <p>为博客文章添加分类，方便内容组织</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h6>发布第一篇文章</h6>
+                        <p>开始撰写您的第一篇博客文章</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h6>配置论坛版块</h6>
+                        <p>创建论坛讨论区，增加用户互动</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 安全提示 -->
+        <div class="security-notice">
+            <i class="fas fa-shield-alt"></i>
+            <div>
+                <strong>安全提示</strong>
+                <p>请妥善保管您的管理员密码，建议定期更换。如需生产环境部署，请参考项目文档进行安全配置。</p>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-.install-container {
+.install-wrapper {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
 }
 
-.success-icon {
-    animation: scale-in 0.5s ease-out;
+.success-container {
+    text-align: center;
+    padding: 40px 20px;
 }
 
-@keyframes scale-in {
-    0% {
-        transform: scale(0);
-        opacity: 0;
+/* 成功动画 */
+.success-animation {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.success-checkmark {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 40px rgba(40, 167, 69, 0.3);
+    animation: scaleIn 0.5s ease-out;
+}
+
+.check-icon {
+    width: 50px;
+    height: 50px;
+    position: relative;
+}
+
+.icon-line {
+    height: 4px;
+    background: white;
+    position: absolute;
+    border-radius: 2px;
+    animation: checkmark 0.5s ease-out 0.3s forwards;
+    transform-origin: left;
+}
+
+.line-tip {
+    width: 20px;
+    top: 28px;
+    left: 8px;
+    transform: scaleX(0);
+    animation-delay: 0.3s;
+}
+
+.line-long {
+    width: 35px;
+    top: 22px;
+    left: 18px;
+    transform: scaleX(0) rotate(45deg);
+    animation-delay: 0.4s;
+}
+
+@keyframes checkmark {
+    to { transform: scaleX(1); }
+}
+
+@keyframes scaleIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.success-emoji {
+    font-size: 3rem;
+    margin-top: 15px;
+    animation: bounce 0.6s ease infinite alternate;
+}
+
+@keyframes bounce {
+    to { transform: translateY(-10px); }
+}
+
+.success-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.success-subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 40px;
+}
+
+/* 信息卡片 */
+.info-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    text-align: left;
+    overflow: hidden;
+}
+
+.info-card-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 15px 20px;
+    font-weight: 600;
+}
+
+.info-card-body {
+    padding: 10px 0;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6c757d;
+}
+
+.info-label i {
+    width: 20px;
+    text-align: center;
+    color: #007bff;
+}
+
+.info-value {
+    display: flex;
+    align-items: center;
+}
+
+.info-value code {
+    background: #f8f9fa;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.info-value .link {
+    color: #007bff;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.info-value .link:hover {
+    text-decoration: underline;
+}
+
+/* 快捷入口 */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.action-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    color: #333;
+}
+
+.action-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.action-icon.home {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+}
+
+.action-icon.admin {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+}
+
+.action-content h5 {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
+
+.action-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.action-card > i:last-child {
+    color: #adb5bd;
+    margin-left: auto;
+}
+
+.action-card:hover > i:last-child {
+    color: #007bff;
+    transform: translateX(5px);
+}
+
+/* 后续步骤 */
+.next-steps {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.steps-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+    color: #333;
+}
+
+.steps-header i {
+    color: #ffc107;
+}
+
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.step-item:hover {
+    background: #f0f4f8;
+}
+
+.step-item.completed {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.step-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #28a745;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+
+.step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.step-content h6 {
+    margin: 0 0 3px;
+    font-weight: 600;
+    color: #333;
+}
+
+.step-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* 安全提示 */
+.security-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 12px;
+    text-align: left;
+}
+
+.security-notice > i {
+    font-size: 1.5rem;
+    color: #ffc107;
+    flex-shrink: 0;
+}
+
+.security-notice strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.security-notice p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* 响应式 */
+@media (max-width: 576px) {
+    .success-title {
+        font-size: 2rem;
     }
-    100% {
-        transform: scale(1);
-        opacity: 1;
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }
 </style>

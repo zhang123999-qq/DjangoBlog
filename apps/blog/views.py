@@ -1,14 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.http import HttpResponseForbidden, JsonResponse
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Count
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
+from django.urls import reverse_lazy
 from moderation.services import smart_moderate_instance
 from .models import Post, Category, Tag, Comment, CommentLike
-from .forms import CommentForm
+from .forms import CommentForm, PostForm
 
 
 def get_categories_and_tags():
@@ -169,4 +171,101 @@ def like_comment_view(request, comment_id):
         'liked': liked,
         'like_count': comment.like_count,
         'message': '操作成功'
+    })
+
+
+# ==================== 文章编辑视图 ====================
+
+class PostCreateView(LoginRequiredMixin, CreateView):
+    """创建文章视图"""
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/post_form.html'
+    
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        messages.success(self.request, '文章创建成功！')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'], context['tags'] = get_categories_and_tags()
+        context['title'] = '创建文章'
+        context['submit_text'] = '发布文章'
+        return context
+
+
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """更新文章视图"""
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/post_form.html'
+    slug_field = 'slug'
+    
+    def test_func(self):
+        """只有作者可以编辑"""
+        post = self.get_object()
+        return post.author == self.request.user or self.request.user.is_staff
+    
+    def form_valid(self, form):
+        messages.success(self.request, '文章更新成功！')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'], context['tags'] = get_categories_and_tags()
+        context['title'] = '编辑文章'
+        context['submit_text'] = '保存修改'
+        return context
+
+
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """删除文章视图"""
+    model = Post
+    slug_field = 'slug'
+    success_url = reverse_lazy('blog:post_list')
+    
+    def test_func(self):
+        """只有作者可以删除"""
+        post = self.get_object()
+        return post.author == self.request.user or self.request.user.is_staff
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, '文章已删除！')
+        return super().delete(request, *args, **kwargs)
+
+
+@login_required
+def post_draft_list(request):
+    """我的草稿列表"""
+    drafts = Post.objects.filter(author=request.user, status='draft').order_by('-updated_at')
+    categories, tags = get_categories_and_tags()
+    
+    paginator = Paginator(drafts, 20)
+    page = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page)
+    
+    return render(request, 'blog/post_draft_list.html', {
+        'posts': page_obj,
+        'categories': categories,
+        'tags': tags,
+        'title': '我的草稿'
+    })
+
+
+@login_required
+def my_posts(request):
+    """我的文章列表"""
+    posts = Post.objects.filter(author=request.user).order_by('-updated_at')
+    categories, tags = get_categories_and_tags()
+    
+    paginator = Paginator(posts, 20)
+    page = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page)
+    
+    return render(request, 'blog/my_posts.html', {
+        'posts': page_obj,
+        'categories': categories,
+        'tags': tags,
+        'title': '我的文章'
     })

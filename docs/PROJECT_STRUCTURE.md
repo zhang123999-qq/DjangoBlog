@@ -7,12 +7,29 @@ DjangoBlog/
 ├── apps/                      # Django 应用模块
 │   ├── accounts/             # 用户账户管理
 │   ├── api/                  # REST API 接口
+│   │   └── upload_views.py   # 图片/文件上传API
 │   ├── blog/                 # 博客功能
+│   │   ├── forms.py          # 文章编辑表单
+│   │   └── views.py          # 文章CRUD视图
 │   ├── core/                 # 核心功能（首页、搜索等）
+│   │   └── upload_views.py   # 上传处理
 │   ├── forum/                # 论坛功能
 │   ├── install/              # 安装向导
-│   └── tools/                # 工具栏（60+ 在线工具）
+│   └── tools/                # 工具栏（70+ 在线工具）
+│       ├── base_tool.py      # 工具基类
+│       ├── registry.py       # 工具注册表
 │       └── tool_modules/     # 工具模块实现
+│           ├── password_strength_tool.py
+│           ├── markdown_editor_tool.py
+│           ├── image_compress_tool.py
+│           ├── html_markdown_tool.py
+│           ├── text_deduplicate_tool.py
+│           ├── clear_format_tool.py
+│           ├── gitignore_generator_tool.py
+│           ├── morse_code_tool.py
+│           ├── ascii_art_tool.py
+│           ├── image_format_convert_tool.py
+│           └── ... (其他60+工具)
 │
 ├── config/                    # 项目配置
 │   ├── settings/             # 配置文件
@@ -23,16 +40,15 @@ DjangoBlog/
 │   ├── wsgi.py              # WSGI 入口
 │   └── asgi.py              # ASGI 入口
 │
-├── deploy/                    # 部署配置
-│   ├── nginx.conf.example    # Nginx 配置示例
-│   ├── gunicorn.service.example
-│   └── supervisor.conf.example
-│
 ├── docs/                      # 文档
-│   └── CONFIGURATION.md
+│   ├── CONFIGURATION.md     # 配置说明
+│   ├── PROJECT_STRUCTURE.md # 项目结构
+│   └── moderation-upgrade.md
 │
-├── logs/                      # 日志文件
-│   └── django.log
+├── media/                     # 用户上传文件
+│   └── uploads/             # 上传目录
+│       ├── images/          # 图片
+│       └── files/           # 文件
 │
 ├── moderation/                # 内容审核系统
 │   ├── management/commands/  # 管理命令
@@ -46,56 +62,65 @@ DjangoBlog/
 │
 ├── static/                    # 静态文件
 │   ├── css/                  # 样式文件
+│   │   └── site.css         # 主样式
 │   ├── img/                  # 图片资源
 │   │   └── avatars/         # 头像图片
 │   ├── js/                   # JavaScript 文件
+│   │   ├── site.js          # 主脚本
+│   │   ├── editor-init.js   # 编辑器初始化（TinyMCE + Monaco）
+│   │   └── tech-effects.js  # 科技特效
 │   └── vendor/               # 第三方库本地备份
 │       ├── bootstrap/
 │       └── bootstrap-icons/
 │
 ├── templates/                 # HTML 模板
 │   ├── accounts/             # 账户相关模板
-│   ├── admin/                # 管理后台模板
+│   ├── admin/                # 管理后台模板（统一风格）
+│   │   ├── base_site_tech.html
+│   │   ├── index_tech.html
+│   │   ├── login_tech.html
+│   │   ├── app_index_tech.html
+│   │   └── change_form.html
 │   ├── blog/                 # 博客模板
+│   │   ├── post_form.html   # 文章编辑（TinyMCE）
+│   │   ├── my_posts.html    # 我的文章
+│   │   └── post_draft_list.html
 │   ├── core/                 # 核心功能模板
 │   ├── forum/                # 论坛模板
 │   ├── includes/             # 公共组件
+│   │   ├── navbar.html      # 导航栏（含写文章入口）
+│   │   ├── messages.html
+│   │   └── footer.html
 │   ├── install/              # 安装向导模板
-│   ├── search/               # 搜索模板
+│   │   ├── index.html       # 安装首页
+│   │   ├── quick_install.html
+│   │   ├── step1_environment.html
+│   │   └── success.html
 │   ├── tools/                # 工具栏模板
+│   │   ├── tool_detail.html
+│   │   └── json_formatter_enhanced.html  # Monaco Editor示例
 │   ├── base.html             # 基础模板
-│   ├── base_tech.html        # 科技主题基础模板
 │   └── home.html             # 首页模板
 │
 ├── tests/                     # 测试文件
-│   ├── logs/                 # 测试日志（已忽略）
-│   ├── screenshots/          # 测试截图（已忽略）
 │   ├── utils/                # 测试工具
 │   ├── conftest.py           # Pytest 配置
-│   ├── test_article.py
-│   ├── test_like.py
-│   ├── test_post.py
-│   ├── test_register.py
-│   └── test_security.py
+│   └── test_*.py             # 测试用例
 │
 ├── .env                       # 环境变量
 ├── .env.example              # 环境变量示例
 ├── .gitignore                # Git 忽略规则
-├── .python-version           # Python 版本
 ├── CHANGELOG.md              # 更新日志
 ├── CONTRIBUTING.md           # 贡献指南
 ├── DEPLOYMENT.md             # 部署文档
+├── README.md                 # 项目说明
 ├── docker-compose.yml        # Docker Compose 配置
 ├── Dockerfile                # Docker 构建文件
 ├── LICENSE                   # 许可证
 ├── manage.py                 # Django 管理脚本
 ├── manage_project.py         # 项目管理脚本
-├── migrate_to_mysql.py       # MySQL 迁移脚本
-├── nginx.conf                # Nginx 配置
 ├── pyproject.toml            # 项目配置
-├── run_lan.bat               # 局域网运行脚本
-├── setup.cfg                 # Setup 配置
-└── test_settings.py          # 测试配置
+└── requirements/             # 依赖管理
 ```
 
 ## 依赖管理

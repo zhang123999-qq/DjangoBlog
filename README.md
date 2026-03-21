@@ -1,20 +1,22 @@
-# DjangoBlog v2.2.0
+# DjangoBlog v2.3.0
 
-🚀 一个基于 Django 4.2 LTS 的现代化博客论坛系统，集成 60+ 在线工具，支持智能内容审核
+🚀 一个基于 Django 4.2 LTS 的现代化博客论坛系统，集成 **70+ 在线工具**，支持智能内容审核、富文本编辑器
 
 [![Django](https://img.shields.io/badge/Django-4.2%20LTS-green.svg)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Celery](https://img.shields.io/badge/Celery-5.4-orange.svg)](https://docs.celeryq.dev/)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com/)
 
 ## ✨ 功能特性
 
 ### 📝 博客系统
 - 文章发布、编辑、删除
+- **TinyMCE 富文本编辑器** - 所见即所得编辑
 - Markdown 支持
 - 分类和标签管理
 - 文章搜索
 - 点赞和评论
+- 草稿箱管理
 
 ### 💬 论坛系统
 - 多版块讨论区
@@ -22,7 +24,7 @@
 - 用户互动
 - 智能内容审核
 
-### 🛡️ 智能审核系统（NEW!）
+### 🛡️ 智能审核系统
 - **用户信誉系统** - 基于行为的智能分级
 - **AI 内容审核** - 百度内容审核 API 集成
 - **多级审核策略** - 高信誉自动发布，低信誉强制人工审核
@@ -30,16 +32,37 @@
 - **图片审核** - AI 图片违规检测
 - **异步处理** - Celery 异步队列，不阻塞请求
 
-### 🔧 在线工具栏（60+ 工具）
-- **加密解密**: AES、RSA、Base64、MD5、SHA、HMAC
-- **编码转换**: URL编码、Unicode、HTML实体
-- **文本处理**: 字数统计、大小写转换、中文繁简转换
-- **生成工具**: UUID、密码、二维码、条形码
-- **数据转换**: JSON格式化、CSV/JSON互转
-- **时间工具**: 时间戳转换、时差计算
-- **图片工具**: 图片Base64、EXIF信息
-- **网络工具**: IP查询、端口扫描、HTTP请求
-- **更多工具**: BMI计算器、正则测试、JSONPath...
+### 🔧 在线工具栏（70+ 工具）
+
+#### 加密解密
+AES、RSA、Base64、MD5、SHA、HMAC、DES、摩斯密码
+
+#### 编码转换
+URL编码、Unicode、HTML实体、HTML/Markdown互转
+
+#### 文本处理
+字数统计、大小写转换、中文繁简转换、文本去重、清除格式
+
+#### 生成工具
+UUID、密码（增强版）、二维码、条形码、字符画、.gitignore
+
+#### 数据转换
+JSON格式化（Monaco编辑器）、CSV/JSON互转
+
+#### 时间工具
+时间戳转换、时差计算
+
+#### 图片工具
+图片Base64、图片压缩、图片格式转换、EXIF信息
+
+#### 网络工具
+IP查询、端口扫描、HTTP请求
+
+#### 安全工具
+密码强度检测、凯撒密码
+
+#### 其他工具
+BMI计算器、正则测试、JSONPath、密码强度检测、Markdown编辑器
 
 ### 👤 用户系统
 - 用户注册/登录
@@ -67,31 +90,47 @@
 | **缓存** | Redis |
 | **API** | Django REST Framework |
 | **前端** | Bootstrap 5.3 |
-| **图标** | Bootstrap Icons |
-| **富文本** | CKEditor |
+| **图标** | Bootstrap Icons / Font Awesome |
+| **富文本** | TinyMCE 7 |
+| **代码编辑器** | Monaco Editor |
 | **AI 审核** | 百度内容审核 API |
 
 ## 📦 快速开始
 
-### 环境要求
-
-- Python 3.10+
-- Redis (可选，用于缓存)
-
-### 安装步骤
+### 一键安装（推荐）
 
 ```bash
 # 克隆项目
 git clone https://github.com/zhang123999-qq/DjangoBlog.git
 cd DjangoBlog
 
+# 一键安装
+python run.py
+
+# 启动服务器
+python start.py
+```
+
+访问 http://127.0.0.1:8000 即可看到网站
+
+### 环境要求
+
+- Python 3.10+
+- pip 或 uv（推荐）
+
+### 手动安装
+
+<details>
+<summary>点击展开手动安装步骤</summary>
+
+```bash
 # 创建虚拟环境
-uv venv
+python -m venv .venv
 .venv\Scripts\activate  # Windows
 # source .venv/bin/activate  # Linux/Mac
 
 # 安装依赖
-uv pip install -r requirements/development.txt
+pip install -r requirements/development.txt
 
 # 数据库迁移
 python manage.py migrate
@@ -103,7 +142,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-访问 http://127.0.0.1:8000 即可看到网站
+</details>
 
 ## 📁 项目结构
 
@@ -117,9 +156,21 @@ DjangoBlog/
 │   ├── forum/             # 论坛功能
 │   ├── install/           # 安装向导
 │   └── tools/             # 工具栏
+│       └── tool_modules/  # 70+ 工具模块
 ├── config/                # 配置文件
 ├── static/                # 静态文件
+│   ├── css/              # 样式
+│   ├── js/               # JavaScript（含编辑器初始化）
+│   ├── img/              # 图片
+│   └── vendor/           # 第三方库
 ├── templates/             # 模板文件
+│   ├── admin/            # 管理后台（统一风格）
+│   ├── blog/             # 博客模板
+│   ├── forum/            # 论坛模板
+│   ├── tools/            # 工具模板
+│   └── install/          # 安装向导
+├── media/                 # 用户上传文件
+├── docs/                  # 文档
 ├── tests/                 # 测试文件
 └── requirements/          # 依赖管理
 ```
@@ -193,6 +244,32 @@ REDIS_URL=redis://localhost:6379/0
 
 详细配置请查看 [配置文档](docs/CONFIGURATION.md)
 
+## 🆕 v2.3.0 更新内容
+
+### 新增功能
+- ✨ **TinyMCE 富文本编辑器** - 博客文章所见即所得编辑
+- ✨ **Monaco Editor** - 代码编辑器，支持语法高亮
+- ✨ **10个新工具** - 密码强度检测、Markdown编辑器、图片压缩等
+- ✨ **文章管理** - 创建、编辑、删除、草稿箱
+- ✨ **图片上传API** - 支持拖拽、粘贴上传
+
+### 界面优化
+- 🎨 管理后台风格统一 - 与前端保持一致
+- 🎨 安装向导优化 - 更清晰的步骤引导
+- 🎨 导航栏优化 - 新增"写文章"快捷入口
+
+### 工具新增（10个）
+1. 密码强度检测
+2. Markdown编辑器
+3. 图片压缩
+4. HTML/Markdown互转
+5. 文本去重
+6. 清除文本格式
+7. .gitignore生成器
+8. 摩斯密码编解码
+9. 字符画生成器
+10. 图片格式转换
+
 ## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！
@@ -210,6 +287,7 @@ REDIS_URL=redis://localhost:6379/0
 ## 👨‍💻 作者
 
 - GitHub: [@zhang123999-qq](https://github.com/zhang123999-qq)
+- Email: 2973084264@qq.com
 
 ---
 

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Django Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>{{ title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="post-form">
+                    {% csrf_token %}
+                    
+                    <!-- 标题 -->
+                    <div class="mb-4">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                            文章标题 <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 摘要 -->
+                    <div class="mb-4">
+                        <label for="{{ form.summary.id_for_label }}" class="form-label fw-bold">
+                            文章摘要
+                        </label>
+                        {{ form.summary }}
+                        <small class="text-muted">用于SEO和文章列表显示，留空将自动截取内容前200字</small>
+                    </div>
+                    
+                    <!-- 内容编辑器 -->
+                    <div class="mb-4">
+                        <label for="{{ form.content.id_for_label }}" class="form-label fw-bold">
+                            文章内容 <span class="text-danger">*</span>
+                        </label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.content.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 分类和标签 -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">
+                                分类
+                            </label>
+                            {{ form.category }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label fw-bold">
+                                标签
+                            </label>
+                            {{ form.tags }}
+                            <small class="text-muted">按住 Ctrl 键可多选</small>
+                        </div>
+                    </div>
+                    
+                    <!-- 状态和设置 -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label fw-bold">
+                                发布状态
+                            </label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch">
+                                {{ form.allow_comments }}
+                                <label class="form-check-label fw-bold" for="{{ form.allow_comments.id_for_label }}">
+                                    允许评论
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="d-flex justify-content-between align-items-center border-top pt-4">
+                        <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>返回列表
+                        </a>
+                        <div class="btn-group">
+                            <button type="submit" name="status" value="draft" class="btn btn-outline-primary">
+                                <i class="bi bi-save me-1"></i>保存草稿
+                            </button>
+                            <button type="submit" name="status" value="published" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>{{ submit_text }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 编辑器提示 -->
+        <div class="card mt-4 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-lightbulb me-2"></i>编辑器使用提示</h6>
+                <ul class="mb-0 small text-muted">
+                    <li>支持富文本编辑，可以插入图片、代码块、表格等</li>
+                    <li>图片上传支持拖拽和粘贴，自动保存到服务器</li>
+                    <li>按 <kbd>Ctrl+S</kbd> 可快速保存文章</li>
+                    <li>草稿状态只有自己可见，发布后所有用户可见</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 编辑器初始化脚本 -->
+<script src="{% static 'js/editor-init.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化 TinyMCE 编辑器
+    TinyMCEditor.create('id_content', {
+        height: 500,
+        menubar: true
+    }).then(editor => {
+        console.log('TinyMCE 编辑器已初始化');
+        
+        // 快捷键保存
+        editor.on('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                document.getElementById('post-form').submit();
+            }
+        });
+    });
+    
+    // 表单提交前同步编辑器内容
+    const form = document.getElementById('post-form');
+    form.addEventListener('submit', function() {
+        const editor = tinymce.get('id_content');
+        if (editor) {
+            editor.save();
+        }
+    });
+});
+</script>
+{% endblock %}
