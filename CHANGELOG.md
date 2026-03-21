@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.1] - 2026-03-21
+
+### Added
+- **工具搜索框** - 快速搜索工具
+  - 实时搜索工具名称和描述
+  - 高亮匹配文字
+  - 显示匹配结果数量
+  - 支持快捷键：`/` 或 `Ctrl+F` 聚焦搜索框，`ESC` 清空
+  - 无匹配结果时显示提示
+
 ## [2.4.0] - 2026-03-21
 
 ### Added

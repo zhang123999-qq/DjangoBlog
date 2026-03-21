@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container py-4">
     <!-- 页面标题 -->
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
         <h1 class="display-5 fw-bold">
             <i class="bi bi-tools me-2 text-primary"></i>工具箱
         </h1>
@@ -19,8 +19,30 @@
         </div>
     {% endif %}
     
+    <!-- 搜索框 -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8 col-lg-6">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" 
+                       class="form-control border-start-0" 
+                       id="tool-search" 
+                       placeholder="搜索工具名称或功能..."
+                       autocomplete="off">
+                <button class="btn btn-outline-secondary" type="button" id="clear-search" style="display: none;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="search-hint" class="form-text text-center mt-2" style="display: none;">
+                <span id="search-result-count">0</span> 个匹配结果
+            </div>
+        </div>
+    </div>
+    
     <!-- 工具统计 -->
-    <div class="row mb-4">
+    <div class="row mb-4" id="stats-section">
         <div class="col-md-4">
             <div class="card border-0 bg-light">
                 <div class="card-body text-center">
@@ -48,10 +70,10 @@
     </div>
     
     <!-- 分类快捷导航 -->
-    <div class="mb-4">
+    <div class="mb-4" id="category-nav">
         <div class="d-flex flex-wrap gap-2 justify-content-center">
             {% for cat in categories %}
-            <a href="#cat-{{ cat.key }}" class="btn btn-outline-secondary btn-sm">
+            <a href="#cat-{{ cat.key }}" class="btn btn-outline-secondary btn-sm category-btn" data-category="{{ cat.key }}">
                 <i class="{{ cat.icon }} me-1" style="color: {{ cat.color }}"></i>
                 {{ cat.name }}
                 <span class="badge bg-secondary ms-1">{{ cat.count }}</span>
@@ -60,23 +82,33 @@
         </div>
     </div>
     
+    <!-- 无搜索结果提示 -->
+    <div id="no-results" class="alert alert-info text-center" style="display: none;">
+        <i class="bi bi-search me-2"></i>
+        未找到匹配的工具，请尝试其他关键词
+    </div>
+    
     <!-- 按分类显示工具 -->
+    <div id="tools-container">
     {% for cat in categories %}
-    <div class="mb-5" id="cat-{{ cat.key }}">
+    <div class="mb-5 category-section" id="cat-{{ cat.key }}" data-category="{{ cat.key }}">
         <div class="d-flex align-items-center mb-3">
             <div class="category-icon me-3" style="background: {{ cat.color }}20; color: {{ cat.color }}">
                 <i class="{{ cat.icon }}"></i>
             </div>
             <div>
-                <h5 class="mb-0">{{ cat.name }}</h5>
+                <h5 class="mb-0 category-title">{{ cat.name }}</h5>
                 <small class="text-muted">{{ cat.description }}</small>
             </div>
-            <span class="badge bg-light text-dark ms-auto">{{ cat.count }} 个工具</span>
+            <span class="badge bg-light text-dark ms-auto category-count">{{ cat.count }} 个工具</span>
         </div>
         
         <div class="row">
             {% for tool in cat.tools %}
-            <div class="col-md-6 col-lg-4 col-xl-3 mb-3">
+            <div class="col-md-6 col-lg-4 col-xl-3 mb-3 tool-card" 
+                 data-name="{{ tool.name }}" 
+                 data-desc="{{ tool.description }}"
+                 data-category="{{ cat.key }}">
                 <div class="card h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-2">
@@ -84,12 +116,12 @@
                                 <i class="bi bi-{{ tool.icon|default:'gear' }}" style="color: {{ cat.color }}"></i>
                             </div>
                             <h6 class="card-title mb-0">
-                                <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark">
+                                <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark tool-name">
                                     {{ tool.name }}
                                 </a>
                             </h6>
                         </div>
-                        <p class="card-text text-muted small mb-2" style="font-size: 0.8rem;">
+                        <p class="card-text text-muted small mb-2 tool-desc" style="font-size: 0.8rem;">
                             {{ tool.description|truncatechars:50 }}
                         </p>
                         <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-outline-primary btn-sm btn-block">
@@ -106,9 +138,10 @@
         <i class="bi bi-info-circle me-2"></i>暂无可用工具
     </div>
     {% endfor %}
+    </div>
     
     <!-- 使用提示 -->
-    <div class="mt-5">
+    <div class="mt-5" id="tips-section">
         <div class="card bg-light border-0">
             <div class="card-body">
                 <h5 class="card-title">
@@ -117,6 +150,7 @@
                 <ul class="mb-0 text-muted">
                     <li>所有工具均为在线使用，无需下载安装</li>
                     <li>数据在本地处理，安全可靠</li>
+                    <li>使用搜索框快速找到需要的工具</li>
                     <li>如有问题或建议，欢迎反馈</li>
                 </ul>
             </div>
@@ -175,5 +209,200 @@
     .btn-outline-secondary:hover {
         background: #f8f9fa;
     }
+    
+    /* 搜索框样式 */
+    #tool-search:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
+    
+    .input-group:focus-within .input-group-text {
+        border-color: #0d6efd;
+    }
+    
+    /* 高亮匹配文字 */
+    .highlight {
+        background: #fff3cd;
+        padding: 0 2px;
+        border-radius: 2px;
+    }
+    
+    /* 隐藏的分类 */
+    .category-section.hidden {
+        display: none;
+    }
+    
+    /* 隐藏的工具卡片 */
+    .tool-card.hidden {
+        display: none;
+    }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('tool-search');
+    const clearBtn = document.getElementById('clear-search');
+    const searchHint = document.getElementById('search-hint');
+    const resultCount = document.getElementById('search-result-count');
+    const noResults = document.getElementById('no-results');
+    const categoryNav = document.getElementById('category-nav');
+    const statsSection = document.getElementById('stats-section');
+    const categorySections = document.querySelectorAll('.category-section');
+    const toolCards = document.querySelectorAll('.tool-card');
+    
+    // 搜索输入事件
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        
+        if (query === '') {
+            // 清空搜索，恢复所有显示
+            showAll();
+            return;
+        }
+        
+        // 执行搜索
+        performSearch(query);
+    });
+    
+    // 清除按钮
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        showAll();
+        searchInput.focus();
+    });
+    
+    // 执行搜索
+    function performSearch(query) {
+        let matchCount = 0;
+        const matchedCategories = new Set();
+        
+        // 遍历所有工具卡片
+        toolCards.forEach(card => {
+            const name = card.dataset.name.toLowerCase();
+            const desc = card.dataset.desc.toLowerCase();
+            const category = card.dataset.category;
+            
+            if (name.includes(query) || desc.includes(query)) {
+                // 匹配成功
+                card.classList.remove('hidden');
+                matchCount++;
+                matchedCategories.add(category);
+                
+                // 高亮匹配文字
+                highlightText(card, query);
+            } else {
+                // 不匹配
+                card.classList.add('hidden');
+                removeHighlight(card);
+            }
+        });
+        
+        // 更新分类显示
+        categorySections.forEach(section => {
+            const catKey = section.dataset.category;
+            const visibleCards = section.querySelectorAll('.tool-card:not(.hidden)');
+            
+            if (visibleCards.length > 0) {
+                section.classList.remove('hidden');
+                // 更新分类计数
+                section.querySelector('.category-count').textContent = visibleCards.length + ' 个工具';
+            } else {
+                section.classList.add('hidden');
+            }
+        });
+        
+        // 更新UI
+        clearBtn.style.display = query ? 'block' : 'none';
+        searchHint.style.display = query ? 'block' : 'none';
+        resultCount.textContent = matchCount;
+        noResults.style.display = matchCount === 0 ? 'block' : 'none';
+        categoryNav.style.display = query ? 'none' : 'flex';
+        statsSection.style.display = query ? 'none' : 'flex';
+    }
+    
+    // 显示所有
+    function showAll() {
+        toolCards.forEach(card => {
+            card.classList.remove('hidden');
+            removeHighlight(card);
+        });
+        
+        categorySections.forEach(section => {
+            section.classList.remove('hidden');
+            // 恢复原始计数
+            const originalCount = section.querySelectorAll('.tool-card').length;
+            section.querySelector('.category-count').textContent = originalCount + ' 个工具';
+        });
+        
+        clearBtn.style.display = 'none';
+        searchHint.style.display = 'none';
+        noResults.style.display = 'none';
+        categoryNav.style.display = 'flex';
+        statsSection.style.display = 'flex';
+    }
+    
+    // 高亮文字
+    function highlightText(card, query) {
+        const nameEl = card.querySelector('.tool-name');
+        const descEl = card.querySelector('.tool-desc');
+        
+        // 高亮名称
+        if (nameEl) {
+            const originalName = nameEl.textContent;
+            const highlighted = highlightMatch(originalName, query);
+            nameEl.innerHTML = highlighted;
+        }
+        
+        // 高亮描述
+        if (descEl) {
+            const originalDesc = descEl.textContent;
+            const highlighted = highlightMatch(originalDesc, query);
+            descEl.innerHTML = highlighted;
+        }
+    }
+    
+    // 匹配高亮
+    function highlightMatch(text, query) {
+        const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+    
+    // 移除高亮
+    function removeHighlight(card) {
+        const nameEl = card.querySelector('.tool-name');
+        const descEl = card.querySelector('.tool-desc');
+        
+        if (nameEl) {
+            // 移除高亮span
+            nameEl.innerHTML = nameEl.textContent;
+        }
+        if (descEl) {
+            descEl.innerHTML = descEl.textContent;
+        }
+    }
+    
+    // 转义正则特殊字符
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    // 快捷键支持
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+F 或 / 聚焦搜索框
+        if ((e.ctrlKey && e.key === 'f') || (e.key === '/' && document.activeElement !== searchInput)) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+        // ESC 清空搜索
+        if (e.key === 'Escape' && searchInput.value) {
+            showAll();
+            searchInput.value = '';
+            searchInput.blur();
+        }
+    });
+});
+</script>
 {% endblock %}
