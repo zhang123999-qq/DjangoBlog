@@ -4,7 +4,8 @@ django-environ>=0.11.0
 django-axes>=7.0.0
 
 # 数据库
-mysqlclient>=2.2.0
+# mysqlclient>=2.2.0  # 需要编译，改用 PyMySQL
+PyMySQL>=1.1.0
 
 # Redis 缓存
 redis>=5.0.0

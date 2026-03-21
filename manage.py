@@ -3,6 +3,17 @@
 import os
 import sys
 
+
+def setup_pymysql():
+    """配置 PyMySQL 作为 MySQL 驱动（替代 mysqlclient）"""
+    try:
+        import pymysql
+        pymysql.install_as_MySQLdb()
+        pymysql.version_info = (2, 2, 0, 'final', 0)  # 兼容 Django 版本检查
+    except ImportError:
+        pass  # PyMySQL 未安装时忽略（开发环境用 SQLite）
+
+
 def get_settings_module():
     """根据环境自动选择配置模块"""
     # 如果已设置，使用环境变量
@@ -19,6 +30,9 @@ def get_settings_module():
 
 def main():
     """Run administrative tasks."""
+    # 配置 PyMySQL（在使用 Django 之前）
+    setup_pymysql()
+    
     settings_module = get_settings_module()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
     
