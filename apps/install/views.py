@@ -154,59 +154,118 @@ def install_index(request):
 def quick_install(request):
     """快速安装"""
     if request.method == 'POST':
-        form = QuickInstallForm(request.POST)
-        if form.is_valid():
-            try:
-                # 获取allowed_hosts
-                allowed_hosts = form.cleaned_data.get('allowed_hosts', 'localhost,127.0.0.1,0.0.0.0,*')
+        try:
+            # 获取表单数据
+            site_name = request.POST.get('site_name', 'Django Blog')
+            allowed_hosts = request.POST.get('allowed_hosts', 'localhost,127.0.0.1,0.0.0.0,*')
+            db_engine = request.POST.get('db_engine', 'sqlite')
+            use_redis = request.POST.get('use_redis') == 'on'
+            admin_username = request.POST.get('admin_username', 'admin')
+            admin_email = request.POST.get('admin_email', '')
+            admin_password = request.POST.get('admin_password', '')
+            
+            # 构建环境变量
+            env_data = {
+                'DEBUG': 'True',
+                'ALLOWED_HOSTS': allowed_hosts,
+                'SITE_NAME': site_name,
+            }
+            
+            # 数据库配置
+            if db_engine == 'mysql':
+                db_name = request.POST.get('db_name_mysql', 'djangoblog')
+                db_user = request.POST.get('db_user', 'root')
+                db_password = request.POST.get('db_password', '')
+                db_host = request.POST.get('db_host', 'localhost')
+                db_port = request.POST.get('db_port', '3306')
                 
-                # 1. 写入.env
-                env_data = {
-                    'DEBUG': 'True',
-                    'ALLOWED_HOSTS': allowed_hosts,
-                    'SITE_NAME': form.cleaned_data['site_name'],
+                # 测试数据库连接
+                db_config = {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': db_name,
+                    'USER': db_user,
+                    'PASSWORD': db_password,
+                    'HOST': db_host,
+                    'PORT': db_port,
                 }
-                write_env_file(env_data, BASE_DIR)
+                success, message = test_database_connection(db_config)
+                if not success:
+                    messages.error(request, message)
+                    return render(request, 'install/quick_install.html', {})
                 
-                # 2. 执行迁移
-                call_command('migrate', '--run-syncdb', verbosity=0)
+                env_data['DB_ENGINE'] = 'django.db.backends.mysql'
+                env_data['DB_NAME'] = db_name
+                env_data['DB_USER'] = db_user
+                env_data['DB_PASSWORD'] = db_password
+                env_data['DB_HOST'] = db_host
+                env_data['DB_PORT'] = db_port
+            else:
+                db_name = request.POST.get('db_name', 'db.sqlite3')
+                env_data['DB_ENGINE'] = 'django.db.backends.sqlite3'
+                env_data['DB_NAME'] = db_name
+            
+            # Redis 配置
+            if use_redis:
+                redis_host = request.POST.get('redis_host', 'localhost')
+                redis_port = request.POST.get('redis_port', '6379')
+                redis_password = request.POST.get('redis_password', '')
+                redis_db = request.POST.get('redis_db', '0')
                 
-                # 3. 创建管理员
-                if not User.objects.filter(username=form.cleaned_data['admin_username']).exists():
-                    User.objects.create_superuser(
-                        username=form.cleaned_data['admin_username'],
-                        email=form.cleaned_data['admin_email'],
-                        password=form.cleaned_data['admin_password']
-                    )
-                
-                # 4. 初始化默认数据（分类、标签、板块）
-                try:
-                    call_command('init_default_data', verbosity=0)
-                except Exception as e:
-                    logger.warning(f"初始化默认数据失败: {str(e)}")
-                
-                # 5. 创建网站配置
-                SiteConfig.objects.update_or_create(
-                    id=1,
-                    defaults={
-                        'site_name': form.cleaned_data['site_name'],
-                        'is_installed': True
-                    }
+                # 测试 Redis 连接
+                redis_config = {
+                    'host': redis_host,
+                    'port': redis_port,
+                    'password': redis_password,
+                    'db': redis_db,
+                }
+                success, message = test_redis_connection(redis_config)
+                if not success:
+                    messages.warning(request, f'{message}，将继续安装但不启用Redis')
+                    use_redis = False
+                else:
+                    env_data['USE_REDIS'] = 'True'
+                    env_data['REDIS_URL'] = f'redis://:{redis_password}@{redis_host}:{redis_port}/{redis_db}' if redis_password else f'redis://{redis_host}:{redis_port}/{redis_db}'
+            
+            # 1. 写入.env
+            write_env_file(env_data, BASE_DIR)
+            
+            # 2. 执行迁移
+            call_command('migrate', '--run-syncdb', verbosity=0)
+            
+            # 3. 创建管理员
+            if not User.objects.filter(username=admin_username).exists():
+                User.objects.create_superuser(
+                    username=admin_username,
+                    email=admin_email,
+                    password=admin_password
                 )
-                
-                # 6. 创建锁文件
-                create_install_lock()
-                
-                messages.success(request, '🎉 安装成功！请登录管理后台。')
-                return redirect('/accounts/login/')
-                
+            
+            # 4. 初始化默认数据
+            try:
+                call_command('init_default_data', verbosity=0)
             except Exception as e:
-                logger.error(f"安装失败: {str(e)}")
-                messages.error(request, f'安装失败: {str(e)}')
-    else:
-        form = QuickInstallForm()
+                logger.warning(f"初始化默认数据失败: {str(e)}")
+            
+            # 5. 创建网站配置
+            SiteConfig.objects.update_or_create(
+                id=1,
+                defaults={
+                    'site_name': site_name,
+                    'is_installed': True
+                }
+            )
+            
+            # 6. 创建锁文件
+            create_install_lock()
+            
+            messages.success(request, '🎉 安装成功！请登录管理后台。')
+            return redirect('/accounts/login/')
+            
+        except Exception as e:
+            logger.error(f"安装失败: {str(e)}")
+            messages.error(request, f'安装失败: {str(e)}')
     
-    return render(request, 'install/quick_install.html', {'form': form})
+    return render(request, 'install/quick_install.html', {})
 
 
 @check_installed

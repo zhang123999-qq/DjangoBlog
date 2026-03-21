@@ -25,9 +25,7 @@
 
     <div class="install-form-container">
         <div class="form-header">
-            <div class="form-icon">
-                <i class="fas fa-bolt"></i>
-            </div>
+            <div class="form-icon">⚡</div>
             <h2>快速安装</h2>
             <p>填写基本信息，一键完成安装</p>
         </div>
@@ -38,447 +36,262 @@
             <!-- 网站信息 -->
             <div class="form-section">
                 <div class="section-title">
-                    <i class="fas fa-globe"></i>
-                    <span>网站信息</span>
+                    🌐 网站信息
                 </div>
                 
-                <div class="form-group">
-                    <label for="id_site_name" class="form-label">
-                        网站名称 <span class="required">*</span>
-                    </label>
-                    {{ form.site_name }}
-                    <div class="form-hint">显示在浏览器标签上的名称，如：我的博客</div>
+                <div class="mb-3">
+                    <label for="id_site_name" class="form-label">网站名称 <span class="text-danger">*</span></label>
+                    <input type="text" name="site_name" id="id_site_name" class="form-control" value="Django Blog" required>
+                    <div class="form-text">显示在浏览器标签上的名称</div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="id_allowed_hosts" class="form-label">
-                        允许访问的域名
-                    </label>
-                    <input type="text" name="allowed_hosts" id="id_allowed_hosts" 
-                           class="form-control" 
-                           value="localhost,127.0.0.1,0.0.0.0,*"
-                           placeholder="多个域名用逗号分隔">
-                    <div class="form-hint">多个域名用逗号分隔，<code>*</code> 表示允许所有域名</div>
+                <div class="mb-3">
+                    <label for="id_allowed_hosts" class="form-label">允许访问的域名</label>
+                    <input type="text" name="allowed_hosts" id="id_allowed_hosts" class="form-control" 
+                           value="localhost,127.0.0.1,0.0.0.0,*" placeholder="多个域名用逗号分隔">
+                    <div class="form-text">多个域名用逗号分隔，<code>*</code> 表示允许所有域名</div>
+                </div>
+            </div>
+
+            <!-- 数据库配置 -->
+            <div class="form-section">
+                <div class="section-title">
+                    🗄️ 数据库配置
+                </div>
+                
+                <div class="mb-3">
+                    <label for="id_db_engine" class="form-label">数据库类型</label>
+                    <select name="db_engine" id="id_db_engine" class="form-select">
+                        <option value="sqlite" selected>SQLite（开发测试推荐）</option>
+                        <option value="mysql">MySQL（生产环境推荐）</option>
+                    </select>
+                    <div class="form-text">SQLite 无需配置，MySQL 需填写连接信息</div>
+                </div>
+                
+                <!-- SQLite 配置 -->
+                <div id="sqlite-config">
+                    <div class="mb-3">
+                        <label for="id_db_name_sqlite" class="form-label">数据库文件名</label>
+                        <input type="text" name="db_name" id="id_db_name_sqlite" class="form-control" value="db.sqlite3">
+                    </div>
+                </div>
+                
+                <!-- MySQL 配置 -->
+                <div id="mysql-config" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_db_name_mysql" class="form-label">数据库名称 <span class="text-danger">*</span></label>
+                            <input type="text" name="db_name_mysql" id="id_db_name_mysql" class="form-control" value="djangoblog">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_db_user" class="form-label">数据库用户名 <span class="text-danger">*</span></label>
+                            <input type="text" name="db_user" id="id_db_user" class="form-control" value="root">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_db_password" class="form-label">数据库密码</label>
+                            <input type="password" name="db_password" id="id_db_password" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_db_host" class="form-label">数据库主机</label>
+                            <input type="text" name="db_host" id="id_db_host" class="form-control" value="localhost">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_db_port" class="form-label">数据库端口</label>
+                        <input type="text" name="db_port" id="id_db_port" class="form-control" value="3306">
+                    </div>
+                    <button type="button" class="btn btn-outline-info btn-sm" id="test-db-btn">🔌 测试连接</button>
+                    <span id="test-db-result"></span>
+                </div>
+            </div>
+
+            <!-- Redis 配置 -->
+            <div class="form-section">
+                <div class="section-title">
+                    🚀 Redis 缓存（可选）
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="use_redis" id="id_use_redis" class="form-check-input">
+                        <label for="id_use_redis" class="form-check-label">启用 Redis 缓存</label>
+                    </div>
+                    <div class="form-text">启用后可提升网站性能，不启用也可正常运行</div>
+                </div>
+                
+                <div id="redis-config" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_redis_host" class="form-label">Redis 主机</label>
+                            <input type="text" name="redis_host" id="id_redis_host" class="form-control" value="localhost">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_redis_port" class="form-label">Redis 端口</label>
+                            <input type="text" name="redis_port" id="id_redis_port" class="form-control" value="6379">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_redis_password" class="form-label">Redis 密码</label>
+                            <input type="password" name="redis_password" id="id_redis_password" class="form-control" placeholder="无密码请留空">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_redis_db" class="form-label">Redis 数据库</label>
+                            <input type="number" name="redis_db" id="id_redis_db" class="form-control" value="0" min="0" max="15">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-info btn-sm" id="test-redis-btn">🔌 测试连接</button>
+                    <span id="test-redis-result"></span>
                 </div>
             </div>
 
             <!-- 管理员账户 -->
             <div class="form-section">
                 <div class="section-title">
-                    <i class="fas fa-user-shield"></i>
-                    <span>管理员账户</span>
+                    👤 管理员账户
                 </div>
                 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="id_admin_username" class="form-label">
-                                用户名 <span class="required">*</span>
-                            </label>
-                            {{ form.admin_username }}
-                        </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_admin_username" class="form-label">用户名 <span class="text-danger">*</span></label>
+                        <input type="text" name="admin_username" id="id_admin_username" class="form-control" value="admin" required>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="id_admin_email" class="form-label">
-                                邮箱 <span class="required">*</span>
-                            </label>
-                            {{ form.admin_email }}
-                        </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_admin_email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                        <input type="email" name="admin_email" id="id_admin_email" class="form-control" required>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="id_admin_password" class="form-label">
-                        密码 <span class="required">*</span>
-                    </label>
-                    {{ form.admin_password }}
-                    <div class="form-hint">至少8个字符，建议包含字母、数字和特殊字符</div>
-                    <div class="password-strength" id="password-strength">
-                        <div class="strength-bar"><span></span></div>
-                        <span class="strength-text"></span>
-                    </div>
+                <div class="mb-3">
+                    <label for="id_admin_password" class="form-label">密码 <span class="text-danger">*</span></label>
+                    <input type="password" name="admin_password" id="id_admin_password" class="form-control" required minlength="8">
+                    <div class="form-text">至少8个字符</div>
                 </div>
             </div>
 
             <!-- 错误提示 -->
             {% if form.errors %}
             <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <div>
-                    {% for field in form %}
-                        {% for error in field.errors %}
-                            <p class="mb-0">{{ field.label }}: {{ error }}</p>
-                        {% endfor %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <p class="mb-0">{{ field.label }}: {{ error }}</p>
                     {% endfor %}
-                    {% for error in form.non_field_errors %}
-                        <p class="mb-0">{{ error }}</p>
-                    {% endfor %}
-                </div>
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <p class="mb-0">{{ error }}</p>
+                {% endfor %}
             </div>
             {% endif %}
 
-            <!-- 安装说明 -->
-            <div class="install-notice">
-                <div class="notice-icon">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <div class="notice-content">
-                    <h6>安装说明</h6>
-                    <ul>
-                        <li>将自动创建 <code>SQLite</code> 数据库文件</li>
-                        <li>安装完成后请妥善保管管理员密码</li>
-                        <li>可随时在管理后台修改网站配置</li>
-                    </ul>
-                </div>
-            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
 
             <!-- 操作按钮 -->
             <div class="form-actions">
-                <a href="{% url 'install:index' %}" class="btn btn-outline-secondary btn-lg">
-                    <i class="fas fa-arrow-left me-2"></i>返回
-                </a>
-                <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
-                    <i class="fas fa-rocket me-2"></i>开始安装
-                </button>
+                <a href="{% url 'install:index' %}" class="btn btn-outline-secondary btn-lg">← 返回</a>
+                <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">🚀 开始安装</button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-.install-wrapper {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-/* 进度指示器 */
-.install-progress {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 40px;
-    padding: 20px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.progress-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #e9ecef;
-    color: #6c757d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.progress-step.active .step-number {
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-}
-
-.progress-step.completed .step-number {
-    background: #28a745;
-    color: white;
-}
-
-.step-label {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.progress-step.active .step-label {
-    color: #007bff;
-}
-
-.progress-line {
-    width: 80px;
-    height: 3px;
-    background: #e9ecef;
-    margin: 0 15px;
-    margin-bottom: 25px;
-    border-radius: 2px;
-}
-
-/* 表单容器 */
-.install-form-container {
-    background: white;
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
-
-.form-header {
-    text-align: center;
-    margin-bottom: 35px;
-}
-
-.form-icon {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.75rem;
-    color: white;
-    margin: 0 auto 20px;
-    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
-}
-
-.form-header h2 {
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #333;
-}
-
-.form-header p {
-    color: #6c757d;
-    margin: 0;
-}
-
-/* 表单区块 */
-.form-section {
-    margin-bottom: 30px;
-    padding: 25px;
-    background: #f8f9fa;
-    border-radius: 16px;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: #333;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.section-title i {
-    color: #007bff;
-}
-
-/* 表单元素 */
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group:last-child {
-    margin-bottom: 0;
-}
-
-.form-label {
-    font-weight: 500;
-    color: #495057;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.form-label .required {
-    color: #dc3545;
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e9ecef;
-    border-radius: 10px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
-}
-
-.form-hint {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-top: 6px;
-}
-
-.form-hint code {
-    background: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-
-/* 密码强度 */
-.password-strength {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-    display: none;
-}
-
-.strength-bar {
-    flex: 1;
-    height: 6px;
-    background: #e9ecef;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.strength-bar span {
-    height: 100%;
-    display: block;
-    transition: all 0.3s ease;
-    width: 0;
-}
-
-.strength-text {
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-/* 安装说明 */
-.install-notice {
-    display: flex;
-    gap: 15px;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(0, 123, 255, 0.05), rgba(0, 123, 255, 0.1));
-    border-radius: 12px;
-    border: 1px solid rgba(0, 123, 255, 0.2);
-    margin-bottom: 25px;
-}
-
-.notice-icon {
-    font-size: 1.5rem;
-    color: #007bff;
-}
-
-.notice-content h6 {
-    margin: 0 0 10px;
-    font-weight: 600;
-}
-
-.notice-content ul {
-    margin: 0;
-    padding-left: 20px;
-}
-
-.notice-content li {
-    margin-bottom: 5px;
-    color: #495057;
-    font-size: 0.9rem;
-}
-
-.notice-content code {
-    background: rgba(0, 123, 255, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-}
-
-/* 操作按钮 */
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    padding-top: 10px;
-}
-
-/* 加载状态 */
-.btn.loading {
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-/* 响应式 */
-@media (max-width: 576px) {
-    .install-form-container {
-        padding: 25px;
-    }
-    
-    .form-section {
-        padding: 20px;
-    }
-    
-    .form-actions {
-        flex-direction: column-reverse;
-    }
-    
-    .form-actions .btn {
-        width: 100%;
-    }
-}
+.install-wrapper { max-width: 700px; margin: 0 auto; padding: 20px; }
+.install-progress { display: flex; align-items: center; justify-content: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.progress-step { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.step-number { width: 40px; height: 40px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+.progress-step.active .step-number { background: linear-gradient(135deg, #007bff, #0056b3); color: white; }
+.step-label { font-size: 0.85rem; color: #6c757d; }
+.progress-line { width: 60px; height: 3px; background: #e9ecef; margin: 0 15px 25px; }
+.install-form-container { background: white; border-radius: 20px; padding: 35px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.form-header { text-align: center; margin-bottom: 30px; }
+.form-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.form-header h2 { font-weight: 700; margin-bottom: 5px; }
+.form-header p { color: #6c757d; margin: 0; }
+.form-section { margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 12px; }
+.section-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e9ecef; }
+.form-actions { display: flex; justify-content: space-between; gap: 15px; margin-top: 25px; }
 </style>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('quick-install-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const passwordInput = document.getElementById('id_admin_password');
-    const strengthDiv = document.getElementById('password-strength');
+(function() {
+    // 数据库类型切换
+    const dbEngineSelect = document.getElementById('id_db_engine');
+    const sqliteConfig = document.getElementById('sqlite-config');
+    const mysqlConfig = document.getElementById('mysql-config');
     
-    // 密码强度检测
-    if (passwordInput) {
-        passwordInput.addEventListener('input', function() {
-            const password = this.value;
-            if (password.length > 0) {
-                strengthDiv.style.display = 'flex';
-                checkPasswordStrength(password);
-            } else {
-                strengthDiv.style.display = 'none';
-            }
-        });
+    function toggleDbConfig() {
+        if (dbEngineSelect.value === 'mysql') {
+            sqliteConfig.style.display = 'none';
+            mysqlConfig.style.display = 'block';
+        } else {
+            sqliteConfig.style.display = 'block';
+            mysqlConfig.style.display = 'none';
+        }
     }
     
-    function checkPasswordStrength(password) {
-        let score = 0;
-        const bar = strengthDiv.querySelector('.strength-bar span');
-        const text = strengthDiv.querySelector('.strength-text');
-        
-        if (password.length >= 8) score += 1;
-        if (password.length >= 12) score += 1;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-        if (/\d/.test(password)) score += 1;
-        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score += 1;
-        
-        const levels = [
-            { width: '20%', color: '#dc3545', text: '很弱' },
-            { width: '40%', color: '#fd7e14', text: '弱' },
-            { width: '60%', color: '#ffc107', text: '一般' },
-            { width: '80%', color: '#20c997', text: '强' },
-            { width: '100%', color: '#28a745', text: '很强' },
-        ];
-        
-        const level = levels[Math.min(score, 4)];
-        bar.style.width = level.width;
-        bar.style.background = level.color;
-        text.textContent = level.text;
-        text.style.color = level.color;
+    dbEngineSelect.addEventListener('change', toggleDbConfig);
+    toggleDbConfig();
+    
+    // Redis 切换
+    const useRedisCheck = document.getElementById('id_use_redis');
+    const redisConfig = document.getElementById('redis-config');
+    
+    function toggleRedisConfig() {
+        redisConfig.style.display = useRedisCheck.checked ? 'block' : 'none';
     }
+    
+    useRedisCheck.addEventListener('change', toggleRedisConfig);
+    
+    // 测试数据库连接
+    document.getElementById('test-db-btn')?.addEventListener('click', function() {
+        const result = document.getElementById('test-db-result');
+        result.innerHTML = ' <span class="text-muted">测试中...</span>';
+        
+        fetch('/install/test-db/?engine=mysql&name=' + document.getElementById('id_db_name_mysql').value + 
+              '&user=' + document.getElementById('id_db_user').value + 
+              '&password=' + document.getElementById('id_db_password').value +
+              '&host=' + document.getElementById('id_db_host').value +
+              '&port=' + document.getElementById('id_db_port').value)
+            .then(r => r.json())
+            .then(data => {
+                result.innerHTML = data.success ? 
+                    ' <span class="text-success">✅ ' + data.message + '</span>' : 
+                    ' <span class="text-danger">❌ ' + data.message + '</span>';
+            })
+            .catch(() => result.innerHTML = ' <span class="text-danger">❌ 测试失败</span>');
+    });
+    
+    // 测试 Redis 连接
+    document.getElementById('test-redis-btn')?.addEventListener('click', function() {
+        const result = document.getElementById('test-redis-result');
+        result.innerHTML = ' <span class="text-muted">测试中...</span>';
+        
+        fetch('/install/test-redis/?host=' + document.getElementById('id_redis_host').value + 
+              '&port=' + document.getElementById('id_redis_port').value +
+              '&password=' + document.getElementById('id_redis_password').value +
+              '&db=' + document.getElementById('id_redis_db').value)
+            .then(r => r.json())
+            .then(data => {
+                result.innerHTML = data.success ? 
+                    ' <span class="text-success">✅ ' + data.message + '</span>' : 
+                    ' <span class="text-danger">❌ ' + data.message + '</span>';
+            })
+            .catch(() => result.innerHTML = ' <span class="text-danger">❌ 测试失败</span>');
+    });
     
     // 表单提交
-    form.addEventListener('submit', function() {
-        submitBtn.classList.add('loading');
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>正在安装...';
+    document.getElementById('quick-install-form').addEventListener('submit', function() {
+        document.getElementById('submit-btn').innerHTML = '⏳ 安装中...';
+        document.getElementById('submit-btn').disabled = true;
     });
-});
+})();
 </script>
 {% endblock %}
