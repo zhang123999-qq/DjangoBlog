@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tool.name }} - DjangoBlog{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 面包屑 -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tools:tool_list' %}" class="text-decoration-none">工具箱</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ tool.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- 主内容 -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt fs-4 me-3"></i>
+                        <div>
+                            <h4 class="mb-0">我的 IP 地址</h4>
+                            <small>自动检测您的公网IP地址</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- IP 地址显示 -->
+                    {% if result %}
+                        {% if result.error %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            {{ result.error }}
+                        </div>
+                        {% else %}
+                        <!-- 大IP显示 -->
+                        <div class="text-center py-4 mb-4 bg-light rounded">
+                            <p class="text-muted mb-2">您的公网 IP 地址</p>
+                            <h1 class="display-4 fw-bold text-primary mb-0" id="ip-display">{{ result.ip }}</h1>
+                            <button class="btn btn-outline-primary btn-sm mt-3" onclick="copyIP()">
+                                <i class="bi bi-clipboard me-1"></i>复制IP
+                            </button>
+                        </div>
+
+                        <!-- 详细信息 -->
+                        {% if result.ip_info %}
+                        <h5 class="mb-3">
+                            <i class="bi bi-info-circle me-2"></i>IP 详细信息
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <!-- 位置信息 -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">
+                                            <i class="bi bi-geo-alt me-2"></i>地理位置
+                                        </h6>
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <tr>
+                                                <td class="text-muted" style="width: 80px;">国家</td>
+                                                <td>
+                                                    {% if result.ip_info.country_code %}
+                                                    <img src="https://flagcdn.com/24x18/{{ result.ip_info.country_code|lower }}.png" 
+                                                         alt="{{ result.ip_info.country }}" 
+                                                         class="me-2" 
+                                                         style="vertical-align: middle;">
+                                                    {% endif %}
+                                                    {{ result.ip_info.country|default:"-" }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">地区</td>
+                                                <td>{{ result.ip_info.region|default:"-" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">城市</td>
+                                                <td>{{ result.ip_info.city|default:"-" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">邮编</td>
+                                                <td>{{ result.ip_info.zipcode|default:"-" }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 网络信息 -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">
+                                            <i class="bi bi-hdd-network me-2"></i>网络信息
+                                        </h6>
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <tr>
+                                                <td class="text-muted" style="width: 80px;">ISP</td>
+                                                <td>{{ result.ip_info.isp|default:"-" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">组织</td>
+                                                <td>{{ result.ip_info.org|default:"-" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">ASN</td>
+                                                <td>{{ result.ip_info.as|default:"-" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">时区</td>
+                                                <td>{{ result.ip_info.timezone|default:"-" }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 坐标信息 -->
+                            {% if result.ip_info.lat and result.ip_info.lon %}
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">
+                                            <i class="bi bi-pin-map me-2"></i>坐标位置
+                                        </h6>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-primary me-3">
+                                                纬度: {{ result.ip_info.lat }}
+                                            </span>
+                                            <span class="badge bg-primary me-3">
+                                                经度: {{ result.ip_info.lon }}
+                                            </span>
+                                            <a href="https://www.google.com/maps?q={{ result.ip_info.lat }},{{ result.ip_info.lon }}" 
+                                               target="_blank" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-map me-1"></i>在地图中查看
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- 主机名 -->
+                            {% if result.ip_info.hostname %}
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body py-2">
+                                        <small class="text-muted">主机名:</small>
+                                        <code class="ms-2">{{ result.ip_info.hostname }}</code>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- 刷新按钮 -->
+                        <div class="text-center mt-4">
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>刷新检测
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <!-- 初始状态 - 自动提交 -->
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">检测中...</span>
+                        </div>
+                        <p class="text-muted">正在检测您的IP地址...</p>
+                        <form method="post" id="auto-form">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 工具说明 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>工具说明</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ tool.description }}</p>
+                    <hr>
+                    <ul class="list-unstyled mb-0 text-muted small">
+                        <li class="mb-2"><i class="bi bi-check text-success me-2"></i>自动检测您的公网IP</li>
+                        <li class="mb-2"><i class="bi bi-check text-success me-2"></i>显示详细地理位置</li>
+                        <li class="mb-2"><i class="bi bi-check text-success me-2"></i>显示ISP和运营商信息</li>
+                        <li><i class="bi bi-check text-success me-2"></i>支持地图定位</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 隐私提示 -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>隐私说明</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        IP地址是公开的网络信息。本工具仅用于查询显示，不会存储您的IP地址或任何个人信息。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 自动提交表单
+{% if not result %}
+document.getElementById('auto-form').submit();
+{% endif %}
+
+// 复制IP
+function copyIP() {
+    const ip = document.getElementById('ip-display').textContent;
+    navigator.clipboard.writeText(ip).then(function() {
+        showToast('IP地址已复制到剪贴板');
+    });
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed bottom-0 end-0 p-3';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="bi bi-check-circle me-2"></i>
+                <strong class="me-auto">成功</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" onclick="this.closest('.position-fixed').remove()"></button>
+            </div>
+            <div class="toast-body">${message}</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .display-4 {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 2px;
+    }
+</style>
+{% endblock %}

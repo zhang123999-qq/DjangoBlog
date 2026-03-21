@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.2] - 2026-03-21
+
+### Added
+- **"我的IP"工具** - 自动检测访问者公网IP地址
+  - 自动获取访问者IP，无需手动输入
+  - 显示地理位置（国家、地区、城市、邮编）
+  - 显示网络信息（ISP、组织、ASN）
+  - 显示坐标位置，支持地图查看
+  - 国旗图标显示
+  - 一键复制IP功能
+
 ## [2.3.1] - 2026-03-21
 
 ### Changed
