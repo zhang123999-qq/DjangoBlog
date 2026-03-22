@@ -218,6 +218,12 @@ def user_flow(page, base_url) -> UserFlow:
 # ============================================
 
 @pytest.fixture
+def test_logger():
+    """测试日志记录器"""
+    return logging.getLogger(__name__)
+
+
+@pytest.fixture
 def captcha_handler() -> CaptchaHandler:
     """验证码处理器"""
     return CaptchaHandler()
