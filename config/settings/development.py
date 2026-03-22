@@ -141,8 +141,5 @@ os.makedirs(BASE_DIR / 'tmp' / 'session', exist_ok=True)
 # 开发环境特定设置
 # =============================================================================
 
-# 禁用安装向导（开发环境不需要）
-ENABLE_INSTALLER = False
-
 # 禁用 axes（开发环境方便测试）
 AXES_ENABLED = False

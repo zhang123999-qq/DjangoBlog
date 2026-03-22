@@ -16,10 +16,9 @@ urlpatterns = [
     path('tools/', include('apps.tools.urls', namespace='tools')),
     # API路由
     path('api/', include('apps.api.urls', namespace='api')),
-    # 管理和安装路由
+    # 管理路由
     path('admin/', admin_site.urls),
     path('moderation/', include('moderation.urls', namespace='moderation')),
-    path('install/', include('apps.install.urls', namespace='install')),
 ]
 
 # 开发模式下提供媒体文件访问

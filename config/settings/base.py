@@ -50,7 +50,6 @@ def get_allowed_hosts():
 # Initialize environ with defaults
 env = environ.Env(
     DEBUG=(bool, False),
-    ENABLE_INSTALLER=(bool, True),
 )
 
 # Read .env file
@@ -90,7 +89,6 @@ INSTALLED_APPS = [
     'apps.forum',
     'apps.tools',
     'apps.api',
-    'apps.install',
     'moderation',
 ]
 
@@ -104,7 +102,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.core.security_middleware.SecurityMiddleware',
-    'apps.install.middleware.InstallMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -234,9 +231,6 @@ EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-
-# Installer settings
-ENABLE_INSTALLER = env('ENABLE_INSTALLER')
 
 # Logging configuration
 LOGGING = {
