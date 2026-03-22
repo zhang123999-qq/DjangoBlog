@@ -12,6 +12,7 @@
 | `start.py` | Python | 简单启动脚本 |
 | `manage_project.py` | Python | 项目管理工具 |
 | `migrate_to_mysql.py` | Python | 数据库迁移脚本 |
+| `init_default_data.py` | Python | 初始化默认数据 ⭐新增 |
 | `start_celery.bat` | Batch | Windows Celery 启动 |
 | `start_celery.sh` | Shell | Linux/Mac Celery 启动 |
 | `start_server.sh` | Shell | 服务器启动 |
@@ -186,6 +187,35 @@ python scripts/migrate_to_mysql.py
 - 从 SQLite 升级到 MySQL
 - 生产环境部署
 - 数据库迁移
+
+---
+
+### 5. init_default_data.py - 初始化默认数据 ⭐新增
+
+**初始化论坛板块、博客分类和标签**，快速填充默认数据。
+
+```bash
+# 执行初始化
+python scripts/init_default_data.py
+```
+
+**创建内容：**
+
+| 类型 | 数量 | 内容 |
+|------|------|------|
+| 论坛板块 | 8个 | 技术交流、问题求助、资源分享、灌水闲聊、Python编程、Web开发、人工智能、数据库 |
+| 博客分类 | 6个 | 技术笔记、项目实战、工具推荐、生活随笔、编程学习、源码解析 |
+| 博客标签 | 6个 | Python、Django、JavaScript、前端开发、后端开发、网络安全 |
+
+**特点：**
+- 自动检测已存在数据，不会重复创建
+- 显示新建数量和总计数量
+- 支持多次运行
+
+**适用场景：**
+- 新项目初始化
+- 重置默认数据
+- 演示环境搭建
 
 ---
 
