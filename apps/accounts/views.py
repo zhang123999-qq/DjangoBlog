@@ -17,15 +17,15 @@ def register_view(request):
             user.backend = backend
             login(request, user, backend=backend)
             return redirect('core:home')
+        else:
+            # 验证失败时，重新生成验证码
+            captcha_code, captcha_image = generate_captcha()
+            request.session['captcha_code'] = captcha_code
     else:
-        # 只在GET请求时生成验证码
+        # GET请求时生成验证码
         captcha_code, captcha_image = generate_captcha()
         request.session['captcha_code'] = captcha_code
         form = UserRegisterForm(request=request)
-    # 确保POST请求时也有captcha_image变量
-    if 'captcha_image' not in locals():
-        captcha_code, captcha_image = generate_captcha()
-        request.session['captcha_code'] = captcha_code
     return render(request, 'accounts/register.html', {'form': form, 'captcha_image': captcha_image})
 
 
@@ -109,13 +109,12 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 return redirect('core:home')
+        # 验证失败时，重新生成验证码
+        captcha_code, captcha_image = generate_captcha()
+        request.session['captcha_code'] = captcha_code
     else:
-        # 只在GET请求时生成验证码
+        # GET请求时生成验证码
         captcha_code, captcha_image = generate_captcha()
         request.session['captcha_code'] = captcha_code
         form = CustomLoginForm(request=request)
-    # 确保POST请求时也有captcha_image变量
-    if 'captcha_image' not in locals():
-        captcha_code, captcha_image = generate_captcha()
-        request.session['captcha_code'] = captcha_code
     return render(request, 'accounts/login.html', {'form': form, 'captcha_image': captcha_image})

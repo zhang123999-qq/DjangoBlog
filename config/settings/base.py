@@ -203,8 +203,8 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
-    'axes.backends.AxesStandaloneBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.ModelBackend',  # 必须放在第一位，支持 get_user
+    'axes.backends.AxesStandaloneBackend',  # Axes 监控 backend
 ]
 
 # Login settings

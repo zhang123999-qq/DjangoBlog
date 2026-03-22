@@ -60,5 +60,8 @@ def validate_captcha(request, code):
     if not stored_code:
         return False
     
-    # 验证码不区分大小写
+    # 确保类型一致，都转换为字符串比较
+    stored_code = str(stored_code)
+    code = str(code)
+    
     return stored_code == code
