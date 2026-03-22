@@ -222,7 +222,7 @@ def quick_install(request):
                 # 【关键】立即更新 Django 的数据库配置
                 from django.conf import settings
                 settings.DATABASES['default'] = {
-                    'ENGINE': 'django.db.backends.sqlite3',
+                    'ENGINE': 'apps.core.db_backends.sqlite3',  # 自定义后端，禁用外键约束
                     'NAME': str(BASE_DIR / db_name),
                 }
             
@@ -476,7 +476,7 @@ def step6_execute(request):
                 # 【关键】立即更新 Django 的数据库配置
                 from django.conf import settings
                 settings.DATABASES['default'] = {
-                    'ENGINE': 'django.db.backends.sqlite3',
+                    'ENGINE': 'apps.core.db_backends.sqlite3',  # 自定义后端，禁用外键约束
                     'NAME': str(BASE_DIR / env_data['DB_NAME']),
                 }
             

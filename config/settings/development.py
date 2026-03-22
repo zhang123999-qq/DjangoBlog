@@ -51,7 +51,7 @@ else:
     # SQLite 配置
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'apps.core.db_backends.sqlite3',  # 自定义后端，禁用外键约束
             'NAME': BASE_DIR / db_name,
             # SQLite 也支持连接池
             'CONN_MAX_AGE': 60,

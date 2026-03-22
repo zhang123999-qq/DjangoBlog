@@ -1,4 +1,4 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/change_form.html" %}
 {% load i18n admin_urls static %}
 
 {% block extrastyle %}
@@ -15,7 +15,7 @@
         backdrop-filter: blur(5px);
         border-radius: 12px;
         padding: 25px;
-        box-shadow: var(--card-shadow);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
     /* 字段集 */
@@ -32,13 +32,8 @@
         background: white;
     }
     
-    fieldset.collapsed h2 {
-        background: transparent;
-        color: var(--primary-color);
-    }
-    
     h2 {
-        background: var(--primary-gradient);
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
         color: white;
         padding: 12px 15px;
         margin: -20px -20px 20px;
@@ -56,7 +51,7 @@
         background: #f8f9fa;
         border-radius: 8px;
         border: 1px solid transparent;
-        transition: var(--transition);
+        transition: all 0.2s ease;
     }
     
     .form-row:hover {
@@ -71,15 +66,6 @@
         color: #495057;
     }
     
-    .form-row label.required {
-        color: #333;
-    }
-    
-    .form-row label.required::after {
-        content: ' *';
-        color: #dc3545;
-    }
-    
     /* 输入框 */
     input[type=text], input[type=email], input[type=password], 
     input[type=number], input[type=url], input[type=date],
@@ -90,48 +76,16 @@
         border-radius: 8px;
         padding: 10px 15px;
         color: #333;
-        transition: var(--transition);
+        transition: all 0.2s ease;
         width: 100%;
         max-width: 600px;
     }
     
     input[type=text]:focus, input[type=email]:focus, 
-    input[type=password]:focus, textarea:focus, select:focus,
-    input[type=number]:focus, input[type=url]:focus,
-    input[type=date]:focus, input[type=time]:focus {
+    input[type=password]:focus, textarea:focus, select:focus {
         outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-    }
-    
-    /* 复选框 */
-    input[type=checkbox] {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--primary-color);
-    }
-    
-    /* 帮助文本 */
-    .help {
-        color: #6c757d;
-        font-size: 0.85rem;
-        margin-top: 5px;
-        padding-left: 5px;
-    }
-    
-    /* 错误信息 */
-    .errorlist {
-        background: rgba(220, 53, 69, 0.1);
-        border: 1px solid rgba(220, 53, 69, 0.3);
-        border-radius: 8px;
-        padding: 10px 15px;
-        margin-bottom: 15px;
-        list-style: none;
-    }
-    
-    .errorlist li {
-        color: #dc3545;
-        font-size: 0.9rem;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
     
     /* 提交区域 */
@@ -141,128 +95,22 @@
         border-radius: 12px;
         padding: 20px;
         margin-top: 20px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
     }
     
-    .submit-row input, .submit-row a.button {
+    .submit-row input {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: white;
+        border: none;
+        border-radius: 8px;
         padding: 12px 25px;
-        border-radius: 8px;
         font-weight: 500;
-        transition: var(--transition);
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
     
-    /* 对象历史 */
-    .object-tools {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .object-tools a {
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 8px 15px;
-        color: #6c757d;
-        text-decoration: none;
-        transition: var(--transition);
-    }
-    
-    .object-tools a:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-    }
-    
-    /* 相关对象 */
-    .inline-group {
-        background: rgba(255, 255, 255, 0.95);
-        border: none;
-        border-radius: 12px;
-        margin-top: 20px;
-        overflow: hidden;
-        box-shadow: var(--card-shadow);
-    }
-    
-    .inline-group h2 {
-        margin: 0;
-        border-radius: 0;
-    }
-    
-    /* 数据表格 */
-    #result_list {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: var(--card-shadow);
-        border: none;
-    }
-    
-    #result_list thead th {
-        background: var(--primary-gradient);
-        color: white;
-        font-weight: 600;
-        padding: 15px;
-        border-bottom: none;
-    }
-    
-    #result_list tbody td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #e9ecef;
-        color: #333;
-    }
-    
-    #result_list tbody tr:hover {
-        background: rgba(0, 123, 255, 0.05);
-    }
-    
-    /* TinyMCE 编辑器适配 */
-    .tox-tinymce {
-        border: 1px solid #e9ecef !important;
-        border-radius: 8px !important;
-    }
-    
-    .tox-toolbar__primary {
-        background: #f8f9fa !important;
-    }
-    
-    .tox-edit-area {
-        background: white !important;
-    }
-    
-    .tox-edit-area iframe {
-        background: white !important;
-    }
-    
-    /* 删除确认页 */
-    .delete-confirmation {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 12px;
-        padding: 30px;
-        box-shadow: var(--card-shadow);
-    }
-    
-    .delete-confirmation h1 {
-        color: #dc3545;
-    }
-    
-    /* 选择器 */
-    .selector .selector-available, .selector .selector-chosen {
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-    }
-    
-    .selector .selector-available h2, .selector .selector-chosen h2 {
-        background: var(--primary-gradient);
-        color: white;
-        border-bottom: none;
-        padding: 12px 15px;
+    .submit-row input:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
 </style>
-{% endblock %}
-
-{% block content %}
-{{ block.super }}
 {% endblock %}

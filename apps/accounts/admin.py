@@ -1,30 +1,9 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import User, Profile
+"""
+用户管理 - 已迁移到 apps/core/admin.py
+统一使用自定义 admin_site 避免冲突
 
-
-class ProfileInline(admin.StackedInline):
-    """在 User 管理页面中内联显示 Profile"""
-    model = Profile
-    can_delete = False
-    verbose_name_plural = '个人资料'
-
-
-class CustomUserAdmin(UserAdmin):
-    """自定义 User 管理"""
-    inlines = [ProfileInline]
-    list_display = ['username', 'email', 'nickname', 'is_staff', 'is_active', 'date_joined', 'last_login']
-    list_filter = ['is_staff', 'is_active', 'is_superuser']
-    search_fields = ['username', 'email', 'nickname']
-    ordering = ['-date_joined']
-
-
-class ProfileAdmin(admin.ModelAdmin):
-    """个人资料管理"""
-    list_display = ['user', 'bio', 'website']
-    search_fields = ['user__username', 'user__email', 'bio', 'website']
-    ordering = ['user__username']
-
-
-admin.site.register(User, CustomUserAdmin)
-admin.site.register(Profile, ProfileAdmin)
+迁移原因：
+- Django 要求模型只能注册到一个 admin site
+- apps/core/admin.py 使用自定义 DjangoBlogAdminSite
+- 避免多个 admin.py 重复注册导致冲突
+"""

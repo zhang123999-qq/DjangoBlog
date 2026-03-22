@@ -135,7 +135,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': 'apps.core.db_backends.sqlite3',  # 自定义后端，禁用外键约束
         'NAME': BASE_DIR / 'db.sqlite3',
         'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
     }

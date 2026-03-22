@@ -1,0 +1,117 @@
+/**
+ * Django Admin 编辑器样式
+ */
+
+/* TinyMCE 编辑器容器 */
+.tox-tinymce {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* TinyMCE 工具栏 */
+.tox-toolbar__primary {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* TinyMCE 编辑区域 */
+.tox-edit-area {
+    background: #fff !important;
+}
+
+.tox-edit-area iframe {
+    background: #fff !important;
+}
+
+/* TinyMCE 状态栏 */
+.tox-statusbar {
+    border-top: 1px solid #e5e7eb !important;
+    background: #f9fafb !important;
+}
+
+/* TinyMCE 按钮 */
+.tox-tbtn {
+    color: #374151 !important;
+}
+
+.tox-tbtn:hover {
+    background: #e5e7eb !important;
+}
+
+.tox-tbtn--enabled {
+    background: #e0e7ff !important;
+    color: #4f46e5 !important;
+}
+
+/* TinyMCE 下拉菜单 */
+.tox-menu {
+    background: #fff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.tox-collection__item {
+    color: #374151 !important;
+}
+
+.tox-collection__item:hover {
+    background: #f3f4f6 !important;
+}
+
+.tox-collection__item--active {
+    background: #e0e7ff !important;
+    color: #4f46e5 !important;
+}
+
+/* TinyMCE 对话框 */
+.tox-dialog {
+    border-radius: 12px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.tox-dialog__header {
+    background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+    color: #fff !important;
+    padding: 15px 20px !important;
+}
+
+.tox-dialog__title {
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+
+.tox-dialog__body {
+    padding: 20px !important;
+}
+
+.tox-dialog__footer {
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 15px 20px !important;
+}
+
+/* 代码块样式 */
+.tox-code-sample {
+    background: #f5f5f5 !important;
+    border-radius: 5px !important;
+    font-family: 'Fira Code', Monaco, Consolas, monospace !important;
+}
+
+/* 全屏模式 */
+.tox-fullscreen {
+    z-index: 10000 !important;
+}
+
+/* 表单行适配 */
+.form-row textarea[data-editor="tinymce"] {
+    width: 100% !important;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .tox-tinymce {
+        height: 350px !important;
+    }
+}
