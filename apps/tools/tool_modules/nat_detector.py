@@ -34,9 +34,20 @@ class NATDetectorTool(BaseTool):
             hostname = "未知"
             local_ip = "未知"
         
+        # 尝试获取公网IP（作为备用）
+        public_ip = None
+        try:
+            import requests
+            response = requests.get('https://api.ipify.org?format=json', timeout=5)
+            if response.status_code == 200:
+                public_ip = response.json().get('ip')
+        except:
+            pass
+        
         return {
             'server_info': {
                 'hostname': hostname,
                 'local_ip': local_ip,
-            }
+            },
+            'server_public_ip': public_ip,
         }
