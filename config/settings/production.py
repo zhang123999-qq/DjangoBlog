@@ -55,6 +55,7 @@ DATABASES = {
         # 连接池配置
         'CONN_MAX_AGE': 600,  # 10 分钟连接池
         'CONN_HEALTH_CHECKS': True,  # 连接健康检查
+        'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
     }
 }
 

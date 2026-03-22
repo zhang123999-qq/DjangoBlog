@@ -43,6 +43,7 @@ if 'mysql' in db_engine:
             # 连接池配置
             'CONN_MAX_AGE': 60,  # 开发环境 1 分钟
             'CONN_HEALTH_CHECKS': True,
+            'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
         }
     }
     print(f"[SETTINGS] 使用开发环境配置 (MySQL: {db_name})")
@@ -55,6 +56,7 @@ else:
             # SQLite 也支持连接池
             'CONN_MAX_AGE': 60,
             'CONN_HEALTH_CHECKS': True,
+            'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
         }
     }
     print(f"[SETTINGS] 使用开发环境配置 (SQLite)")
