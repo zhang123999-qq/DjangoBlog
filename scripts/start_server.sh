@@ -1,11 +1,23 @@
 #!/bin/bash
 # DjangoBlog 生产环境启动脚本
-# 使用方法: ./start_server.sh
+# 使用方法: ./scripts/start_server.sh
 
-cd /www/wwwroot/DjangoBlog
+# 获取脚本所在目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_DIR"
 
 # 激活虚拟环境
-source .venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "venv" ]; then
+    source venv/bin/activate
+else
+    echo "Error: Virtual environment not found"
+    echo "Please run: python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
+    exit 1
+fi
 
 # 停止旧进程
 pkill -f gunicorn 2>/dev/null
@@ -27,3 +39,4 @@ nohup gunicorn config.wsgi:application \
 
 echo "Gunicorn started on 0.0.0.0:8000"
 echo "PID: $(cat logs/gunicorn.pid 2>/dev/null || echo 'N/A')"
+echo "Logs: $PROJECT_DIR/logs/"

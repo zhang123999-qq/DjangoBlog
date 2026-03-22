@@ -1,13 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 数据迁移脚本：SQLite -> MySQL
+
+用法: python scripts/migrate_to_mysql.py
+
+前置条件:
+1. 安装并启动 MySQL
+2. 创建目标数据库
+3. 配置 .env 中的 MySQL 连接信息
 """
 import os
+import sys
 import sqlite3
-import django
-import warnings
-warnings.filterwarnings('ignore')
+from pathlib import Path
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+# 项目根目录
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 设置 Django 设置
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+
+# 添加项目路径
+sys.path.insert(0, str(BASE_DIR))
+
+import django
 django.setup()
 
 from apps.blog.models import Category, Tag, Post, Comment
