@@ -8,20 +8,29 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.core.cache import cache
 from moderation.services import smart_moderate_instance
 from .models import Post, Category, Tag, Comment, CommentLike
 from .forms import CommentForm, PostForm
 
 
 def get_categories_and_tags():
-    """获取带发布文章数量的分类和标签"""
-    categories = Category.objects.annotate(
-        published_count=Count('posts', filter=models.Q(posts__status='published', posts__slug__isnull=False) & ~models.Q(posts__slug=''))
-    )
-    tags = Tag.objects.annotate(
-        published_count=Count('posts', filter=models.Q(posts__status='published', posts__slug__isnull=False) & ~models.Q(posts__slug=''))
-    )
-    return categories, tags
+    """获取带发布文章数量的分类和标签（带缓存）"""
+    cache_key = 'blog_categories_tags'
+    result = cache.get(cache_key)
+    
+    if result is None:
+        categories = Category.objects.annotate(
+            published_count=Count('posts', filter=models.Q(posts__status='published', posts__slug__isnull=False) & ~models.Q(posts__slug=''))
+        )
+        tags = Tag.objects.annotate(
+            published_count=Count('posts', filter=models.Q(posts__status='published', posts__slug__isnull=False) & ~models.Q(posts__slug=''))
+        )
+        result = (list(categories), list(tags))
+        # 缓存 5 分钟
+        cache.set(cache_key, result, 300)
+    
+    return result
 
 
 class PostListView(ListView):

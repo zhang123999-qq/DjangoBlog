@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.cache import cache
 
 
 class SiteConfig(models.Model):
@@ -20,6 +21,18 @@ class SiteConfig(models.Model):
 
     @classmethod
     def get_solo(cls):
-        """获取或创建唯一的 SiteConfig 实例"""
-        instance, created = cls.objects.get_or_create(pk=1)
+        """获取或创建唯一的 SiteConfig 实例（带缓存）"""
+        cache_key = 'site_config_solo'
+        instance = cache.get(cache_key)
+        
+        if instance is None:
+            instance, created = cls.objects.get_or_create(pk=1)
+            # 缓存 5 分钟
+            cache.set(cache_key, instance, 300)
+        
         return instance
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # 更新缓存
+        cache.set('site_config_solo', self, 300)

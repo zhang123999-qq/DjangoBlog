@@ -146,6 +146,7 @@ def check_pending_moderation():
     """检查待审核内容，生成提醒
     
     定时任务：检查超过 6 小时未审核的内容
+    优化：批量查询，避免 N+1 问题
     """
     from .models import ModerationReminder, ModerationAdmin
     from django.db.models import Q
@@ -155,58 +156,68 @@ def check_pending_moderation():
     # 查找超过 6 小时未审核的内容
     threshold = timezone.now() - timedelta(hours=6)
     
-    # 查找各类型的待审核内容
+    # 批量获取所有审核管理员映射
+    admin_mapping = {}
+    for mod_admin in ModerationAdmin.objects.all():
+        admin_mapping[mod_admin.target_type] = mod_admin.admin
+    
+    # 批量获取已存在的提醒（避免重复创建）
+    existing_reminders = set(
+        ModerationReminder.objects.filter(
+            is_processed=False
+        ).values_list('target_type', 'target_id')
+    )
+    
     pending_items = []
     
-    # 检查评论
+    # 检查评论（批量查询）
     try:
         from apps.blog.models import Comment
         pending_comments = Comment.objects.filter(
             review_status='pending',
             created_at__lt=threshold
-        )
-        for comment in pending_comments:
-            pending_items.append(('comment', comment.id))
+        ).values_list('id', flat=True)
+        
+        for comment_id in pending_comments:
+            if ('comment', comment_id) not in existing_reminders:
+                pending_items.append(('comment', comment_id))
     except Exception as e:
         logger.error(f'检查评论失败: {e}')
     
-    # 检查主题
+    # 检查主题（批量查询）
     try:
         from apps.forum.models import Topic
         pending_topics = Topic.objects.filter(
             review_status='pending',
             created_at__lt=threshold
-        )
-        for topic in pending_topics:
-            pending_items.append(('topic', topic.id))
+        ).values_list('id', flat=True)
+        
+        for topic_id in pending_topics:
+            if ('topic', topic_id) not in existing_reminders:
+                pending_items.append(('topic', topic_id))
     except Exception as e:
         logger.error(f'检查主题失败: {e}')
     
-    # 生成提醒
-    created_count = 0
+    # 批量创建提醒
+    reminders_to_create = []
     for target_type, target_id in pending_items:
-        # 检查是否已有提醒
-        if not ModerationReminder.objects.filter(
-            target_type=target_type,
-            target_id=target_id,
-            is_processed=False
-        ).exists():
-            # 获取审核管理员
-            try:
-                mod_admin = ModerationAdmin.objects.get(target_type=target_type)
-                assigned_admin = mod_admin.admin
-            except ModerationAdmin.DoesNotExist:
-                assigned_admin = None
-            
-            ModerationReminder.objects.create(
+        reminders_to_create.append(
+            ModerationReminder(
                 target_type=target_type,
                 target_id=target_id,
-                assigned_admin=assigned_admin
+                assigned_admin=admin_mapping.get(target_type)
             )
-            created_count += 1
+        )
     
-    logger.info(f'生成了 {created_count} 条审核提醒')
-    return created_count
+    # 批量插入
+    if reminders_to_create:
+        ModerationReminder.objects.bulk_create(
+            reminders_to_create,
+            ignore_conflicts=True  # 忽略冲突
+        )
+    
+    logger.info(f'生成了 {len(reminders_to_create)} 条审核提醒')
+    return len(reminders_to_create)
 
 
 @shared_task
@@ -214,6 +225,7 @@ def auto_approve_old_pending():
     """自动通过超过 24 小时无敏感词的待审核内容
     
     定时任务：每天执行一次
+    优化：批量处理，避免逐个操作
     """
     from .models import ModerationLog
     from .utils import check_sensitive_content
@@ -222,54 +234,92 @@ def auto_approve_old_pending():
     
     threshold = timezone.now() - timedelta(hours=24)
     approved_count = 0
+    logs_to_create = []
     
-    # 处理评论
+    # 处理评论（批量）
     try:
         from apps.blog.models import Comment
-        pending_comments = Comment.objects.filter(
+        # 获取所有待审核评论
+        pending_comments = list(Comment.objects.filter(
             review_status='pending',
             created_at__lt=threshold
-        )
-        for comment in pending_comments:
-            has_sensitive, _ = check_sensitive_content(comment.content)
-            if not has_sensitive:
-                comment.review_status = 'approved'
-                comment.review_note = '系统自动通过（超时无敏感词）'
-                comment.save(update_fields=['review_status', 'review_note'])
-                
-                ModerationLog.objects.create(
-                    target_type='comment',
-                    target_id=comment.id,
-                    action='approved',
-                    note='系统自动通过（超时无敏感词）'
+        ))
+        
+        # 分批处理（每批 100 个）
+        batch_size = 100
+        for i in range(0, len(pending_comments), batch_size):
+            batch = pending_comments[i:i + batch_size]
+            to_approve = []
+            
+            for comment in batch:
+                has_sensitive, _ = check_sensitive_content(comment.content)
+                if not has_sensitive:
+                    comment.review_status = 'approved'
+                    comment.review_note = '系统自动通过（超时无敏感词）'
+                    to_approve.append(comment)
+                    logs_to_create.append(
+                        ModerationLog(
+                            target_type='comment',
+                            target_id=comment.id,
+                            action='approved',
+                            note='系统自动通过（超时无敏感词）'
+                        )
+                    )
+            
+            # 批量更新
+            if to_approve:
+                Comment.objects.bulk_update(
+                    to_approve,
+                    ['review_status', 'review_note'],
+                    batch_size
                 )
-                approved_count += 1
+                approved_count += len(to_approve)
+                
     except Exception as e:
         logger.error(f'自动通过评论失败: {e}')
     
-    # 处理主题
+    # 处理主题（批量）
     try:
         from apps.forum.models import Topic
-        pending_topics = Topic.objects.filter(
+        pending_topics = list(Topic.objects.filter(
             review_status='pending',
             created_at__lt=threshold
-        )
-        for topic in pending_topics:
-            has_sensitive, _ = check_sensitive_content(topic.content)
-            if not has_sensitive:
-                topic.review_status = 'approved'
-                topic.review_note = '系统自动通过（超时无敏感词）'
-                topic.save(update_fields=['review_status', 'review_note'])
-                
-                ModerationLog.objects.create(
-                    target_type='topic',
-                    target_id=topic.id,
-                    action='approved',
-                    note='系统自动通过（超时无敏感词）'
+        ))
+        
+        batch_size = 100
+        for i in range(0, len(pending_topics), batch_size):
+            batch = pending_topics[i:i + batch_size]
+            to_approve = []
+            
+            for topic in batch:
+                has_sensitive, _ = check_sensitive_content(topic.content)
+                if not has_sensitive:
+                    topic.review_status = 'approved'
+                    topic.review_note = '系统自动通过（超时无敏感词）'
+                    to_approve.append(topic)
+                    logs_to_create.append(
+                        ModerationLog(
+                            target_type='topic',
+                            target_id=topic.id,
+                            action='approved',
+                            note='系统自动通过（超时无敏感词）'
+                        )
+                    )
+            
+            if to_approve:
+                Topic.objects.bulk_update(
+                    to_approve,
+                    ['review_status', 'review_note'],
+                    batch_size
                 )
-                approved_count += 1
+                approved_count += len(to_approve)
+                
     except Exception as e:
         logger.error(f'自动通过主题失败: {e}')
+    
+    # 批量创建日志
+    if logs_to_create:
+        ModerationLog.objects.bulk_create(logs_to_create, batch_size=100)
     
     logger.info(f'自动通过了 {approved_count} 条内容')
     return approved_count

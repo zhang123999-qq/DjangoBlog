@@ -362,6 +362,45 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 86400.0,
         'options': {'queue': 'low_priority'},
     },
+    # ============================================================
+    # 性能维护任务
+    # ============================================================
+    # 每小时清理过期 Session
+    'cleanup-expired-sessions': {
+        'task': 'apps.core.maintenance_tasks.cleanup_expired_sessions',
+        'schedule': 3600.0,  # 1 小时
+        'options': {'queue': 'low_priority'},
+    },
+    # 每 6 小时缓存预热
+    'warmup-cache': {
+        'task': 'apps.core.maintenance_tasks.warmup_cache',
+        'schedule': 21600.0,  # 6 小时
+        'options': {'queue': 'low_priority'},
+    },
+    # 每天 1 点清理旧审核日志
+    'cleanup-moderation-logs': {
+        'task': 'apps.core.maintenance_tasks.cleanup_old_moderation_logs',
+        'schedule': 86400.0,
+        'options': {'queue': 'low_priority'},
+    },
+    # 每天凌晨 0 点生成统计数据
+    'generate-statistics': {
+        'task': 'apps.core.maintenance_tasks.generate_statistics',
+        'schedule': 86400.0,
+        'options': {'queue': 'low_priority'},
+    },
+    # 每周日凌晨 4 点优化数据库
+    'optimize-database': {
+        'task': 'apps.core.maintenance_tasks.optimize_database',
+        'schedule': 604800.0,  # 1 周
+        'options': {'queue': 'low_priority'},
+    },
+    # 每 5 分钟检查 Redis 健康
+    'check-redis-health': {
+        'task': 'apps.core.maintenance_tasks.check_redis_health',
+        'schedule': 300.0,  # 5 分钟
+        'options': {'queue': 'low_priority'},
+    },
 }
 
 # =============================================================================

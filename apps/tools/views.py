@@ -1,6 +1,8 @@
 import logging
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from .registry import registry
 from .models import ToolConfig
 from .categories import TOOL_CATEGORIES
@@ -8,6 +10,7 @@ from .categories import TOOL_CATEGORIES
 logger = logging.getLogger(__name__)
 
 
+@cache_page(60)  # 缓存 1 分钟
 def tool_list(request):
     """工具列表视图"""
     # 重置工具发现状态，确保发现所有工具
@@ -23,21 +26,13 @@ def tool_list(request):
     logger.debug(f'工具列表视图：发现 {len(all_tools)} 个工具')
     
     # 渲染响应
-    response = render(request, 'tools/tool_list.html', {
+    return render(request, 'tools/tool_list.html', {
         'categories': categories,
         'tools': all_tools,
         'total_tools': len(all_tools),
         'enabled_tools_count': len(all_tools),
         'category_info': TOOL_CATEGORIES,
     })
-    
-    # 添加缓存控制头，确保浏览器每次都获取最新的页面
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    response['ETag'] = str(hash(str(all_tools)))
-    
-    return response
 
 
 def tool_detail(request, tool_slug):

@@ -31,6 +31,9 @@ dependencies = [
     "celery>=5.4",
     "redis>=5.2",
     "baidu-aip>=4.16",
+    "gevent>=24.0",  # Gunicorn 异步 worker 必需
+    "hiredis>=2.0",  # Redis 高性能解析器
+    "django-redis>=5.4",  # Django Redis 缓存后端
 ]
 
 [project.optional-dependencies]

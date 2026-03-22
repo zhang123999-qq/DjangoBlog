@@ -47,9 +47,14 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            # MySQL 连接池参数
+            'connect_timeout': 10,
+            'read_timeout': 30,
+            'write_timeout': 30,
         },
-        'CONN_MAX_AGE': 600,  # 连接池，10分钟
-        'CONN_HEALTH_CHECKS': True,  # Django 4.1+ 连接健康检查
+        # 连接池配置
+        'CONN_MAX_AGE': 600,  # 10 分钟连接池
+        'CONN_HEALTH_CHECKS': True,  # 连接健康检查
     }
 }
 
