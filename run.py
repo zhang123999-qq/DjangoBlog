@@ -492,9 +492,6 @@ DB_ENGINE=sqlite
 # Redis (可选)
 USE_REDIS=False
 
-# 安装向导
-ENABLE_INSTALLER=True
-
 # CSRF 信任来源
 CSRF_TRUSTED_ORIGINS=http://localhost:8000
 '''

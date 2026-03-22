@@ -173,7 +173,6 @@ def main():
     print_info(f"Python: {python}")
     print_info(f"地址: http://{host}:{port}/")
     print_info(f"管理后台: http://{host}:{port}/admin/")
-    print_info(f"安装向导: http://{host}:{port}/install/")
     
     if args.lan:
         print_warning("局域网访问已启用")
