@@ -75,7 +75,6 @@ if use_redis:
             'LOCATION': redis_url,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-                'PARSER_CLASS': 'redis.connection.HiredisParser',
                 'CONNECTION_POOL_CLASS': 'redis.connection.BlockingConnectionPool',
                 'CONNECTION_POOL_CLASS_KWARGS': {
                     'max_connections': 20,  # 开发环境较少连接
