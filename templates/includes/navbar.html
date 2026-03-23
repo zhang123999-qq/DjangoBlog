@@ -37,7 +37,7 @@
                                 {% if user.profile.avatar %}
                                     <img src="{{ user.profile.avatar.url }}" alt="头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
                                 {% else %}
-                                    <img src="/static/img/default-avatar.png" alt="默认头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
+                                    <img src="{% static 'img/avatars/default-avatar.png' %}" alt="默认头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
                                 {% endif %}
                                 <span class="position-absolute bottom-0 right-0 w-2 h-2 bg-success rounded-full border-2 border-white"></span>
                             </div>

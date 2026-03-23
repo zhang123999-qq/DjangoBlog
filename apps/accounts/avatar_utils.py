@@ -13,8 +13,8 @@ def get_random_avatar():
     Returns:
         str: 头像相对路径（用于ImageField）
     """
-    # 头像目录
-    avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+    # 头像目录 - 从 static/img/avatars 获取
+    avatar_dir = os.path.join(settings.BASE_DIR, 'static', 'img', 'avatars')
     
     # 支持的头像格式
     extensions = ['.png', '.jpg', '.jpeg', '.gif']
@@ -26,16 +26,31 @@ def get_random_avatar():
             file_path = os.path.join(avatar_dir, file)
             if os.path.isfile(file_path):
                 ext = os.path.splitext(file)[1].lower()
-                if ext in extensions:
+                if ext in extensions and not file.startswith('README'):
                     avatars.append(file)
     
     if not avatars:
-        # 如果没有头像，返回None（使用默认头像）
-        return None
+        # 如果没有头像，返回默认头像
+        return 'avatars/default-avatar.png'
     
-    # 随机选择一个头像，返回相对路径
+    # 随机选择一个头像
     selected = random.choice(avatars)
-    return f'avatars/{selected}'
+    
+    # 复制到 media/avatars 目录
+    import shutil
+    media_avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+    os.makedirs(media_avatar_dir, exist_ok=True)
+    
+    src_path = os.path.join(avatar_dir, selected)
+    # 生成唯一文件名
+    import uuid
+    ext = os.path.splitext(selected)[1]
+    unique_name = f'{uuid.uuid4().hex[:8]}{ext}'
+    dst_path = os.path.join(media_avatar_dir, unique_name)
+    
+    shutil.copy2(src_path, dst_path)
+    
+    return f'avatars/{unique_name}'
 
 
 def get_avatar_list():

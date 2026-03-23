@@ -15,7 +15,7 @@
                             {% if user.profile.avatar %}
                                 <img src="{{ user.profile.avatar.url }}" alt="头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
                             {% else %}
-                                <img src="/static/img/default-avatar.png" alt="默认头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                                <img src="{% static 'img/avatars/default-avatar.png' %}" alt="默认头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
                             {% endif %}
                             <h3 class="mt-3">{{ user.username }}</h3>
                             {% if user.nickname %}
