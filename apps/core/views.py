@@ -180,14 +180,6 @@ def readiness_view(request):
         'cache': _check_cache(),
     }
     
-    # 额外检查：是否有足够的数据库连接
-    try:
-        from django.db import connections
-        db_connections = len(connections)
-        checks['db_connections'] = db_connections > 0
-    except:
-        checks['db_connections'] = False
-    
     all_ready = all(checks.values())
     
     return JsonResponse({
