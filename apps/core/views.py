@@ -1,11 +1,14 @@
 """核心视图"""
 import os
 import json
+import time
 from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib import messages
 from django.conf import settings
+from django.db import connection
+from django.core.cache import cache
 from apps.blog.models import Post, Category, Comment
 from apps.forum.models import Topic, Board
 from apps.accounts.models import User
@@ -102,8 +105,104 @@ def search_view(request):
 
 
 def healthz_view(request):
-    """健康检查"""
-    return JsonResponse({'status': 'ok'})
+    """
+    增强健康检查端点
+    
+    检查项：
+    - 数据库连接
+    - 缓存（Redis）连接
+    - 系统状态
+    
+    返回：
+    - 200: 所有检查通过
+    - 503: 部分检查失败
+    """
+    start_time = time.time()
+    checks = {
+        'database': _check_database(),
+        'cache': _check_cache(),
+    }
+    
+    # 计算响应时间
+    duration_ms = (time.time() - start_time) * 1000
+    
+    # 判断整体状态
+    all_healthy = all(checks.values())
+    status_code = 200 if all_healthy else 503
+    
+    response_data = {
+        'status': 'healthy' if all_healthy else 'unhealthy',
+        'checks': checks,
+        'duration_ms': round(duration_ms, 2),
+        'version': '2.3.0',
+    }
+    
+    return JsonResponse(response_data, status=status_code)
+
+
+def _check_database():
+    """检查数据库连接"""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+        return True
+    except Exception as e:
+        return False
+
+
+def _check_cache():
+    """检查缓存连接"""
+    try:
+        # 写入测试
+        test_key = 'health_check_test'
+        test_value = str(time.time())
+        cache.set(test_key, test_value, 10)
+        
+        # 读取测试
+        result = cache.get(test_key)
+        
+        # 清理
+        cache.delete(test_key)
+        
+        return result == test_value
+    except Exception as e:
+        return False
+
+
+def readiness_view(request):
+    """
+    就绪检查端点（Kubernetes 风格）
+    
+    比 healthz 更严格，检查应用是否准备好接收流量
+    """
+    checks = {
+        'database': _check_database(),
+        'cache': _check_cache(),
+    }
+    
+    # 额外检查：是否有足够的数据库连接
+    try:
+        from django.db import connections
+        db_connections = len(connections)
+        checks['db_connections'] = db_connections > 0
+    except:
+        checks['db_connections'] = False
+    
+    all_ready = all(checks.values())
+    
+    return JsonResponse({
+        'ready': all_ready,
+        'checks': checks,
+    }, status=200 if all_ready else 503)
+
+
+def liveness_view(request):
+    """
+    存活检查端点（Kubernetes 风格）
+    
+    简单检查应用是否运行
+    """
+    return JsonResponse({'alive': True})
 
 
 def contact_view(request):

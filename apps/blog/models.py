@@ -3,7 +3,12 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.urls import reverse
 from django.db.models import F
+from django.core.cache import cache
 from apps.core.utils import generate_slug
+
+
+# Redis key 前缀（与 tasks.py 保持一致）
+VIEWS_CACHE_PREFIX = 'post:views:'
 
 
 class Category(models.Model):
@@ -125,12 +130,42 @@ class Post(models.Model):
         return reverse('blog:post_detail', args=[self.slug])
 
     def increase_views(self):
-        """增加浏览量（使用F表达式避免并发问题）"""
-        Post.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
-        # 更新当前实例的值
-        self.views_count = F('views_count') + 1
-        # 重新从数据库获取最新值
-        self.refresh_from_db(fields=['views_count'])
+        """
+        增加浏览量（使用 Redis 计数，异步同步到数据库）
+        
+        性能优化：
+        - 避免每次请求都写数据库
+        - 使用 Redis INCR 原子操作
+        - Celery 定时任务同步到数据库
+        """
+        try:
+            # 使用 Redis 计数
+            cache_key = f'{VIEWS_CACHE_PREFIX}{self.pk}'
+            
+            # 原子递增
+            if hasattr(cache, 'incr'):
+                # django-redis 支持 incr
+                try:
+                    cache.incr(cache_key)
+                except ValueError:
+                    # key 不存在，初始化
+                    cache.set(cache_key, 1, 3600)  # 1 小时过期
+            else:
+                # 降级处理：直接使用数据库
+                Post.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
+                self.refresh_from_db(fields=['views_count'])
+                return
+            
+            # 更新内存中的值（乐观估计）
+            self.views_count = F('views_count') + 1
+            
+        except Exception as e:
+            # 异常时降级到数据库直接更新
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Redis 浏览量计数失败，降级到数据库: {e}')
+            Post.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
+            self.refresh_from_db(fields=['views_count'])
 
 
 class Comment(models.Model):

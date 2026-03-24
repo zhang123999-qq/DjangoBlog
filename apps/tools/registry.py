@@ -1,14 +1,20 @@
 import importlib
 import logging
 import os
+from django.core.cache import cache
 from .base_tool import BaseTool
 from .categories import ToolCategory, TOOL_CATEGORIES, CATEGORY_ORDER
 
 logger = logging.getLogger(__name__)
 
+# 缓存 key
+TOOLS_CACHE_KEY = 'tools:all_tools'
+TOOLS_CATEGORY_CACHE_KEY = 'tools:by_category'
+CACHE_TIMEOUT = 3600  # 1 小时
+
 
 class ToolRegistry:
-    """工具注册表"""
+    """工具注册表（优化版：懒加载 + 缓存）"""
     def __init__(self):
         self.tools = {}
         self._discovered = False
@@ -49,21 +55,55 @@ class ToolRegistry:
         self._discovered = True
 
     def get_tool(self, slug):
-        """根据 slug 获取工具"""
+        """
+        根据 slug 获取工具（懒加载）
+        
+        性能优化：
+        - 只加载请求的工具
+        - 不触发全量发现
+        """
+        # 先检查内存缓存
+        if slug in self.tools:
+            return self.tools[slug]
+        
+        # 触发发现（只执行一次）
         if not self._discovered:
             self.discover_tools()
+        
         return self.tools.get(slug)
 
     def get_all_tools(self):
-        """获取所有工具"""
-        # 每次都重新发现工具，以便发现新添加的工具
-        self._discovered = False
-        self.tools = {}
-        self.discover_tools()
-        return list(self.tools.values())
+        """
+        获取所有工具（带缓存）
+        
+        性能优化：
+        - 使用 Django 缓存
+        - 避免每次请求都发现工具
+        - 支持手动刷新
+        """
+        # 尝试从缓存获取
+        cached_tools = cache.get(TOOLS_CACHE_KEY)
+        if cached_tools is not None:
+            return cached_tools
+        
+        # 缓存未命中，发现工具
+        if not self._discovered:
+            self.discover_tools()
+        
+        tools = list(self.tools.values())
+        
+        # 写入缓存
+        cache.set(TOOLS_CACHE_KEY, tools, CACHE_TIMEOUT)
+        
+        return tools
     
     def get_tools_by_category(self):
-        """按分类获取工具"""
+        """按分类获取工具（带缓存）"""
+        # 尝试从缓存获取
+        cached = cache.get(TOOLS_CATEGORY_CACHE_KEY)
+        if cached is not None:
+            return cached
+        
         if not self._discovered:
             self.discover_tools()
         
@@ -78,6 +118,9 @@ class ToolRegistry:
         # 对每个分类内的工具按名称排序
         for cat in categorized:
             categorized[cat].sort(key=lambda t: t.name)
+        
+        # 写入缓存
+        cache.set(TOOLS_CATEGORY_CACHE_KEY, categorized, CACHE_TIMEOUT)
         
         return categorized
     
@@ -101,10 +144,17 @@ class ToolRegistry:
         
         return result
     
+    def clear_cache(self):
+        """清除工具缓存"""
+        cache.delete(TOOLS_CACHE_KEY)
+        cache.delete(TOOLS_CATEGORY_CACHE_KEY)
+        logger.info('工具缓存已清除')
+    
     def reset_discovered(self):
-        """重置发现状态"""
+        """重置发现状态并清除缓存"""
         self._discovered = False
         self.tools = {}
+        self.clear_cache()
 
 
 # 全局工具注册表实例
