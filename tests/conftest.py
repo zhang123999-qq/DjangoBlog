@@ -381,7 +381,8 @@ def pytest_collection_modifyitems(config, items):
 
     for item in items:
         fixturenames = set(getattr(item, 'fixturenames', []) or [])
-        if {'page', 'context', 'browser'} & fixturenames:
+        # 仅对真正依赖 Playwright 运行时的用例打 e2e 跳过
+        if {'page', 'context', 'browser', 'playwright'} & fixturenames:
             item.add_marker(skip_e2e)
             item.add_marker('e2e')
 
