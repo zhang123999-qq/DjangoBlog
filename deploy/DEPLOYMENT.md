@@ -100,6 +100,22 @@ docker compose --env-file .env -f deploy/docker-compose.yml exec web python mana
 
 > 安全提示：请勿提交 `.env` 到仓库；仓库仅保留 `deploy/.env.docker.example` 模板。
 
+### 3.1.1 一键启动脚本
+
+```bash
+# Linux / macOS
+bash deploy/up.sh
+
+# Windows (CMD)
+deploy\up.bat
+```
+
+脚本会自动执行：
+- 启动 compose
+- 数据库迁移
+- collectstatic
+
+
 ### 3.2 单独使用 Docker
 
 1. 构建镜像：
