@@ -134,6 +134,8 @@ function getLanguageFromFilename(filename) {
 
 let tinymceLoaded = false;
 let tinymceLoadPromise = null;
+let uploadClientLoaded = false;
+let uploadClientLoadPromise = null;
 
 /**
  * 加载 TinyMCE
@@ -160,6 +162,29 @@ function loadTinyMCE() {
     return tinymceLoadPromise;
 }
 
+function loadUploadAsyncClient() {
+    if (uploadClientLoaded || window.UploadAsyncClient) {
+        uploadClientLoaded = true;
+        return Promise.resolve();
+    }
+    if (uploadClientLoadPromise) {
+        return uploadClientLoadPromise;
+    }
+
+    uploadClientLoadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = '/static/js/upload-async-client.js';
+        script.onload = () => {
+            uploadClientLoaded = true;
+            resolve();
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+
+    return uploadClientLoadPromise;
+}
+
 /**
  * 创建 TinyMCE 编辑器实例
  * @param {string} elementId - textarea元素ID
@@ -167,6 +192,7 @@ function loadTinyMCE() {
  */
 async function createTinyMCE(elementId, options = {}) {
     await loadTinyMCE();
+    await loadUploadAsyncClient();
     
     const defaultOptions = {
         height: 500,
@@ -213,6 +239,49 @@ async function createTinyMCE(elementId, options = {}) {
         images_upload_url: '/api/upload/image/',
         images_upload_credentials: true,
         file_picker_types: 'image media file',
+        file_picker_callback: function(callback, value, meta) {
+            // 仅处理附件上传，图片仍由 TinyMCE 默认 images_upload_url 处理
+            if (meta.filetype !== 'file') {
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+
+            input.onchange = async function() {
+                const file = input.files && input.files[0];
+                document.body.removeChild(input);
+                if (!file) return;
+
+                try {
+                    const result = await window.UploadAsyncClient.uploadFileWithPolling(file, {
+                        timeoutMs: 120000,
+                        intervalMs: 1500,
+                        maxRetries: 3,
+                    });
+
+                    callback(result.location, {
+                        text: file.name,
+                        title: file.name,
+                    });
+                } catch (err) {
+                    const msg = err && err.message ? err.message : '上传失败';
+                    if (window.tinymce && window.tinymce.activeEditor) {
+                        window.tinymce.activeEditor.notificationManager.open({
+                            text: `附件上传失败：${msg}`,
+                            type: 'error',
+                            timeout: 3000,
+                        });
+                    } else {
+                        alert(`附件上传失败：${msg}`);
+                    }
+                }
+            };
+
+            input.click();
+        },
         relative_urls: false,
         remove_script_host: false,
         convert_urls: true,

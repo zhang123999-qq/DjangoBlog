@@ -3,6 +3,32 @@
  */
 (function() {
     'use strict';
+
+    let uploadClientLoaded = false;
+    let uploadClientLoadPromise = null;
+
+    function loadUploadAsyncClient() {
+        if (uploadClientLoaded || window.UploadAsyncClient) {
+            uploadClientLoaded = true;
+            return Promise.resolve();
+        }
+        if (uploadClientLoadPromise) {
+            return uploadClientLoadPromise;
+        }
+
+        uploadClientLoadPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = '/static/js/upload-async-client.js';
+            script.onload = () => {
+                uploadClientLoaded = true;
+                resolve();
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+
+        return uploadClientLoadPromise;
+    }
     
     // 等待 DOM 加载完成
     document.addEventListener('DOMContentLoaded', function() {
@@ -54,6 +80,55 @@
                 automatic_uploads: true,
                 images_upload_url: '/api/upload/image/',
                 images_upload_credentials: true,
+                file_picker_types: 'image media file',
+                file_picker_callback: function(callback, value, meta) {
+                    if (meta.filetype !== 'file') {
+                        return;
+                    }
+
+                    const doUpload = async () => {
+                        await loadUploadAsyncClient();
+                        if (!window.UploadAsyncClient) {
+                            throw new Error('上传客户端未加载');
+                        }
+
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.style.display = 'none';
+                        document.body.appendChild(input);
+
+                        input.onchange = async function() {
+                            const file = input.files && input.files[0];
+                            document.body.removeChild(input);
+                            if (!file) return;
+
+                            try {
+                                const result = await window.UploadAsyncClient.uploadFileWithPolling(file, {
+                                    timeoutMs: 120000,
+                                    intervalMs: 1500,
+                                    maxRetries: 3,
+                                });
+                                callback(result.location, { text: file.name, title: file.name });
+                            } catch (err) {
+                                const msg = err && err.message ? err.message : '上传失败';
+                                const active = window.tinymce && window.tinymce.activeEditor;
+                                if (active) {
+                                    active.notificationManager.open({
+                                        text: `附件上传失败：${msg}`,
+                                        type: 'error',
+                                        timeout: 3000,
+                                    });
+                                } else {
+                                    alert(`附件上传失败：${msg}`);
+                                }
+                            }
+                        };
+
+                        input.click();
+                    };
+
+                    doUpload();
+                },
                 relative_urls: false,
                 remove_script_host: false,
                 convert_urls: true,
