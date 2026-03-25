@@ -4,8 +4,7 @@
 {% block title %}{{ tool.name }} - {{ site_config.site_title }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- 面包屑 -->
+<div class="container py-4 tool-page">
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">首页</a></li>
@@ -15,7 +14,6 @@
     </nav>
 
     <div class="row">
-        <!-- 工具主体 -->
         <div class="col-lg-8">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white">
@@ -30,15 +28,12 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- 工具表单 -->
                     <form method="post">
                         {% csrf_token %}
-                        
+
                         {% for field in form %}
                         <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label fw-medium">
-                                {{ field.label }}
-                            </label>
+                            <label for="{{ field.id_for_label }}" class="form-label fw-medium">{{ field.label }}</label>
                             {{ field }}
                             {% if field.help_text %}
                             <div class="form-text">{{ field.help_text }}</div>
@@ -50,8 +45,8 @@
                             {% endif %}
                         </div>
                         {% endfor %}
-                        
-                        <div class="d-flex gap-2">
+
+                        <div class="d-flex gap-2 flex-wrap">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-play-fill me-1"></i>执行
                             </button>
@@ -63,193 +58,22 @@
                             </a>
                         </div>
                     </form>
-                    
-                    <!-- 结果显示 -->
+
                     {% if result %}
                     <hr class="my-4">
                     <h5 class="mb-3">
                         <i class="bi bi-check-circle text-success me-2"></i>执行结果
                     </h5>
-                    
+
                     <div class="result-box p-3 bg-light rounded">
-                        {% if result.error %}
-                        <div class="alert alert-danger mb-0">
-                            <i class="bi bi-exclamation-triangle me-2"></i>{{ result.error }}
-                        </div>
-                        {% else %}
-                            {# 图片输出 #}
-                            {% if result.image_base64 or result.image %}
-                            <div class="text-center">
-                                <p class="text-muted small mb-2">生成成功，长按或右键保存图片</p>
-                                {% if result.image %}
-                                <img src="{{ result.image }}" alt="生成图片" class="img-fluid rounded shadow-sm" style="max-width: 100%;">
-                                {% else %}
-                                <img src="data:image/png;base64,{{ result.image_base64 }}" alt="生成图片" class="img-fluid rounded shadow-sm" style="max-width: 100%;">
-                                {% endif %}
-                            </div>
-                            
-                            {# BMI 计算器结果 #}
-                            {% elif result.bmi %}
-                            <div class="text-center mb-4">
-                                <h2 style="color: {{ result.color }}; font-size: 3rem; font-weight: bold;">{{ result.bmi }}</h2>
-                                <p class="lead" style="color: {{ result.color }};">{{ result.category }}</p>
-                            </div>
-                            <table class="table table-bordered mb-3">
-                                <tbody>
-                                    <tr>
-                                        <th class="bg-light u-cell-w-40">身高</th>
-                                        <td>{{ result.height }} cm</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">体重</th>
-                                        <td>{{ result.weight }} kg</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">BMI 指数</th>
-                                        <td style="color: {{ result.color }}; font-weight: bold;">{{ result.bmi }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">健康状态</th>
-                                        <td style="color: {{ result.color }}; font-weight: bold;">{{ result.category }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">标准体重范围</th>
-                                        <td>{{ result.normal_min }} - {{ result.normal_max }} kg</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="alert alert-info mb-3">
-                                <i class="bi bi-lightbulb me-2"></i><strong>健康建议：</strong>{{ result.advice }}
-                            </div>
-                            <div class="mt-3">
-                                <h6 class="text-muted mb-2">BMI 参考标准</h6>
-                                <table class="table table-sm table-bordered">
-                                    <tbody>
-                                        <tr><td>&lt; 18.5</td><td class="text-warning">偏瘦</td></tr>
-                                        <tr><td>18.5 - 23.9</td><td class="text-success">正常</td></tr>
-                                        <tr><td>24 - 27.9</td><td class="text-warning">偏胖</td></tr>
-                                        <tr><td>28 - 29.9</td><td class="text-danger">肥胖</td></tr>
-                                        <tr><td>&gt;= 30</td><td class="text-danger">重度肥胖</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            {# 颜色预览 #}
-                            {% elif result.preview %}
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="me-3" style="width: 80px; height: 80px; border-radius: 8px; background: {{ result.preview }}; border: 2px solid #dee2e6;"></div>
-                                <div>
-                                    <p class="mb-1"><strong>HEX:</strong> {{ result.hex }}</p>
-                                    <p class="mb-1"><strong>RGB:</strong> {{ result.rgb }}</p>
-                                    <p class="mb-0"><strong>HSL:</strong> {{ result.hsl }}</p>
-                                </div>
-                            </div>
-                            
-                            {# 二维码/条形码识别结果 #}
-                            {% elif result.results %}
-                            <p><strong>文件名:</strong> {{ result.filename }}</p>
-                            <hr>
-                            {% for item in result.results %}
-                            <div class="mb-2">
-                                <span class="badge bg-primary">{{ item.type }}</span>
-                                <p class="mt-2 mb-0">{{ item.data }}</p>
-                            </div>
-                            {% endfor %}
-                            
-                            {# EXIF 数据 #}
-                            {% elif result.exif_data %}
-                            <p><strong>文件名:</strong> {{ result.filename }}</p>
-                            <hr>
-                            <table class="table table-bordered table-sm">
-                                <tbody>
-                                    {% for key, value in result.exif_data.items %}
-                                    <tr>
-                                        <th class="bg-light" style="width: 40%;">{{ key }}</th>
-                                        <td>{{ value }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            
-                            {# 文本统计结果 #}
-                            {% elif result.char_count is not None %}
-                            <table class="table table-bordered">
-                                <tbody>
-                                    <tr><th class="bg-light">字符数（包括空格）</th><td>{{ result.char_count }}</td></tr>
-                                    <tr><th class="bg-light">字符数（不包括空格）</th><td>{{ result.char_count_no_space }}</td></tr>
-                                    <tr><th class="bg-light">单词数</th><td>{{ result.word_count }}</td></tr>
-                                    <tr><th class="bg-light">行数</th><td>{{ result.line_count }}</td></tr>
-                                    <tr><th class="bg-light">段落数</th><td>{{ result.paragraph_count }}</td></tr>
-                                </tbody>
-                            </table>
-                            
-                            {# IP 查询结果 #}
-                            {% elif result.ip %}
-                            <table class="table table-bordered">
-                                <tbody>
-                                    {% for key, value in result.items %}
-                                    {% if key != 'error' %}
-                                    <tr>
-                                        <th class="bg-light" style="width: 40%;">{{ key }}</th>
-                                        <td>{{ value }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            
-                            {# Base64 输出 #}
-                            {% elif result.base64 %}
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Base64 结果:</label>
-                                <textarea class="form-control font-monospace" rows="5" readonly>{{ result.base64 }}</textarea>
-                                <button class="btn btn-outline-secondary btn-sm mt-2" onclick="copyToClipboard(this.previousElementSibling)">
-                                    <i class="bi bi-clipboard me-1"></i>复制
-                                </button>
-                            </div>
-                            
-                            {# Base64 图片输出 #}
-                            {% elif result.base64 and result.mode == 'base64_to_image' %}
-                            <div class="text-center">
-                                <p class="text-muted small mb-2">转换成功</p>
-                                <img src="{{ result.data_uri }}" alt="转换图片" class="img-fluid rounded shadow-sm" style="max-width: 100%;">
-                            </div>
-                            
-                            {# 通用文本输出 #}
-                            {% else %}
-                            <div class="result-text font-monospace u-pre-wrap-break">
-                                {% if result.result %}{{ result.result }}{% else %}{{ result }}{% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {# 复制按钮（针对某些结果） #}
-                            {% if result.password or result.formatted_json %}
-                            <div class="mt-3">
-                                {% if result.password %}
-                                <div class="input-group">
-                                    <input type="text" class="form-control font-monospace" value="{{ result.password }}" readonly>
-                                    <button class="btn btn-outline-secondary" onclick="copyToClipboard(this.previousElementSibling)">
-                                        <i class="bi bi-clipboard"></i>
-                                    </button>
-                                </div>
-                                {% elif result.formatted_json %}
-                                <textarea class="form-control font-monospace" rows="10" readonly>{{ result.formatted_json }}</textarea>
-                                <button class="btn btn-outline-secondary btn-sm mt-2" onclick="copyToClipboard(this.previousElementSibling)">
-                                    <i class="bi bi-clipboard me-1"></i>复制
-                                </button>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        {% endif %}
+                        {% include 'tools/includes/result_blocks.html' %}
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-        <!-- 侧边栏 -->
+
         <div class="col-lg-4">
-            <!-- 工具说明 -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
                     <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>工具说明</h6>
@@ -263,8 +87,7 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- 使用提示 -->
+
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
                     <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>使用提示</h6>
@@ -284,22 +107,22 @@
 
 {% block extra_js %}
 <script>
-function copyToClipboard(element) {
-    if (element.tagName === 'INPUT') {
-        element.select();
-    } else {
+function copyToClipboard(element, btnEl) {
+    if (!element) return;
+    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
         element.select();
         element.setSelectionRange(0, 99999);
     }
-    navigator.clipboard.writeText(element.value).then(function() {
-        const btn = event.target.closest('button');
+    navigator.clipboard.writeText(element.value || element.textContent || '').then(function() {
+        const btn = btnEl || event?.target?.closest('button');
+        if (!btn) return;
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check me-1"></i>已复制';
         btn.classList.add('btn-success');
         setTimeout(function() {
             btn.innerHTML = originalHTML;
             btn.classList.remove('btn-success');
-        }, 2000);
+        }, 1800);
     });
 }
 </script>
@@ -307,29 +130,29 @@ function copyToClipboard(element) {
 
 {% block extra_css %}
 <style>
-    .tool-icon-lg {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.75rem;
-    }
-    
-    .result-box {
-        border: 1px solid #e9ecef;
-    }
-    
-    .result-text {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 4px;
-    }
-    
-    .font-monospace {
-        font-family: 'Courier New', Courier, monospace;
-    }
+.tool-icon-lg {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.result-box {
+    border: 1px solid #e9ecef;
+}
+
+.result-text {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.font-monospace {
+    font-family: 'Courier New', Courier, monospace;
+}
 </style>
 {% endblock %}
