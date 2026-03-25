@@ -9,8 +9,8 @@ from datetime import datetime
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import default_storage
-from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
-from rest_framework import permissions, status
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import permissions, serializers, status
 from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
@@ -63,6 +63,20 @@ ERROR_RESPONSE_SCHEMA = {
     },
     'required': ['error_code', 'error', 'message'],
 }
+
+UploadImageRequestSerializer = inline_serializer(
+    name='UploadImageRequest',
+    fields={
+        'file': serializers.FileField(),
+    },
+)
+
+UploadFileRequestSerializer = inline_serializer(
+    name='UploadFileRequest',
+    fields={
+        'file': serializers.FileField(),
+    },
+)
 
 
 def _safe_extension(filename: str) -> str:
@@ -177,6 +191,7 @@ def upload_status(request, upload_id: str):
     operation_id='upload_image',
     summary='上传图片（同步）',
     tags=['upload'],
+    request={'multipart/form-data': UploadImageRequestSerializer},
     responses={
         200: OpenApiResponse(description='上传成功', response={
             'type': 'object',
@@ -237,6 +252,7 @@ def upload_image(request):
     operation_id='upload_file',
     summary='上传通用文件（同步/异步）',
     tags=['upload'],
+    request={'multipart/form-data': UploadFileRequestSerializer},
     responses={
         200: OpenApiResponse(description='同步上传成功', response={
             'type': 'object',
@@ -352,3 +368,4 @@ def upload_file(request):
     except Exception:
         logger.exception('upload_file failed')
         return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

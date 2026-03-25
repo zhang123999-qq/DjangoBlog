@@ -29,6 +29,11 @@ ERROR_SCHEMA = {
     'required': ['error_code', 'error', 'message'],
 }
 
+ApproveRequestSerializer = inline_serializer(
+    name='ModerationApproveRequest',
+    fields={},
+)
+
 RejectRequestSerializer = inline_serializer(
     name='ModerationRejectRequest',
     fields={
@@ -238,26 +243,7 @@ def _record_peak_concurrency(user_id, current: int):
     responses={
         200: OpenApiResponse(
             description='获取成功',
-            response={
-                'type': 'object',
-                'properties': {
-                    'success': {'type': 'boolean', 'example': True},
-                    'window_minutes': {'type': 'integer', 'example': 10},
-                    'totals': {'type': 'object'},
-                    'peak_concurrency': {'type': 'integer', 'example': 5},
-                    'series': {'type': 'array', 'items': {'type': 'object'}},
-                    'hotspots': {'type': 'array', 'items': {'type': 'object'}},
-                    'thresholds': {
-                        'type': 'object',
-                        'properties': {
-                            'rate_limited': {'type': 'integer', 'example': 5},
-                            'concurrency_limited': {'type': 'integer', 'example': 3},
-                            'fail_rate': {'type': 'number', 'example': 0.2},
-                        },
-                    },
-                },
-                'required': ['success', 'window_minutes', 'totals', 'peak_concurrency', 'series', 'hotspots', 'thresholds'],
-            },
+            response=MetricsSerializer,
         ),
         403: OpenApiResponse(
             description='权限不足',
@@ -291,18 +277,11 @@ def moderation_metrics_api(request):
     operation_id='api_moderation_approve',
     summary='审核通过（JSON API）',
     tags=['moderation'],
+    request=ApproveRequestSerializer,
     responses={
         200: OpenApiResponse(
             description='审核通过成功',
-            response={
-                'type': 'object',
-                'properties': {
-                    'success': {'type': 'boolean', 'example': True},
-                    'status': {'type': 'string', 'example': 'approved'},
-                    'id': {'type': 'integer'},
-                },
-                'required': ['success', 'status', 'id'],
-            },
+            response=ApproveSuccessSerializer,
         ),
         400: OpenApiResponse(
             description='内容类型错误',
@@ -379,12 +358,7 @@ def moderation_approve_api(request, content_type: str, content_id: int):
     operation_id='api_moderation_reject',
     summary='审核拒绝（JSON API）',
     tags=['moderation'],
-    request={
-        'type': 'object',
-        'properties': {
-            'review_note': {'type': 'string', 'description': '审核备注'},
-        },
-    },
+    request=RejectRequestSerializer,
     responses={
         200: OpenApiResponse(
             description='审核拒绝成功',
