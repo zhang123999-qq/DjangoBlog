@@ -87,8 +87,8 @@
                                 <p class="mb-2 text-muted">回复于: <a href="{{ reply.topic.get_absolute_url }}">{{ reply.topic.title }}</a></p>
                                 <p class="mb-3">{{ reply.content|truncatechars:100 }}</p>
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'moderation:approve' 'reply' reply.id %}" class="btn btn-success btn-sm">通过</a>
-                                    <a href="{% url 'moderation:reject' 'reply' reply.id %}" class="btn btn-danger btn-sm">拒绝</a>
+                                    <a href="{% url 'moderation:approve' 'reply' reply.id %}" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="reply" data-content-id="{{ reply.id }}">通过</a>
+                                    <a href="{% url 'moderation:reject' 'reply' reply.id %}" class="btn btn-danger btn-sm js-moderation-action" data-action="reject" data-content-type="reply" data-content-id="{{ reply.id }}">拒绝</a>
                                 </div>
                             </div>
                         {% endfor %}
@@ -115,9 +115,70 @@
                 }
             };
 
+            const showRejectModal = () => {
+                return new Promise((resolve) => {
+                    const modal = document.createElement('div');
+                    modal.style.position = 'fixed';
+                    modal.style.inset = '0';
+                    modal.style.background = 'rgba(0,0,0,.35)';
+                    modal.style.zIndex = '10000';
+                    modal.style.display = 'flex';
+                    modal.style.alignItems = 'center';
+                    modal.style.justifyContent = 'center';
+
+                    modal.innerHTML = `
+                        <div style="width:min(92vw,520px);background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:16px;">
+                            <h5 style="margin:0 0 10px;">填写拒绝原因</h5>
+                            <p style="margin:0 0 10px;color:#666;font-size:13px;">可选，最多 200 字。也可点击模板快速填充。</p>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary js-reason-template" data-v="疑似广告/推广内容">广告/推广</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary js-reason-template" data-v="包含不当或敏感内容">敏感内容</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary js-reason-template" data-v="内容质量较低，建议补充细节后重发">内容质量低</button>
+                            </div>
+                            <textarea id="reject-note-input" class="form-control" maxlength="200" rows="4" placeholder="请输入拒绝原因（可选）"></textarea>
+                            <div style="margin-top:6px;font-size:12px;color:#888;text-align:right;" id="reject-note-counter">0/200</div>
+                            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+                                <button type="button" class="btn btn-light" id="reject-cancel-btn">取消</button>
+                                <button type="button" class="btn btn-danger" id="reject-confirm-btn">确认拒绝</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.appendChild(modal);
+
+                    const input = modal.querySelector('#reject-note-input');
+                    const counter = modal.querySelector('#reject-note-counter');
+                    const cancelBtn = modal.querySelector('#reject-cancel-btn');
+                    const confirmBtn = modal.querySelector('#reject-confirm-btn');
+                    const tplBtns = modal.querySelectorAll('.js-reason-template');
+
+                    const cleanup = (value) => {
+                        modal.remove();
+                        resolve(value);
+                    };
+
+                    input.addEventListener('input', () => {
+                        counter.textContent = `${input.value.length}/200`;
+                    });
+
+                    tplBtns.forEach(b => {
+                        b.addEventListener('click', () => {
+                            input.value = b.dataset.v || '';
+                            counter.textContent = `${input.value.length}/200`;
+                            input.focus();
+                        });
+                    });
+
+                    cancelBtn.addEventListener('click', () => cleanup(null));
+                    confirmBtn.addEventListener('click', () => cleanup((input.value || '').trim()));
+                    modal.addEventListener('click', (ev) => {
+                        if (ev.target === modal) cleanup(null);
+                    });
+                });
+            };
+
             buttons.forEach(btn => {
                 btn.addEventListener('click', async function (e) {
-                    // 无 JS 时走原跳转；有 JS 时走 API
                     e.preventDefault();
 
                     const action = btn.dataset.action;
@@ -141,7 +202,13 @@
                             return;
                         }
 
-                        const note = window.prompt('请输入拒绝原因（可选）：', '') || '';
+                        const note = await showRejectModal();
+                        if (note === null) {
+                            btn.classList.remove('disabled');
+                            btn.textContent = oldText;
+                            return;
+                        }
+
                         await window.ModerationApiClient.reject(contentType, contentId, note);
                         toast('审核拒绝成功', 'success');
                         setTimeout(() => window.location.reload(), 350);
