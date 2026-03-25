@@ -52,6 +52,7 @@ DEFAULT_MESSAGES: Dict[str, str] = {
     ErrorCodes.MODERATION_CONTENT_NOT_FOUND: '审核对象不存在',
     ErrorCodes.MODERATION_APPROVE_FAILED: '审核通过操作失败，请稍后重试',
     ErrorCodes.MODERATION_REJECT_FAILED: '审核拒绝操作失败，请稍后重试',
+    ErrorCodes.MODERATION_PERMISSION_DENIED: '无审核权限',
 }
 
 
@@ -68,3 +69,4 @@ def api_error_payload(code: str, message: Optional[str] = None, **extra) -> Dict
     }
     payload.update(extra)
     return payload
+d
