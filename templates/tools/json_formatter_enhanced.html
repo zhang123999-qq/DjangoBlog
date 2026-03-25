@@ -1,285 +1,207 @@
-{% extends 'tools/tool_detail.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block extra_js %}
-<script src="{% static 'js/editor-init.js' %}"></script>
-<style>
-    .editor-container {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    .editor-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .editor-body {
-        display: flex;
-        height: 400px;
-    }
-    .editor-panel {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    .editor-panel-header {
-        background: #f8f9fa;
-        padding: 8px 12px;
-        border-bottom: 1px solid #dee2e6;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-    .monaco-editor-container {
-        flex: 1;
-    }
-    #input-editor, #output-editor {
-        height: 100%;
-    }
-    .editor-divider {
-        width: 4px;
-        background: #dee2e6;
-        cursor: col-resize;
-    }
-    .editor-divider:hover {
-        background: #007bff;
-    }
-    .editor-stats {
-        display: flex;
-        gap: 20px;
-        font-size: 0.875rem;
-    }
-    .editor-stat {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .error-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-    .error-box {
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        max-width: 500px;
-        text-align: center;
-    }
-</style>
+{% block title %}{{ tool.name|default:'JSON 格式化工具' }} - {{ site_config.site_title }}{% endblock %}
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="editor-container">
-            <div class="editor-header">
-                <div>
-                    <i class="bi bi-code-slash me-2"></i>
-                    JSON 编辑器
-                </div>
-                <div class="editor-stats" id="editor-stats">
-                    <span class="editor-stat">
-                        <i class="bi bi-hash"></i>
-                        <span id="char-count">0</span> 字符
-                    </span>
-                    <span class="editor-stat">
-                        <i class="bi bi-list"></i>
-                        <span id="line-count">0</span> 行
-                    </span>
-                </div>
-            </div>
-            <div class="editor-body">
-                <div class="editor-panel">
-                    <div class="editor-panel-header">
-                        <i class="bi bi-input-cursor-text me-1"></i> 输入
+{% block content %}
+<div class="container py-4 tool-page">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tools:tool_list' %}" class="text-decoration-none">工具箱</a></li>
+            <li class="breadcrumb-item active" aria-current="page">JSON 格式化</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="editor-container">
+                <div class="editor-header">
+                    <div>
+                        <i class="bi bi-code-slash me-2"></i>
+                        JSON 编辑器
                     </div>
-                    <div class="monaco-editor-container" id="input-editor"></div>
-                </div>
-                <div class="editor-divider"></div>
-                <div class="editor-panel">
-                    <div class="editor-panel-header">
-                        <i class="bi bi-check-circle me-1"></i> 输出
+                    <div class="editor-stats" id="editor-stats">
+                        <span class="editor-stat">
+                            <i class="bi bi-hash"></i>
+                            <span id="char-count">0</span> 字符
+                        </span>
+                        <span class="editor-stat">
+                            <i class="bi bi-list"></i>
+                            <span id="line-count">0</span> 行
+                        </span>
                     </div>
-                    <div class="monaco-editor-container" id="output-editor"></div>
+                </div>
+                <div class="editor-body">
+                    <div class="editor-panel">
+                        <div class="editor-panel-header">
+                            <i class="bi bi-input-cursor-text me-1"></i> 输入
+                        </div>
+                        <div class="monaco-editor-container" id="input-editor"></div>
+                    </div>
+                    <div class="editor-divider"></div>
+                    <div class="editor-panel">
+                        <div class="editor-panel-header">
+                            <i class="bi bi-check-circle me-1"></i> 输出
+                        </div>
+                        <div class="monaco-editor-container" id="output-editor"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <label class="form-label">缩进</label>
-                <select class="form-select" id="indent-select">
-                    <option value="2">2 空格</option>
-                    <option value="4">4 空格</option>
-                    <option value="tab">Tab</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">选项</label>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="sort-keys">
-                    <label class="form-check-label" for="sort-keys">按键名排序</label>
+
+            <div class="row mt-3 g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">缩进</label>
+                    <select class="form-select" id="indent-select">
+                        <option value="2">2 空格</option>
+                        <option value="4">4 空格</option>
+                        <option value="tab">Tab</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">选项</label>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="sort-keys">
+                        <label class="form-check-label" for="sort-keys">按键名排序（顶层）</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100" id="format-btn" type="button">
+                        <i class="bi bi-magic me-1"></i> 格式化
+                    </button>
                 </div>
             </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button class="btn btn-primary w-100" id="format-btn">
-                    <i class="bi bi-magic me-1"></i> 格式化
+
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm" id="copy-btn" type="button">
+                    <i class="bi bi-clipboard me-1"></i> 复制结果
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="minify-btn" type="button">
+                    <i class="bi bi-compress me-1"></i> 压缩
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="clear-btn" type="button">
+                    <i class="bi bi-x-circle me-1"></i> 清空
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="sample-btn" type="button">
+                    <i class="bi bi-file-earmark-code me-1"></i> 示例
                 </button>
             </div>
         </div>
-        
-        <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" id="copy-btn">
-                <i class="bi bi-clipboard me-1"></i> 复制结果
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" id="minify-btn">
-                <i class="bi bi-compress me-1"></i> 压缩
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" id="clear-btn">
-                <i class="bi bi-x-circle me-1"></i> 清空
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" id="sample-btn">
-                <i class="bi bi-file-earmark-code me-1"></i> 示例
-            </button>
-        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+.editor-container { border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; }
+.editor-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
+}
+.editor-body { display: flex; height: 430px; }
+.editor-panel { flex: 1; display: flex; flex-direction: column; }
+.editor-panel-header { background: #f8f9fa; padding: 8px 12px; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: .875rem; }
+.monaco-editor-container { flex: 1; }
+.editor-divider { width: 4px; background: #dee2e6; cursor: col-resize; }
+.editor-divider:hover { background: #007bff; }
+.editor-stats { display: flex; gap: 20px; font-size: .875rem; }
+.editor-stat { display: flex; align-items: center; gap: 5px; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/editor-init.js' %}"></script>
 <script>
 let inputEditor, outputEditor;
 
+function mountToast(message, type='success') {
+  const toast = document.createElement('div');
+  toast.className = `toast align-items-center text-white border-0 position-fixed ${type === 'success' ? 'bg-success' : 'bg-danger'}`;
+  toast.style.bottom = '20px';
+  toast.style.right = '20px';
+  toast.style.zIndex = '9999';
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body"><i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>${message}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>`;
+  document.body.appendChild(toast);
+  const bsToast = new bootstrap.Toast(toast, { delay: 2600 });
+  bsToast.show();
+  toast.addEventListener('hidden.bs.toast', () => toast.remove());
+}
+
+function formatJSON() {
+  const input = inputEditor.getValue();
+  const indent = document.getElementById('indent-select').value;
+  const sortKeys = document.getElementById('sort-keys').checked;
+
+  try {
+    const data = JSON.parse(input || '{}');
+    const indentStr = indent === 'tab' ? '\t' : parseInt(indent, 10);
+    const value = sortKeys && data && typeof data === 'object' && !Array.isArray(data)
+      ? JSON.stringify(Object.keys(data).sort().reduce((o, k) => (o[k] = data[k], o), {}), null, indentStr)
+      : JSON.stringify(data, null, indentStr);
+    outputEditor.setValue(value);
+  } catch (e) {
+    mountToast(e.message || 'JSON 格式错误', 'error');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
-    // 初始化 Monaco Editor
-    await MonacoEditor.load();
-    
-    inputEditor = MonacoEditor.create('input-editor', {
-        language: 'json',
-        value: '',
-        minimap: { enabled: false }
-    });
-    
-    outputEditor = MonacoEditor.create('output-editor', {
-        language: 'json',
-        value: '',
-        readOnly: true,
-        minimap: { enabled: false }
-    });
-    
-    // 监听输入变化，更新统计
-    inputEditor.onDidChangeModelContent(() => {
-        const value = inputEditor.getValue();
-        document.getElementById('char-count').textContent = value.length;
-        document.getElementById('line-count').textContent = value.split('\n').length;
-        
-        // 实时验证JSON
-        try {
-            JSON.parse(value);
-            inputEditor.markers = [];
-        } catch (e) {
-            // 显示错误标记
-        }
-    });
-    
-    // 格式化按钮
-    document.getElementById('format-btn').addEventListener('click', formatJSON);
-    
-    // 复制按钮
-    document.getElementById('copy-btn').addEventListener('click', () => {
-        navigator.clipboard.writeText(outputEditor.getValue());
-        showToast('已复制到剪贴板');
-    });
-    
-    // 压缩按钮
-    document.getElementById('minify-btn').addEventListener('click', () => {
-        try {
-            const data = JSON.parse(inputEditor.getValue());
-            outputEditor.setValue(JSON.stringify(data));
-        } catch (e) {
-            showError(e.message);
-        }
-    });
-    
-    // 清空按钮
-    document.getElementById('clear-btn').addEventListener('click', () => {
-        inputEditor.setValue('');
-        outputEditor.setValue('');
-    });
-    
-    // 示例按钮
-    document.getElementById('sample-btn').addEventListener('click', () => {
-        const sample = {
-            "name": "Django Blog",
-            "version": "2.1.0",
-            "features": ["博客", "论坛", "工具栏"],
-            "config": {
-                "debug": true,
-                "database": "sqlite"
-            }
-        };
-        inputEditor.setValue(JSON.stringify(sample, null, 2));
-    });
-    
-    // 快捷键: Ctrl+Enter 格式化
-    inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, formatJSON);
-});
+  await MonacoEditor.load();
 
-async function formatJSON() {
-    const input = inputEditor.getValue();
-    const indent = document.getElementById('indent-select').value;
-    const sortKeys = document.getElementById('sort-keys').checked;
-    
+  inputEditor = MonacoEditor.create('input-editor', {
+    language: 'json',
+    value: '',
+    minimap: { enabled: false }
+  });
+
+  outputEditor = MonacoEditor.create('output-editor', {
+    language: 'json',
+    value: '',
+    readOnly: true,
+    minimap: { enabled: false }
+  });
+
+  inputEditor.onDidChangeModelContent(() => {
+    const value = inputEditor.getValue();
+    document.getElementById('char-count').textContent = value.length;
+    document.getElementById('line-count').textContent = value ? value.split('\n').length : 0;
+  });
+
+  document.getElementById('format-btn').addEventListener('click', formatJSON);
+
+  document.getElementById('copy-btn').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(outputEditor.getValue() || '');
+    mountToast('已复制到剪贴板', 'success');
+  });
+
+  document.getElementById('minify-btn').addEventListener('click', () => {
     try {
-        const data = JSON.parse(input);
-        const indentStr = indent === 'tab' ? '\t' : parseInt(indent);
-        const formatted = JSON.stringify(data, sortKeys ? Object.keys(data).sort() : null, indentStr);
-        outputEditor.setValue(formatted);
+      const data = JSON.parse(inputEditor.getValue() || '{}');
+      outputEditor.setValue(JSON.stringify(data));
     } catch (e) {
-        showError(e.message);
+      mountToast(e.message || 'JSON 格式错误', 'error');
     }
-}
+  });
 
-function showError(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-white bg-danger border-0 position-fixed';
-    toast.style.cssText = 'bottom: 20px; right: 20px; z-index: 9999;';
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-}
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    inputEditor.setValue('');
+    outputEditor.setValue('');
+  });
 
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed';
-    toast.style.cssText = 'bottom: 20px; right: 20px; z-index: 9999;';
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="bi bi-check-circle me-2"></i>
-                ${message}
-            </div>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-}
+  document.getElementById('sample-btn').addEventListener('click', () => {
+    const sample = {
+      name: 'Django Blog',
+      version: '2.3.1',
+      features: ['博客', '论坛', '工具栏'],
+      config: { debug: false, database: 'mysql' }
+    };
+    inputEditor.setValue(JSON.stringify(sample, null, 2));
+  });
+
+  inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, formatJSON);
+});
 </script>
 {% endblock %}
