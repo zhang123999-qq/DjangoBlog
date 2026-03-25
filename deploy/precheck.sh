@@ -54,6 +54,28 @@ check_required_env(){
   fi
 }
 
+check_expected_env(){
+  local key="$1"
+  local expected="$2"
+  if [ ! -f "$ENV_FILE" ]; then
+    fail "缺少 .env，无法校验 ${key}"
+    return
+  fi
+
+  local value
+  value=$(grep -E "^${key}=" "$ENV_FILE" | tail -n1 | cut -d'=' -f2- || true)
+  if [ -z "$value" ]; then
+    fail "${key} 缺失或为空"
+    return
+  fi
+
+  if [ "$value" = "$expected" ]; then
+    ok "${key}=${expected}"
+  else
+    fail "${key}=${value}（期望 ${expected}）"
+  fi
+}
+
 echo "============================================================"
 echo " DjangoBlog 部署前预检"
 echo "============================================================"
@@ -89,6 +111,28 @@ check_required_env DB_PASSWORD
 check_required_env MYSQL_ROOT_PASSWORD
 check_required_env ALLOWED_HOSTS
 check_required_env CSRF_TRUSTED_ORIGINS
+
+# 生产安全开关（P0）
+check_required_env DEBUG
+check_required_env SECURE_SSL_REDIRECT
+check_required_env SESSION_COOKIE_SECURE
+check_required_env CSRF_COOKIE_SECURE
+check_required_env SECURE_HSTS_SECONDS
+
+check_expected_env DEBUG False
+check_expected_env SECURE_SSL_REDIRECT True
+check_expected_env SESSION_COOKIE_SECURE True
+check_expected_env CSRF_COOKIE_SECURE True
+
+# HSTS 需 > 0
+if [ -f "$ENV_FILE" ]; then
+  hsts_val=$(grep -E '^SECURE_HSTS_SECONDS=' "$ENV_FILE" | tail -n1 | cut -d'=' -f2-)
+  if [[ "$hsts_val" =~ ^[0-9]+$ ]] && [ "$hsts_val" -gt 0 ]; then
+    ok "SECURE_HSTS_SECONDS=${hsts_val}"
+  else
+    fail "SECURE_HSTS_SECONDS=${hsts_val}（期望 > 0）"
+  fi
+fi
 
 # 6) 端口占用
 check_port 80
