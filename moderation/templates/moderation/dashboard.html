@@ -24,6 +24,7 @@
                     <div class="col-6 col-md-3"><div class="border rounded p-2" id="m-card-reject-fail"><div class="text-muted small">拒绝失败</div><div id="m-reject-fail" class="fw-bold text-warning">-</div></div></div>
                 </div>
                 <div class="mt-3 small text-muted" id="m-hotspots">热点用户：-</div>
+                <div class="small text-muted" id="m-thresholds">告警阈值：-</div>
                 <div class="mt-2">
                     <div class="small text-muted mb-1">近 10 分钟趋势（请求 / 限流 / 并发命中）</div>
                     <canvas id="m-trend-canvas" height="64" style="width:100%;border:1px solid #eee;border-radius:6px;"></canvas>
@@ -171,16 +172,22 @@
                     setText('m-reject-fail', rejectFail);
 
                     const failRate = (approveFail + rejectFail) / totalReq;
+                    const th = data?.thresholds || {};
+                    const thRate = Number(th.rate_limited ?? 5);
+                    const thConc = Number(th.concurrency_limited ?? 3);
+                    const thFail = Number(th.fail_rate ?? 0.2);
+
                     const markAlert = (id, on) => {
                         const el = document.getElementById(id);
                         if (!el) return;
                         el.style.borderColor = on ? '#dc3545' : '';
                         el.style.boxShadow = on ? '0 0 0 1px rgba(220,53,69,.25) inset' : '';
                     };
-                    markAlert('m-card-rate', rateLimited >= 5);
-                    markAlert('m-card-conc', concLimited >= 3);
-                    markAlert('m-card-approve-fail', failRate >= 0.2);
-                    markAlert('m-card-reject-fail', failRate >= 0.2);
+                    markAlert('m-card-rate', rateLimited >= thRate);
+                    markAlert('m-card-conc', concLimited >= thConc);
+                    markAlert('m-card-approve-fail', failRate >= thFail);
+                    markAlert('m-card-reject-fail', failRate >= thFail);
+                    setText('m-thresholds', `告警阈值：限流≥${thRate}，并发命中≥${thConc}，失败率≥${Math.round(thFail * 100)}%`);
 
                     const hotspots = Array.isArray(data?.hotspots) ? data.hotspots.slice(0, 3) : [];
                     const hotText = hotspots.length

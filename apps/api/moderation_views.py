@@ -204,8 +204,16 @@ def _record_peak_concurrency(user_id, current: int):
                     'peak_concurrency': {'type': 'integer', 'example': 5},
                     'series': {'type': 'array', 'items': {'type': 'object'}},
                     'hotspots': {'type': 'array', 'items': {'type': 'object'}},
+                    'thresholds': {
+                        'type': 'object',
+                        'properties': {
+                            'rate_limited': {'type': 'integer', 'example': 5},
+                            'concurrency_limited': {'type': 'integer', 'example': 3},
+                            'fail_rate': {'type': 'number', 'example': 0.2},
+                        },
+                    },
                 },
-                'required': ['success', 'window_minutes', 'totals', 'peak_concurrency', 'series', 'hotspots'],
+                'required': ['success', 'window_minutes', 'totals', 'peak_concurrency', 'series', 'hotspots', 'thresholds'],
             },
         ),
         403: OpenApiResponse(
@@ -228,7 +236,12 @@ def moderation_metrics_api(request):
         minutes = 10
 
     data = _collect_metrics(minutes)
-    return Response({'success': True, **data}, status=status.HTTP_200_OK)
+    thresholds = {
+        'rate_limited': int(getattr(settings, 'MODERATION_UI_ALERT_RATE_LIMITED', 5)),
+        'concurrency_limited': int(getattr(settings, 'MODERATION_UI_ALERT_CONCURRENCY_LIMITED', 3)),
+        'fail_rate': float(getattr(settings, 'MODERATION_UI_ALERT_FAIL_RATE', 0.2)),
+    }
+    return Response({'success': True, **data, 'thresholds': thresholds}, status=status.HTTP_200_OK)
 
 
 @extend_schema(
