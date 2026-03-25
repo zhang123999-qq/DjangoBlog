@@ -10,7 +10,6 @@ Redis 内存优化和回收机制
 
 import logging
 from django.core.cache import cache
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +75,13 @@ class RedisMemoryOptimizer:
             
             client = get_redis_connection('default')
             
-            # 获取所有键
-            all_keys = client.keys('*')
-            
+            # 用 SCAN 采样，避免 KEYS * 阻塞
+            sampled_keys = []
+            for key in client.scan_iter(match='*', count=200):
+                sampled_keys.append(key)
+                if len(sampled_keys) >= 1000:
+                    break
+
             # 分析键类型
             key_types = {}
             key_prefixes = {}
@@ -89,19 +92,20 @@ class RedisMemoryOptimizer:
                 '< 7d': 0,
                 '> 7d': 0,
             }
-            
-            for key in all_keys[:1000]:  # 只分析前 1000 个键
+
+            for key in sampled_keys:
                 # 键类型
-                key_type = client.type(key).decode() if isinstance(key_type, bytes) else client.type(key)
+                key_type_raw = client.type(key)
+                key_type = key_type_raw.decode() if isinstance(key_type_raw, bytes) else key_type_raw
                 key_types[key_type] = key_types.get(key_type, 0) + 1
-                
+
                 # 键前缀
                 key_str = key.decode() if isinstance(key, bytes) else key
                 for prefix in cls.KNOWN_PREFIXES:
                     if key_str.startswith(prefix):
                         key_prefixes[prefix] = key_prefixes.get(prefix, 0) + 1
                         break
-                
+
                 # TTL 分布
                 ttl = client.ttl(key)
                 if ttl == -1:
@@ -116,9 +120,10 @@ class RedisMemoryOptimizer:
                     ttl_distribution['< 7d'] += 1
                 else:
                     ttl_distribution['> 7d'] += 1
-            
+
             return {
-                'total_keys': len(all_keys),
+                'total_keys': client.dbsize(),
+                'sampled_keys': len(sampled_keys),
                 'key_types': key_types,
                 'key_prefixes': key_prefixes,
                 'ttl_distribution': ttl_distribution,

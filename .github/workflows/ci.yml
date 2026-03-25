@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Sync deps
+        run: uv sync --all-extras
+
+      - name: Python syntax smoke
+        run: |
+          uv run python -m py_compile \
+            manage.py \
+            config/celery.py \
+            config/settings/base.py \
+            config/settings/development.py \
+            config/settings/production.py \
+            apps/api/views.py \
+            apps/core/upload_views.py \
+            apps/core/upload_tasks.py \
+            apps/forum/views.py
+
+      - name: Django system check
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.development
+          SECRET_KEY: ci-test-secret-key
+          DEBUG: "True"
+        run: uv run python manage.py check
+
+      - name: Node syntax smoke for key front-end files
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: JS syntax check
+        run: |
+          node --check static/js/editor-init.js
+          node --check static/js/admin-editor.js
+          node --check static/js/upload-async-client.js

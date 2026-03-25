@@ -29,6 +29,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.annotate(post_count=Count('posts', filter=PUBLISHED_POST_COUNT_FILTER)).order_by('name')
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'api_read'
 
     @action(detail=True, methods=['get'])
     def posts(self, request, pk=None):
@@ -101,6 +102,7 @@ class BoardViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Board.objects.all().order_by('name')
     serializer_class = BoardSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'api_read'
 
     @action(detail=True, methods=['get'])
     def topics(self, request, pk=None):

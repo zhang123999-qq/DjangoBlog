@@ -119,21 +119,21 @@ def warmup_cache():
     """
     from apps.core.models import SiteConfig
     from apps.blog.models import Category, Tag
-    from django.db.models import Count
+    from django.db.models import Count, Q
     
     try:
         # 预热 SiteConfig
         SiteConfig.get_solo()
         logger.info('预热 SiteConfig 缓存')
         
-        # 预热分类和标签
+        # 预热分类和标签（仅统计已发布文章）
         categories = list(Category.objects.annotate(
-            published_count=Count('posts')
+            published_count=Count('posts', filter=Q(posts__status='published'))
         ).values('id', 'name', 'slug', 'published_count'))
         cache.set('blog_categories', categories, 3600)
-        
+
         tags = list(Tag.objects.annotate(
-            published_count=Count('posts')
+            published_count=Count('posts', filter=Q(posts__status='published'))
         ).values('id', 'name', 'slug', 'published_count'))
         cache.set('blog_tags', tags, 3600)
         

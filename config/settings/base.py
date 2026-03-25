@@ -294,6 +294,7 @@ REST_FRAMEWORK = {
         'anon': env('API_ANON_RATE', default='100/hour'),
         'user': env('API_USER_RATE', default='1000/hour'),
         'upload': env('API_UPLOAD_RATE', default='30/hour'),
+        'api_read': env('API_READ_RATE', default='1200/hour'),
     },
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
