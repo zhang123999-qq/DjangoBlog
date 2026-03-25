@@ -7,8 +7,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema
-from rest_framework import permissions, status
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import permissions, serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -26,6 +26,44 @@ ERROR_SCHEMA = {
     },
     'required': ['error_code', 'error', 'message'],
 }
+
+RejectRequestSerializer = inline_serializer(
+    name='ModerationRejectRequest',
+    fields={
+        'review_note': serializers.CharField(required=False, allow_blank=True),
+    },
+)
+
+ApproveSuccessSerializer = inline_serializer(
+    name='ModerationApproveSuccess',
+    fields={
+        'success': serializers.BooleanField(),
+        'status': serializers.CharField(),
+        'id': serializers.IntegerField(),
+    },
+)
+
+RejectSuccessSerializer = inline_serializer(
+    name='ModerationRejectSuccess',
+    fields={
+        'success': serializers.BooleanField(),
+        'status': serializers.CharField(),
+        'id': serializers.IntegerField(),
+    },
+)
+
+MetricsSerializer = inline_serializer(
+    name='ModerationMetricsResponse',
+    fields={
+        'success': serializers.BooleanField(),
+        'window_minutes': serializers.IntegerField(),
+        'totals': serializers.JSONField(),
+        'peak_concurrency': serializers.IntegerField(),
+        'series': serializers.ListField(child=serializers.JSONField()),
+        'hotspots': serializers.ListField(child=serializers.JSONField()),
+        'thresholds': serializers.JSONField(),
+    },
+)
 
 
 def _is_moderator(user) -> bool:
@@ -348,15 +386,7 @@ def moderation_approve_api(request, content_type: str, content_id: int):
     responses={
         200: OpenApiResponse(
             description='审核拒绝成功',
-            response={
-                'type': 'object',
-                'properties': {
-                    'success': {'type': 'boolean', 'example': True},
-                    'status': {'type': 'string', 'example': 'rejected'},
-                    'id': {'type': 'integer'},
-                },
-                'required': ['success', 'status', 'id'],
-            },
+            response=RejectSuccessSerializer,
         ),
         400: OpenApiResponse(
             description='内容类型错误',
