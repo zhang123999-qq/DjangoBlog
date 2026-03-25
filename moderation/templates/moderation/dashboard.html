@@ -101,10 +101,19 @@
     </div>
 
     <script src="/static/js/moderation-api-client.js"></script>
+    <script src="/static/js/ui-toast.js"></script>
     <script>
         (function () {
             const buttons = document.querySelectorAll('.js-moderation-action');
             if (!buttons.length || !window.ModerationApiClient) return;
+
+            const toast = (msg, type = 'info') => {
+                if (window.UIToast && window.UIToast.show) {
+                    window.UIToast.show(msg, type, 2200);
+                } else {
+                    alert(msg);
+                }
+            };
 
             buttons.forEach(btn => {
                 btn.addEventListener('click', async function (e) {
@@ -127,18 +136,18 @@
                     try {
                         if (action === 'approve') {
                             await window.ModerationApiClient.approve(contentType, contentId);
-                            alert('审核通过成功');
-                            window.location.reload();
+                            toast('审核通过成功', 'success');
+                            setTimeout(() => window.location.reload(), 350);
                             return;
                         }
 
                         const note = window.prompt('请输入拒绝原因（可选）：', '') || '';
                         await window.ModerationApiClient.reject(contentType, contentId, note);
-                        alert('审核拒绝成功');
-                        window.location.reload();
+                        toast('审核拒绝成功', 'success');
+                        setTimeout(() => window.location.reload(), 350);
                     } catch (err) {
                         const msg = window.ModerationApiClient.getErrorMessage(err);
-                        alert('操作失败：' + msg);
+                        toast('操作失败：' + msg, 'error');
                         btn.classList.remove('disabled');
                         btn.textContent = oldText;
                     }
