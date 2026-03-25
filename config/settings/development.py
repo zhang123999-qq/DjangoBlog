@@ -109,10 +109,17 @@ else:
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # =============================================================================
-# 静态文件 - 开发环境使用 Django 默认
+# 静态文件 - 开发环境（Django 5.1 兼容 STORAGES）
 # =============================================================================
 
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 # =============================================================================
 # 性能监控配置

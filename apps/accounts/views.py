@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import render, redirect
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CustomLoginForm
 from .captcha import generate_captcha
@@ -118,3 +119,12 @@ def login_view(request):
         request.session['captcha_code'] = captcha_code
         form = CustomLoginForm(request=request)
     return render(request, 'accounts/login.html', {'form': form, 'captcha_image': captcha_image})
+
+
+def logout_view(request):
+    """用户登出视图（仅允许 POST，避免 Django 5.0 弃用告警）。"""
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    logout(request)
+    return redirect('core:home')
