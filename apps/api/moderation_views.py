@@ -152,7 +152,7 @@ def moderation_reject_api(request, content_type: str, content_id: int):
     if content is None:
         return Response(api_error_payload(ErrorCodes.MODERATION_CONTENT_NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
 
-    review_note = request.data.get('review_note', '') if isinstance(request.data, dict) else ''
+    review_note = request.data.get('review_note', '') if hasattr(request.data, 'get') else ''
 
     try:
         reject_instance(content, request.user, note=review_note)

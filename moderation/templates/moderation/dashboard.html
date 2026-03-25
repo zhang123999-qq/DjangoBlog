@@ -29,8 +29,8 @@
                                 <p class="mb-2 text-muted">评论于: <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a></p>
                                 <p class="mb-3">{{ comment.content|truncatechars:100 }}</p>
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'moderation:approve' 'comment' comment.id %}" class="btn btn-success btn-sm">通过</a>
-                                    <a href="{% url 'moderation:reject' 'comment' comment.id %}" class="btn btn-danger btn-sm">拒绝</a>
+                                    <a href="{% url 'moderation:approve' 'comment' comment.id %}" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="comment" data-content-id="{{ comment.id }}">通过</a>
+                                    <a href="{% url 'moderation:reject' 'comment' comment.id %}" class="btn btn-danger btn-sm js-moderation-action" data-action="reject" data-content-type="comment" data-content-id="{{ comment.id }}">拒绝</a>
                                 </div>
                             </div>
                         {% endfor %}
@@ -99,4 +99,51 @@
             </div>
         </div>
     </div>
+
+    <script src="/static/js/moderation-api-client.js"></script>
+    <script>
+        (function () {
+            const buttons = document.querySelectorAll('.js-moderation-action');
+            if (!buttons.length || !window.ModerationApiClient) return;
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', async function (e) {
+                    // 无 JS 时走原跳转；有 JS 时走 API
+                    e.preventDefault();
+
+                    const action = btn.dataset.action;
+                    const contentType = btn.dataset.contentType;
+                    const contentId = btn.dataset.contentId;
+
+                    if (!action || !contentType || !contentId) {
+                        window.location.href = btn.href;
+                        return;
+                    }
+
+                    btn.classList.add('disabled');
+                    const oldText = btn.textContent;
+                    btn.textContent = action === 'approve' ? '处理中...' : '提交中...';
+
+                    try {
+                        if (action === 'approve') {
+                            await window.ModerationApiClient.approve(contentType, contentId);
+                            alert('审核通过成功');
+                            window.location.reload();
+                            return;
+                        }
+
+                        const note = window.prompt('请输入拒绝原因（可选）：', '') || '';
+                        await window.ModerationApiClient.reject(contentType, contentId, note);
+                        alert('审核拒绝成功');
+                        window.location.reload();
+                    } catch (err) {
+                        const msg = window.ModerationApiClient.getErrorMessage(err);
+                        alert('操作失败：' + msg);
+                        btn.classList.remove('disabled');
+                        btn.textContent = oldText;
+                    }
+                });
+            });
+        })();
+    </script>
 {% endblock %}
