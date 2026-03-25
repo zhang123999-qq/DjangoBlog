@@ -11,12 +11,16 @@ Celery 配置文件
     celery -A config flower --port=5555
 """
 
+import logging
 import os
+
 from celery import Celery
 from django.conf import settings
 
 # 设置默认 Django settings 模块
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+
+logger = logging.getLogger(__name__)
 
 app = Celery('djangoblog')
 
@@ -30,4 +34,4 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     """调试任务"""
-    print(f'Request: {self.request!r}')
+    logger.debug('Celery debug request: %r', self.request)

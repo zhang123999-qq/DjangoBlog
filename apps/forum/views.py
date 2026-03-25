@@ -73,7 +73,7 @@ class TopicDetailView(DetailView):
     def get_context_data(self, **kwargs):
         """获取上下文数据"""
         context = super().get_context_data(**kwargs)
-        context['replies'] = self.object.replies.filter(is_deleted=False, review_status='approved')
+        context['replies'] = getattr(self.object, 'approved_replies', [])
         context['reply_form'] = ReplyForm()
         return context
 

@@ -122,7 +122,7 @@ class BoardViewSet(viewsets.ReadOnlyModelViewSet):
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     """主题 API"""
 
-    queryset = Topic.objects.filter(review_status='approved').select_related('author', 'board').prefetch_related('replies__author')
+    queryset = Topic.objects.filter(review_status='approved').select_related('author', 'board')
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['board', 'author']

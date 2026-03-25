@@ -1,6 +1,8 @@
 """Development settings for project."""
 
+import logging
 import os
+
 from .base import *
 
 # =============================================================================
@@ -8,6 +10,7 @@ from .base import *
 # =============================================================================
 
 ENVIRONMENT = 'development'
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # 调试配置
@@ -40,26 +43,24 @@ if 'mysql' in db_engine:
                 'charset': 'utf8mb4',
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
-            # 连接池配置
-            'CONN_MAX_AGE': 60,  # 开发环境 1 分钟
+            'CONN_MAX_AGE': 60,
             'CONN_HEALTH_CHECKS': True,
-            'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
+            'ATOMIC_REQUESTS': True,
         }
     }
-    print(f"[SETTINGS] 使用开发环境配置 (MySQL: {db_name})")
+    logger.info('[SETTINGS] 使用开发环境配置 (MySQL: %s)', db_name)
 else:
     # SQLite 配置
     DATABASES = {
         'default': {
-            'ENGINE': 'apps.core.db_backends.sqlite3',  # 自定义后端，禁用外键约束
+            'ENGINE': 'apps.core.db_backends.sqlite3',
             'NAME': BASE_DIR / db_name,
-            # SQLite 也支持连接池
             'CONN_MAX_AGE': 60,
             'CONN_HEALTH_CHECKS': True,
-            'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
+            'ATOMIC_REQUESTS': True,
         }
     }
-    print(f"[SETTINGS] 使用开发环境配置 (SQLite)")
+    logger.info('[SETTINGS] 使用开发环境配置 (SQLite)')
 
 # =============================================================================
 # 缓存配置
@@ -77,7 +78,7 @@ if use_redis:
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
                 'CONNECTION_POOL_CLASS': 'redis.connection.BlockingConnectionPool',
                 'CONNECTION_POOL_CLASS_KWARGS': {
-                    'max_connections': 20,  # 开发环境较少连接
+                    'max_connections': 20,
                     'timeout': 10,
                 },
                 'SOCKET_CONNECT_TIMEOUT': 5,
@@ -96,7 +97,7 @@ else:
             'LOCATION': 'unique-snowflake',
             'OPTIONS': {
                 'MAX_ENTRIES': 1000,
-            }
+            },
         }
     }
     SESSION_ENGINE = 'django.contrib.sessions.backends.db'
@@ -117,10 +118,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 # 性能监控配置
 # =============================================================================
 
-# 慢请求阈值（毫秒）
 SLOW_REQUEST_THRESHOLD_MS = 500
-
-# 查询过多阈值
 HIGH_QUERY_THRESHOLD = 20
 
 # 添加性能监控中间件
@@ -141,5 +139,4 @@ os.makedirs(BASE_DIR / 'tmp' / 'session', exist_ok=True)
 # 开发环境特定设置
 # =============================================================================
 
-# 禁用 axes（开发环境方便测试）
 AXES_ENABLED = False

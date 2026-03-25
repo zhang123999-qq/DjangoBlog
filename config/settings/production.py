@@ -1,5 +1,7 @@
 """Production settings for project."""
 
+import logging
+
 from .base import *
 
 # =============================================================================
@@ -7,6 +9,7 @@ from .base import *
 # =============================================================================
 
 ENVIRONMENT = 'production'
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # 安全配置
@@ -167,4 +170,4 @@ if DEBUG:
     import warnings
     warnings.warn("警告: 生产环境 DEBUG 设置为 True，建议设置为 False！")
 
-print(f"[SETTINGS] 使用生产环境配置 (MySQL + Redis)")
+logger.info("[SETTINGS] 使用生产环境配置 (MySQL + Redis)")
