@@ -25,6 +25,7 @@
                         <option value="60000">60s</option>
                     </select>
                     <button type="button" class="btn btn-sm btn-outline-light" id="m-export-json">导出JSON</button>
+                    <button type="button" class="btn btn-sm btn-outline-light" id="m-export-csv">导出CSV</button>
                 </div>
                 <small id="metrics-updated-at" class="text-light opacity-75">--:--:--</small>
             </div>
@@ -376,12 +377,21 @@
                 }
             };
 
+            const toCsvCell = (v) => {
+                const s = String(v ?? '');
+                if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+                return s;
+            };
+
+            const buildCsv = (rows) => rows.map(r => r.map(toCsvCell).join(',')).join('\n');
+
             const REJECT_REASON_KEY = 'moderation.rejectReasons.v1';
 
             const windowSelect = document.getElementById('m-window-select');
             const autoRefreshSwitch = document.getElementById('m-auto-refresh-switch');
             const refreshIntervalSelect = document.getElementById('m-refresh-interval');
             const exportJsonBtn = document.getElementById('m-export-json');
+            const exportCsvBtn = document.getElementById('m-export-csv');
 
             if (windowSelect) {
                 const initialWindow = readWindowMinutes();
@@ -445,6 +455,70 @@
                     URL.revokeObjectURL(url);
 
                     toast('指标 JSON 已导出', 'success');
+                });
+            }
+
+            if (exportCsvBtn) {
+                exportCsvBtn.addEventListener('click', () => {
+                    if (!lastMetricsPayload) {
+                        toast('暂无可导出的指标数据，请先等待一次成功刷新', 'error');
+                        return;
+                    }
+
+                    const now = new Date();
+                    const stamp = now.toISOString().replace(/[:.]/g, '-');
+
+                    const totals = lastMetricsPayload?.totals || {};
+                    const summaryRows = [
+                        ['metric', 'value'],
+                        ['window_minutes', lastMetricsPayload?.window_minutes ?? ''],
+                        ['peak_concurrency', lastMetricsPayload?.peak_concurrency ?? ''],
+                        ['requests_total', totals.requests_total ?? 0],
+                        ['rate_limited', totals.rate_limited ?? 0],
+                        ['concurrency_limited', totals.concurrency_limited ?? 0],
+                        ['approve_success', totals.approve_success ?? 0],
+                        ['approve_failed', totals.approve_failed ?? 0],
+                        ['reject_success', totals.reject_success ?? 0],
+                        ['reject_failed', totals.reject_failed ?? 0],
+                    ];
+
+                    const seriesRows = [
+                        ['bucket', 'requests_total', 'rate_limited', 'concurrency_limited', 'approve_success', 'approve_failed', 'reject_success', 'reject_failed', 'peak_concurrency'],
+                    ];
+                    const series = Array.isArray(lastMetricsPayload?.series) ? lastMetricsPayload.series : [];
+                    series.forEach((p) => {
+                        seriesRows.push([
+                            p.bucket ?? '',
+                            p.requests_total ?? 0,
+                            p.rate_limited ?? 0,
+                            p.concurrency_limited ?? 0,
+                            p.approve_success ?? 0,
+                            p.approve_failed ?? 0,
+                            p.reject_success ?? 0,
+                            p.reject_failed ?? 0,
+                            p.peak_concurrency ?? 0,
+                        ]);
+                    });
+
+                    const csvText = [
+                        '# summary',
+                        buildCsv(summaryRows),
+                        '',
+                        '# series',
+                        buildCsv(seriesRows),
+                    ].join('\n');
+
+                    const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `moderation-metrics-${stamp}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+
+                    toast('指标 CSV 已导出', 'success');
                 });
             }
 
