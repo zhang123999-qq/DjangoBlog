@@ -139,12 +139,14 @@
                                     });
                                 }
                             } catch (err) {
-                                const msg = err && err.message ? err.message : '上传失败';
+                                const msg = (window.UploadAsyncClient && window.UploadAsyncClient.getErrorMessage)
+                                    ? window.UploadAsyncClient.getErrorMessage(err)
+                                    : (err && err.message ? err.message : '上传失败');
                                 if (active) {
                                     active.notificationManager.open({
                                         text: `附件上传失败：${msg}`,
                                         type: 'error',
-                                        timeout: 3000,
+                                        timeout: 3200,
                                     });
                                 } else {
                                     alert(`附件上传失败：${msg}`);
