@@ -24,6 +24,7 @@
                         <option value="30000" selected>30s</option>
                         <option value="60000">60s</option>
                     </select>
+                    <button type="button" class="btn btn-sm btn-outline-light" id="m-export-json">导出JSON</button>
                 </div>
                 <small id="metrics-updated-at" class="text-light opacity-75">--:--:--</small>
             </div>
@@ -165,6 +166,7 @@
             let backoffRetryTimer = null;
             let failStreak = 0;
             let lastWarnedStreak = 0;
+            let lastMetricsPayload = null;
 
             const readWindowMinutes = () => {
                 const url = new URL(window.location.href);
@@ -258,6 +260,7 @@
                         return;
                     }
                     const data = await resp.json();
+                    lastMetricsPayload = data;
                     const t = data?.totals || {};
 
                     const setText = (id, value) => {
@@ -378,6 +381,7 @@
             const windowSelect = document.getElementById('m-window-select');
             const autoRefreshSwitch = document.getElementById('m-auto-refresh-switch');
             const refreshIntervalSelect = document.getElementById('m-refresh-interval');
+            const exportJsonBtn = document.getElementById('m-export-json');
 
             if (windowSelect) {
                 const initialWindow = readWindowMinutes();
@@ -406,6 +410,41 @@
                     const ms = Number(refreshIntervalSelect.value || 30000);
                     writeRefreshInterval([15000, 30000, 60000].includes(ms) ? ms : 30000);
                     restartMetricsTimer();
+                });
+            }
+
+            if (exportJsonBtn) {
+                exportJsonBtn.addEventListener('click', () => {
+                    if (!lastMetricsPayload) {
+                        toast('暂无可导出的指标数据，请先等待一次成功刷新', 'error');
+                        return;
+                    }
+
+                    const now = new Date();
+                    const stamp = now.toISOString().replace(/[:.]/g, '-');
+                    const filename = `moderation-metrics-${stamp}.json`;
+                    const blob = new Blob([
+                        JSON.stringify(
+                            {
+                                exported_at: now.toISOString(),
+                                page: window.location.href,
+                                data: lastMetricsPayload,
+                            },
+                            null,
+                            2,
+                        ),
+                    ], { type: 'application/json;charset=utf-8' });
+
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+
+                    toast('指标 JSON 已导出', 'success');
                 });
             }
 
