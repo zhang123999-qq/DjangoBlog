@@ -66,29 +66,39 @@ python manage.py runserver
 
 ## 3. Docker 部署
 
-### 3.1 使用 Docker Compose
+### 3.1 使用 Docker Compose（安全推荐）
 
 1. 确保已安装 Docker 和 Docker Compose
 
-2. 构建并启动容器：
+2. 准备环境变量（必须）
 
 ```bash
-docker-compose up -d
+# 在项目根目录执行
+cp deploy/.env.docker.example .env
+# 编辑 .env，填写 SECRET_KEY / DB_PASSWORD / MYSQL_ROOT_PASSWORD / 域名
 ```
 
-3. 运行数据库迁移：
+3. 启动容器（使用显式 env-file）
 
 ```bash
-docker-compose exec web python manage.py migrate
+docker compose --env-file .env -f deploy/docker-compose.yml up -d
 ```
 
-4. 创建超级用户：
+4. 运行数据库迁移：
 
 ```bash
-docker-compose exec web python manage.py createsuperuser
+docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py migrate
 ```
 
-5. 访问 http://localhost:8000/ 查看项目。
+5. 创建超级用户：
+
+```bash
+docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py createsuperuser
+```
+
+6. 访问 http://localhost:8000/ 查看项目。
+
+> 安全提示：请勿提交 `.env` 到仓库；仓库仅保留 `deploy/.env.docker.example` 模板。
 
 ### 3.2 单独使用 Docker
 
