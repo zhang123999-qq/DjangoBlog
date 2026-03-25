@@ -10,6 +10,8 @@
     MODERATION_CONTENT_NOT_FOUND: '审核对象不存在或已被处理。',
     MODERATION_APPROVE_FAILED: '审核通过失败，请稍后重试。',
     MODERATION_REJECT_FAILED: '审核拒绝失败，请稍后重试。',
+    MODERATION_API_RATE_LIMITED: '审核请求太频繁，请稍后再试。',
+    MODERATION_API_CONCURRENCY_LIMITED: '当前审核任务较多，请稍后再试。',
   };
 
   function getCookie(name) {

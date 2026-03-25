@@ -28,6 +28,9 @@ class ErrorCodes:
     MODERATION_CONTENT_NOT_FOUND = 'MODERATION_CONTENT_NOT_FOUND'
     MODERATION_APPROVE_FAILED = 'MODERATION_APPROVE_FAILED'
     MODERATION_REJECT_FAILED = 'MODERATION_REJECT_FAILED'
+    MODERATION_PERMISSION_DENIED = 'MODERATION_PERMISSION_DENIED'
+    MODERATION_API_RATE_LIMITED = 'MODERATION_API_RATE_LIMITED'
+    MODERATION_API_CONCURRENCY_LIMITED = 'MODERATION_API_CONCURRENCY_LIMITED'
 
 
 DEFAULT_MESSAGES: Dict[str, str] = {
@@ -53,6 +56,8 @@ DEFAULT_MESSAGES: Dict[str, str] = {
     ErrorCodes.MODERATION_APPROVE_FAILED: '审核通过操作失败，请稍后重试',
     ErrorCodes.MODERATION_REJECT_FAILED: '审核拒绝操作失败，请稍后重试',
     ErrorCodes.MODERATION_PERMISSION_DENIED: '无审核权限',
+    ErrorCodes.MODERATION_API_RATE_LIMITED: '审核请求过于频繁，请稍后再试',
+    ErrorCodes.MODERATION_API_CONCURRENCY_LIMITED: '审核服务繁忙，请稍后再试',
 }
 
 
@@ -69,4 +74,3 @@ def api_error_payload(code: str, message: Optional[str] = None, **extra) -> Dict
     }
     payload.update(extra)
     return payload
-d
