@@ -23,6 +23,9 @@ django-allauth>=65.0.0
 # 富文本编辑器
 django-ckeditor>=6.7.0
 
+# 静态资源压缩（base settings 已启用 compressor app）
+django-compressor>=4.5.0
+
 # 图片处理
 Pillow>=10.0.0
 
