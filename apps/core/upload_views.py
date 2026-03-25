@@ -1,4 +1,4 @@
-"""编辑器/通用上传 API（安全加固版 v2：MIME + 魔数双检）"""
+"""编辑器/通用上传 API（安全加固版 v4：可选异步隔离扫描）"""
 
 import logging
 import socket
@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.storage import default_storage
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
@@ -42,22 +43,16 @@ DANGEROUS_FILE_EXTENSIONS = {
     'php', 'phtml', 'jsp', 'asp', 'aspx', 'cgi', 'pl', 'py', 'rb', 'jar',
 }
 
-# 常见可执行/脚本文件头（魔数）
-DANGEROUS_MAGIC_HEADERS = [
-    b'MZ',                 # Windows PE/EXE/DLL
-    b'#!',                 # shebang script
-    b'\x7fELF',            # Linux ELF
-    b'PK\x03\x04',        # zip (不一定危险，后续按扩展放行)
-]
+# ClamAV（可选）
+CLAMAV_ENABLED = getattr(settings, 'UPLOAD_CLAMAV_ENABLED', False)
+CLAMAV_HOST = getattr(settings, 'UPLOAD_CLAMAV_HOST', '127.0.0.1')
+CLAMAV_PORT = getattr(settings, 'UPLOAD_CLAMAV_PORT', 3310)
+CLAMAV_TIMEOUT = getattr(settings, 'UPLOAD_CLAMAV_TIMEOUT', 5)
+CLAMAV_FAIL_CLOSED = getattr(settings, 'UPLOAD_CLAMAV_FAIL_CLOSED', False)
 
-# 图片魔数
-IMAGE_MAGIC = {
-    'jpg': [b'\xff\xd8\xff'],
-    'jpeg': [b'\xff\xd8\xff'],
-    'png': [b'\x89PNG\r\n\x1a\n'],
-    'gif': [b'GIF87a', b'GIF89a'],
-    'webp': [b'RIFF'],  # 需额外检查 WEBP 标识
-}
+# 异步隔离扫描（仅对通用文件上传生效）
+UPLOAD_ASYNC_PIPELINE_ENABLED = getattr(settings, 'UPLOAD_ASYNC_PIPELINE_ENABLED', False)
+UPLOAD_STATUS_TTL = getattr(settings, 'UPLOAD_STATUS_TTL', 24 * 3600)
 
 
 def _safe_extension(filename: str) -> str:
@@ -79,28 +74,22 @@ def _looks_like_webp(header: bytes) -> bool:
 
 def _validate_image_magic(upload, ext: str) -> bool:
     header = _peek_header(upload, 32)
-    patterns = IMAGE_MAGIC.get(ext, [])
-    if not patterns:
-        return False
-
+    if ext in {'jpg', 'jpeg'}:
+        return header.startswith(b'\xff\xd8\xff')
+    if ext == 'png':
+        return header.startswith(b'\x89PNG\r\n\x1a\n')
+    if ext == 'gif':
+        return header.startswith(b'GIF87a') or header.startswith(b'GIF89a')
     if ext == 'webp':
         return _looks_like_webp(header)
-
-    return any(header.startswith(p) for p in patterns)
+    return False
 
 
 def _contains_dangerous_magic(upload, ext: str) -> bool:
-    """
-    检测危险文件头。
-    注意：ZIP 在业务白名单中允许（docx/xlsx/pptx/zip 等），因此仅对“可执行特征”严格拦截。
-    """
+    """检测危险文件头。"""
     header = _peek_header(upload, 32)
-
-    # 强拦截：MZ / ELF / shebang
     if header.startswith(b'MZ') or header.startswith(b'\x7fELF') or header.startswith(b'#!'):
         return True
-
-    # PK\x03\x04 是 zip 容器，不直接判危险
     return False
 
 
@@ -114,47 +103,34 @@ def _save_upload(upload, folder: str) -> str:
     return f"{settings.MEDIA_URL}{saved_path}"
 
 
-def _clamav_scan_stream(upload) -> tuple[bool, str]:
-    """
-    使用 clamd INSTREAM 协议扫描上传文件（不落盘）。
-    返回: (is_clean, message)
-    """
-    # 兼容不同文件对象
-    upload.seek(0)
-
+def _clamav_scan_fileobj(file_obj) -> tuple[bool, str]:
+    """使用 clamd INSTREAM 协议扫描文件对象。"""
+    file_obj.seek(0)
     with socket.create_connection((CLAMAV_HOST, CLAMAV_PORT), timeout=CLAMAV_TIMEOUT) as sock:
-        # zINSTREAM\0（新版 clamd 推荐）
         sock.sendall(b'zINSTREAM\0')
 
-        for chunk in upload.chunks():
+        for chunk in file_obj.chunks():
             sock.sendall(struct.pack('!I', len(chunk)))
             sock.sendall(chunk)
 
-        # 发送结束块
         sock.sendall(struct.pack('!I', 0))
-
         resp = sock.recv(4096).decode('utf-8', errors='ignore').strip()
 
-    upload.seek(0)
+    file_obj.seek(0)
 
     if 'OK' in resp:
         return True, resp
     if 'FOUND' in resp:
         return False, resp
-
-    # 未知响应按异常处理
     raise RuntimeError(f'clamav unexpected response: {resp}')
 
 
-def _scan_with_clamav(upload) -> tuple[bool, str]:
-    """
-    ClamAV 扫描门面：支持 fail-open / fail-closed。
-    """
+def _scan_with_clamav(file_obj) -> tuple[bool, str]:
     if not CLAMAV_ENABLED:
         return True, 'clamav disabled'
 
     try:
-        return _clamav_scan_stream(upload)
+        return _clamav_scan_fileobj(file_obj)
     except Exception as e:
         logger.exception('clamav scan failed')
         if CLAMAV_FAIL_CLOSED:
@@ -162,12 +138,26 @@ def _scan_with_clamav(upload) -> tuple[bool, str]:
         return True, f'clamav error (fail-open): {e}'
 
 
+def _set_upload_status(upload_id: str, payload: dict):
+    cache.set(f'upload:status:{upload_id}', payload, UPLOAD_STATUS_TTL)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def upload_status(request, upload_id: str):
+    """查询异步上传处理状态。"""
+    data = cache.get(f'upload:status:{upload_id}')
+    if not data:
+        return Response({'error': '上传任务不存在或已过期'}, status=status.HTTP_404_NOT_FOUND)
+    return Response(data, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 @throttle_classes([UploadRateThrottle])
 @parser_classes([MultiPartParser, FormParser])
 def upload_image(request):
-    """TinyMCE 图片上传接口（仅登录用户）"""
+    """TinyMCE 图片上传接口（仅登录用户，同步返回 location）。"""
     upload = request.FILES.get('file')
     if not upload:
         return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
@@ -182,6 +172,11 @@ def upload_image(request):
     if not _validate_image_magic(upload, ext):
         return Response({'error': '图片文件头校验失败'}, status=status.HTTP_400_BAD_REQUEST)
 
+    clean, detail = _scan_with_clamav(upload)
+    if not clean:
+        logger.warning('upload_image blocked by clamav: %s', detail)
+        return Response({'error': '文件安全扫描未通过'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         file_url = _save_upload(upload, 'images')
         return Response({'location': file_url}, status=status.HTTP_200_OK)
@@ -195,7 +190,7 @@ def upload_image(request):
 @throttle_classes([UploadRateThrottle])
 @parser_classes([MultiPartParser, FormParser])
 def upload_file(request):
-    """通用文件上传接口（仅登录用户）"""
+    """通用文件上传接口（仅登录用户）。"""
     upload = request.FILES.get('file')
     if not upload:
         return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
@@ -214,6 +209,48 @@ def upload_file(request):
     if _contains_dangerous_magic(upload, ext):
         return Response({'error': '检测到危险文件头，上传被拒绝'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # v4：可选异步隔离扫描管线
+    if UPLOAD_ASYNC_PIPELINE_ENABLED:
+        from apps.core.upload_tasks import process_quarantined_upload
+
+        upload_id = uuid.uuid4().hex
+        today = datetime.now().strftime('%Y/%m')
+        quarantine_name = f'{upload_id}.{ext}' if ext else upload_id
+        quarantine_path = f'uploads/quarantine/{today}/{quarantine_name}'
+
+        try:
+            default_storage.save(quarantine_path, upload)
+            task = process_quarantined_upload.delay(
+                upload_id=upload_id,
+                quarantine_path=quarantine_path,
+                ext=ext,
+                original_name=upload.name,
+            )
+
+            _set_upload_status(
+                upload_id,
+                {
+                    'status': 'pending',
+                    'upload_id': upload_id,
+                    'task_id': task.id,
+                    'filename': upload.name,
+                },
+            )
+
+            return Response(
+                {
+                    'status': 'pending',
+                    'upload_id': upload_id,
+                    'task_id': task.id,
+                    'status_path': f"/api/upload/status/{upload_id}/",
+                },
+                status=status.HTTP_202_ACCEPTED,
+            )
+        except Exception:
+            logger.exception('upload_file async pipeline failed')
+            return Response({'error': '上传失败，请稍后重试'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # 同步流程
     clean, detail = _scan_with_clamav(upload)
     if not clean:
         logger.warning('upload_file blocked by clamav: %s', detail)

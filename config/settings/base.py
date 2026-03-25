@@ -335,6 +335,10 @@ UPLOAD_CLAMAV_PORT = env.int('UPLOAD_CLAMAV_PORT', default=3310)
 UPLOAD_CLAMAV_TIMEOUT = env.int('UPLOAD_CLAMAV_TIMEOUT', default=5)
 UPLOAD_CLAMAV_FAIL_CLOSED = env.bool('UPLOAD_CLAMAV_FAIL_CLOSED', default=False)
 
+# 上传异步隔离扫描（v4）
+UPLOAD_ASYNC_PIPELINE_ENABLED = env.bool('UPLOAD_ASYNC_PIPELINE_ENABLED', default=False)
+UPLOAD_STATUS_TTL = env.int('UPLOAD_STATUS_TTL', default=86400)
+
 # =============================================================================
 # Celery 配置
 # =============================================================================
