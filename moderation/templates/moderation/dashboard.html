@@ -15,15 +15,19 @@
             <div class="card-body">
                 <div class="row g-2">
                     <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">总请求</div><div id="m-requests" class="fw-bold">-</div></div></div>
-                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">限流命中</div><div id="m-rate-limited" class="fw-bold text-danger">-</div></div></div>
-                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">并发命中</div><div id="m-conc-limited" class="fw-bold text-danger">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2" id="m-card-rate"><div class="text-muted small">限流命中</div><div id="m-rate-limited" class="fw-bold text-danger">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2" id="m-card-conc"><div class="text-muted small">并发命中</div><div id="m-conc-limited" class="fw-bold text-danger">-</div></div></div>
                     <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">并发峰值</div><div id="m-peak-conc" class="fw-bold">-</div></div></div>
                     <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">通过成功</div><div id="m-approve-ok" class="fw-bold text-success">-</div></div></div>
                     <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">拒绝成功</div><div id="m-reject-ok" class="fw-bold text-success">-</div></div></div>
-                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">通过失败</div><div id="m-approve-fail" class="fw-bold text-warning">-</div></div></div>
-                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">拒绝失败</div><div id="m-reject-fail" class="fw-bold text-warning">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2" id="m-card-approve-fail"><div class="text-muted small">通过失败</div><div id="m-approve-fail" class="fw-bold text-warning">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2" id="m-card-reject-fail"><div class="text-muted small">拒绝失败</div><div id="m-reject-fail" class="fw-bold text-warning">-</div></div></div>
                 </div>
                 <div class="mt-3 small text-muted" id="m-hotspots">热点用户：-</div>
+                <div class="mt-2">
+                    <div class="small text-muted mb-1">近 10 分钟趋势（请求 / 限流 / 并发命中）</div>
+                    <canvas id="m-trend-canvas" height="64" style="width:100%;border:1px solid #eee;border-radius:6px;"></canvas>
+                </div>
             </div>
         </div>
         
@@ -157,14 +161,70 @@
                     setText('m-peak-conc', data?.peak_concurrency ?? 0);
                     setText('m-approve-ok', t.approve_success ?? 0);
                     setText('m-reject-ok', t.reject_success ?? 0);
-                    setText('m-approve-fail', t.approve_failed ?? 0);
-                    setText('m-reject-fail', t.reject_failed ?? 0);
+                    const approveFail = t.approve_failed ?? 0;
+                    const rejectFail = t.reject_failed ?? 0;
+                    const rateLimited = t.rate_limited ?? 0;
+                    const concLimited = t.concurrency_limited ?? 0;
+                    const totalReq = Math.max(1, t.requests_total ?? 0);
+
+                    setText('m-approve-fail', approveFail);
+                    setText('m-reject-fail', rejectFail);
+
+                    const failRate = (approveFail + rejectFail) / totalReq;
+                    const markAlert = (id, on) => {
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        el.style.borderColor = on ? '#dc3545' : '';
+                        el.style.boxShadow = on ? '0 0 0 1px rgba(220,53,69,.25) inset' : '';
+                    };
+                    markAlert('m-card-rate', rateLimited >= 5);
+                    markAlert('m-card-conc', concLimited >= 3);
+                    markAlert('m-card-approve-fail', failRate >= 0.2);
+                    markAlert('m-card-reject-fail', failRate >= 0.2);
 
                     const hotspots = Array.isArray(data?.hotspots) ? data.hotspots.slice(0, 3) : [];
                     const hotText = hotspots.length
                         ? hotspots.map(h => `用户${h.user_id}(${h.count})`).join('、')
                         : '无';
                     setText('m-hotspots', `热点用户：${hotText}`);
+
+                    // 轻量 sparkline 趋势图
+                    const canvas = document.getElementById('m-trend-canvas');
+                    const series = Array.isArray(data?.series) ? data.series : [];
+                    if (canvas && series.length) {
+                        const ctx = canvas.getContext('2d');
+                        const w = canvas.clientWidth || 600;
+                        const h = canvas.height || 64;
+                        canvas.width = w;
+
+                        ctx.clearRect(0, 0, w, h);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, w, h);
+
+                        const reqs = series.map(p => Number(p.requests_total || 0));
+                        const rates = series.map(p => Number(p.rate_limited || 0));
+                        const concs = series.map(p => Number(p.concurrency_limited || 0));
+                        const maxY = Math.max(1, ...reqs, ...rates, ...concs);
+                        const padX = 8;
+                        const padY = 6;
+                        const step = series.length > 1 ? (w - padX * 2) / (series.length - 1) : 0;
+
+                        const drawLine = (arr, color) => {
+                            ctx.beginPath();
+                            arr.forEach((v, i) => {
+                                const x = padX + step * i;
+                                const y = h - padY - (v / maxY) * (h - padY * 2);
+                                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                            });
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        };
+
+                        drawLine(reqs, '#0d6efd');
+                        drawLine(rates, '#dc3545');
+                        drawLine(concs, '#fd7e14');
+                    }
 
                     const at = document.getElementById('metrics-updated-at');
                     if (at) at.textContent = new Date().toLocaleTimeString();
