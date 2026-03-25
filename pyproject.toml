@@ -28,12 +28,48 @@ classifiers = [
 ]
 
 dependencies = [
+    "Django>=4.2,<5.0",
+    "django-environ>=0.11.0",
+    "django-axes>=7.0.0",
+    "PyMySQL>=1.1.0",
+
     "celery>=5.4",
     "redis>=5.2",
+    "django-redis>=5.4",
+    "hiredis>=2.0",
+
+    "djangorestframework>=3.14.0",
+    "django-filter>=23.0",
+    "drf-spectacular>=0.27.0",
+
+    "django-allauth>=65.0.0",
+    "django-ckeditor>=6.7.0",
+    "django-compressor>=4.5.0",
+
+    "Pillow>=10.0.0",
+    "markdown>=3.7",
+    "bleach>=6.2.0",
+
+    "requests>=2.32.0",
+    "qrcode>=8.0",
+    "pycryptodome>=3.21.0",
+    "cryptography>=42.0.0",
+    "pyzbar>=0.1.9",
+    "jsonpath-ng>=1.6.0",
+    "faker>=20.0.0",
+    "croniter>=2.0.0",
+    "python-barcode>=0.15.0",
+
+    "django-el-pagination>=4.1.0",
+    "django-taggit>=6.1.0",
+    "django-meta>=2.4.0",
+    "python-json-logger>=3.3.0",
+    "django-cors-headers>=4.7.0",
+    "python-slugify>=8.0.0",
+    "django-mptt>=0.16.0",
+
     "baidu-aip>=4.16",
     "gevent>=24.0",  # Gunicorn 异步 worker 必需
-    "hiredis>=2.0",  # Redis 高性能解析器
-    "django-redis>=5.4",  # Django Redis 缓存后端
 ]
 
 [project.optional-dependencies]

@@ -149,7 +149,11 @@
     <script>
         (function () {
             const buttons = document.querySelectorAll('.js-moderation-action');
-            if (!buttons.length || !window.ModerationApiClient) return;
+            const hasMetricsCard = !!document.getElementById('moderation-metrics-card');
+            const hasModerationClient = !!window.ModerationApiClient;
+
+            // 没有指标面板且没有可用审核客户端时才整体退出
+            if (!hasMetricsCard && (!buttons.length || !hasModerationClient)) return;
 
             const toast = (msg, type = 'info') => {
                 if (window.UIToast && window.UIToast.show) {

@@ -2,10 +2,12 @@
 
 import logging
 import time
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.cache import cache
-from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
+from django.utils import timezone
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -128,7 +130,8 @@ def _collect_metrics(minutes: int = 10):
             dt = now - timedelta(minutes=minutes - 1 - i)
             bucket = dt.strftime('%Y%m%d%H%M')
             pattern = f'moderation:metric:user:*:{bucket}'
-            for key in cache.keys(pattern):
+            keys = list(cache.iter_keys(pattern)) if hasattr(cache, 'iter_keys') else []
+            for key in keys:
                 # key: moderation:metric:user:{user_id}:{bucket}
                 s = key.decode() if isinstance(key, bytes) else str(key)
                 parts = s.split(':')
