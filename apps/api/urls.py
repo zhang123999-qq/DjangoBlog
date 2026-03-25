@@ -6,7 +6,7 @@ from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from apps.core.upload_views import upload_file, upload_image, upload_status
-from .moderation_views import moderation_approve_api, moderation_reject_api
+from .moderation_views import moderation_approve_api, moderation_reject_api, moderation_metrics_api
 from .views import BoardViewSet, CategoryViewSet, PostViewSet, TagViewSet, TopicViewSet
 
 app_name = 'api'
@@ -26,6 +26,7 @@ urlpatterns = [
     path('upload/status/<str:upload_id>/', upload_status, name='upload-status'),
 
     # Moderation JSON API（统一错误码 + OpenAPI）
+    path('moderation/metrics/', moderation_metrics_api, name='moderation-metrics'),
     path('moderation/approve/<str:content_type>/<int:content_id>/', moderation_approve_api, name='moderation-approve'),
     path('moderation/reject/<str:content_type>/<int:content_id>/', moderation_reject_api, name='moderation-reject'),
 

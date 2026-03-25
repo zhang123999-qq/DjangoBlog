@@ -87,6 +87,69 @@ def _leave_concurrency_guard(key):
         cache.set(key, current - 1, 120)
 
 
+def _collect_metrics(minutes: int = 10):
+    """聚合最近 N 分钟的 moderation 指标。"""
+    minutes = max(1, min(int(minutes), 120))
+    now = timezone.now().replace(second=0, microsecond=0)
+
+    metric_names = [
+        'requests_total', 'rate_limited', 'concurrency_limited',
+        'approve_success', 'approve_failed',
+        'reject_success', 'reject_failed',
+        'permission_denied', 'invalid_content_type', 'content_not_found',
+    ]
+
+    totals = {name: 0 for name in metric_names}
+    series = []
+    peak_global = 0
+
+    for i in range(minutes):
+        dt = now - timedelta(minutes=minutes - 1 - i)
+        bucket = dt.strftime('%Y%m%d%H%M')
+        point = {'bucket': bucket}
+
+        for name in metric_names:
+            key = f'moderation:metric:{name}:{bucket}'
+            value = int(cache.get(key, 0) or 0)
+            totals[name] += value
+            point[name] = value
+
+        peak_key = f'moderation:metric:peak_concurrency:{bucket}'
+        peak_val = int(cache.get(peak_key, 0) or 0)
+        point['peak_concurrency'] = peak_val
+        peak_global = max(peak_global, peak_val)
+
+        series.append(point)
+
+    # 热点用户：读取最近分钟桶的 user 指标 key（依赖 redis 支持 keys）
+    hotspots = []
+    try:
+        for i in range(minutes):
+            dt = now - timedelta(minutes=minutes - 1 - i)
+            bucket = dt.strftime('%Y%m%d%H%M')
+            pattern = f'moderation:metric:user:*:{bucket}'
+            for key in cache.keys(pattern):
+                # key: moderation:metric:user:{user_id}:{bucket}
+                s = key.decode() if isinstance(key, bytes) else str(key)
+                parts = s.split(':')
+                if len(parts) >= 5:
+                    uid = parts[3]
+                    count = int(cache.get(s, 0) or 0)
+                    hotspots.append({'user_id': uid, 'bucket': bucket, 'count': count})
+    except Exception:
+        hotspots = []
+
+    hotspots = sorted(hotspots, key=lambda x: x['count'], reverse=True)[:20]
+
+    return {
+        'window_minutes': minutes,
+        'totals': totals,
+        'peak_concurrency': peak_global,
+        'series': series,
+        'hotspots': hotspots,
+    }
+
+
 def _metric_incr(name: str, delta: int = 1):
     """轻量计数器（按分钟桶），用于限流/并发命中可观测。"""
     from django.utils import timezone
@@ -109,8 +172,6 @@ def _record_user_hotspot(user_id):
 
 def _record_peak_concurrency(user_id, current: int):
     """记录分钟级并发峰值。"""
-    from django.utils import timezone
-
     bucket = timezone.now().strftime('%Y%m%d%H%M')
     global_key = f'moderation:metric:peak_concurrency:{bucket}'
     user_key = f'moderation:metric:peak_concurrency:user:{user_id}:{bucket}'
@@ -122,6 +183,52 @@ def _record_peak_concurrency(user_id, current: int):
     user_peak = cache.get(user_key, 0)
     if current > user_peak:
         cache.set(user_key, current, 3600)
+
+
+@extend_schema(
+    operation_id='api_moderation_metrics',
+    summary='审核保护指标（最近 N 分钟）',
+    tags=['moderation'],
+    parameters=[
+        OpenApiParameter(name='minutes', type=int, location=OpenApiParameter.QUERY, required=False, description='统计窗口分钟数，1-120，默认10'),
+    ],
+    responses={
+        200: OpenApiResponse(
+            description='获取成功',
+            response={
+                'type': 'object',
+                'properties': {
+                    'success': {'type': 'boolean', 'example': True},
+                    'window_minutes': {'type': 'integer', 'example': 10},
+                    'totals': {'type': 'object'},
+                    'peak_concurrency': {'type': 'integer', 'example': 5},
+                    'series': {'type': 'array', 'items': {'type': 'object'}},
+                    'hotspots': {'type': 'array', 'items': {'type': 'object'}},
+                },
+                'required': ['success', 'window_minutes', 'totals', 'peak_concurrency', 'series', 'hotspots'],
+            },
+        ),
+        403: OpenApiResponse(
+            description='权限不足',
+            response=ERROR_SCHEMA,
+            examples=[OpenApiExample('Permission denied', value=api_error_payload(ErrorCodes.MODERATION_PERMISSION_DENIED))],
+        ),
+    },
+)
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def moderation_metrics_api(request):
+    if not _is_moderator(request.user):
+        return Response(api_error_payload(ErrorCodes.MODERATION_PERMISSION_DENIED), status=status.HTTP_403_FORBIDDEN)
+
+    minutes = request.query_params.get('minutes', 10)
+    try:
+        minutes = int(minutes)
+    except Exception:
+        minutes = 10
+
+    data = _collect_metrics(minutes)
+    return Response({'success': True, **data}, status=status.HTTP_200_OK)
 
 
 @extend_schema(
