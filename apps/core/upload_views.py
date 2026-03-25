@@ -1,105 +1,107 @@
-"""
-编辑器图片上传API
-"""
+"""编辑器/通用上传 API（安全加固版）"""
+
+import logging
 import os
 import uuid
 from datetime import datetime
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+
 from django.conf import settings
 from django.core.files.storage import default_storage
+from rest_framework import permissions, status
+from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
+
+logger = logging.getLogger(__name__)
 
 
-@csrf_exempt
-@require_POST
+class UploadRateThrottle(UserRateThrottle):
+    scope = 'upload'
+
+
+IMAGE_ALLOWED_MIME_TYPES = {
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+}
+IMAGE_ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+
+DANGEROUS_FILE_EXTENSIONS = {
+    'exe', 'dll', 'bat', 'cmd', 'ps1', 'sh', 'com', 'msi', 'scr',
+    'php', 'phtml', 'jsp', 'asp', 'aspx', 'cgi', 'pl', 'py', 'rb', 'jar',
+}
+
+
+def _safe_extension(filename: str) -> str:
+    if '.' not in filename:
+        return ''
+    return filename.rsplit('.', 1)[-1].lower().strip()
+
+
+def _save_upload(upload, folder: str) -> str:
+    ext = _safe_extension(upload.name)
+    today = datetime.now().strftime('%Y/%m')
+    filename = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
+    relative_path = f"uploads/{folder}/{today}/{filename}"
+
+    saved_path = default_storage.save(relative_path, upload)
+    return f"{settings.MEDIA_URL}{saved_path}"
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+@throttle_classes([UploadRateThrottle])
+@parser_classes([MultiPartParser, FormParser])
 def upload_image(request):
-    """
-    TinyMCE 图片上传接口
-    返回格式: { "location": "图片URL" }
-    """
+    """TinyMCE 图片上传接口（仅登录用户）"""
+    upload = request.FILES.get('file')
+    if not upload:
+        return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if upload.size > 5 * 1024 * 1024:
+        return Response({'error': '文件大小不能超过5MB'}, status=status.HTTP_400_BAD_REQUEST)
+
+    ext = _safe_extension(upload.name)
+    if upload.content_type not in IMAGE_ALLOWED_MIME_TYPES or ext not in IMAGE_ALLOWED_EXTENSIONS:
+        return Response({'error': '不支持的图片类型'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        if 'file' not in request.FILES:
-            return JsonResponse({'error': '没有上传文件'}, status=400)
-        
-        upload = request.FILES['file']
-        
-        # 验证文件类型
-        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-        if upload.content_type not in allowed_types:
-            return JsonResponse({'error': '不支持的文件类型'}, status=400)
-        
-        # 验证文件大小 (最大5MB)
-        if upload.size > 5 * 1024 * 1024:
-            return JsonResponse({'error': '文件大小不能超过5MB'}, status=400)
-        
-        # 生成文件名
-        ext = upload.name.split('.')[-1].lower()
-        today = datetime.now().strftime('%Y/%m')
-        filename = f'{uuid.uuid4().hex}.{ext}'
-        
-        # 保存路径
-        relative_path = f'uploads/images/{today}/{filename}'
-        
-        # 确保目录存在
-        full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        
-        # 保存文件
-        with open(full_path, 'wb+') as destination:
-            for chunk in upload.chunks():
-                destination.write(chunk)
-        
-        # 返回URL
-        file_url = f'{settings.MEDIA_URL}{relative_path}'
-        
-        return JsonResponse({'location': file_url})
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        file_url = _save_upload(upload, 'images')
+        return Response({'location': file_url}, status=status.HTTP_200_OK)
+    except Exception:
+        logger.exception('upload_image failed')
+        return Response({'error': '上传失败，请稍后重试'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@csrf_exempt
-@require_POST
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+@throttle_classes([UploadRateThrottle])
+@parser_classes([MultiPartParser, FormParser])
 def upload_file(request):
-    """
-    通用文件上传接口
-    """
+    """通用文件上传接口（仅登录用户）"""
+    upload = request.FILES.get('file')
+    if not upload:
+        return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if upload.size > 10 * 1024 * 1024:
+        return Response({'error': '文件大小不能超过10MB'}, status=status.HTTP_400_BAD_REQUEST)
+
+    ext = _safe_extension(upload.name)
+    if ext in DANGEROUS_FILE_EXTENSIONS:
+        return Response({'error': '不允许上传该类型文件'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        if 'file' not in request.FILES:
-            return JsonResponse({'error': '没有上传文件'}, status=400)
-        
-        upload = request.FILES['file']
-        
-        # 验证文件大小 (最大10MB)
-        if upload.size > 10 * 1024 * 1024:
-            return JsonResponse({'error': '文件大小不能超过10MB'}, status=400)
-        
-        # 生成文件名
-        ext = upload.name.split('.')[-1].lower() if '.' in upload.name else ''
-        today = datetime.now().strftime('%Y/%m')
-        filename = f'{uuid.uuid4().hex}.{ext}' if ext else uuid.uuid4().hex
-        
-        # 保存路径
-        relative_path = f'uploads/files/{today}/{filename}'
-        
-        # 确保目录存在
-        full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        
-        # 保存文件
-        with open(full_path, 'wb+') as destination:
-            for chunk in upload.chunks():
-                destination.write(chunk)
-        
-        # 返回URL
-        file_url = f'{settings.MEDIA_URL}{relative_path}'
-        
-        return JsonResponse({
-            'location': file_url,
-            'filename': upload.name,
-            'size': upload.size
-        })
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        file_url = _save_upload(upload, 'files')
+        return Response(
+            {
+                'location': file_url,
+                'filename': upload.name,
+                'size': upload.size,
+            },
+            status=status.HTTP_200_OK,
+        )
+    except Exception:
+        logger.exception('upload_file failed')
+        return Response({'error': '上传失败，请稍后重试'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,27 +1,32 @@
 """API 视图"""
-from rest_framework import viewsets, permissions, filters
+from django.db.models import Count, Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from apps.blog.models import Category, Tag, Post, Comment
-from apps.forum.models import Board, Topic, Reply
+
+from apps.blog.models import Category, Comment, Post, Tag
+from apps.forum.models import Board, Reply, Topic
 from .serializers import (
-    CategorySerializer,
-    TagSerializer,
-    PostSerializer,
-    PostListSerializer,
-    CommentSerializer,
     BoardSerializer,
-    TopicSerializer,
-    TopicListSerializer,
+    CategorySerializer,
+    CommentSerializer,
+    PostListSerializer,
+    PostSerializer,
     ReplySerializer,
+    TagSerializer,
+    TopicListSerializer,
+    TopicSerializer,
 )
+
+
+PUBLISHED_POST_COUNT_FILTER = Q(posts__status='published') & Q(posts__slug__isnull=False) & ~Q(posts__slug='')
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """分类 API"""
 
-    queryset = Category.objects.all()
+    queryset = Category.objects.annotate(post_count=Count('posts', filter=PUBLISHED_POST_COUNT_FILTER)).order_by('name')
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
 
@@ -33,6 +38,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
             Post.objects.filter(category=category, status='published')
             .select_related('author', 'category')
             .prefetch_related('tags')
+            .order_by('-published_at', '-created_at')
         )
 
         page = self.paginate_queryset(posts)
@@ -47,7 +53,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """标签 API"""
 
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.annotate(post_count=Count('posts', filter=PUBLISHED_POST_COUNT_FILTER)).order_by('name')
     serializer_class = TagSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -78,7 +84,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     def comments(self, request, pk=None):
         """获取文章评论（分页）"""
         post = self.get_object()
-        comments = Comment.objects.filter(post=post, review_status='approved').select_related('user')
+        comments = Comment.objects.filter(post=post, review_status='approved').select_related('user').order_by('created_at')
 
         page = self.paginate_queryset(comments)
         if page is not None:
@@ -92,7 +98,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
 class BoardViewSet(viewsets.ReadOnlyModelViewSet):
     """版块 API"""
 
-    queryset = Board.objects.all()
+    queryset = Board.objects.all().order_by('name')
     serializer_class = BoardSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -100,7 +106,9 @@ class BoardViewSet(viewsets.ReadOnlyModelViewSet):
     def topics(self, request, pk=None):
         """获取版块下的主题（分页）"""
         board = self.get_object()
-        topics = Topic.objects.filter(board=board, review_status='approved').select_related('author', 'board')
+        topics = Topic.objects.filter(board=board, review_status='approved').select_related('author', 'board').order_by(
+            '-is_pinned', '-last_reply_at', '-created_at'
+        )
 
         page = self.paginate_queryset(topics)
         if page is not None:
@@ -137,7 +145,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     def replies(self, request, pk=None):
         """获取主题回复（分页）"""
         topic = self.get_object()
-        replies = Reply.objects.filter(topic=topic, review_status='approved', is_deleted=False).select_related('author', 'topic')
+        replies = Reply.objects.filter(topic=topic, review_status='approved', is_deleted=False).select_related('author', 'topic').order_by('created_at')
 
         page = self.paginate_queryset(replies)
         if page is not None:
