@@ -61,7 +61,7 @@
                                         </h6>
                                         <table class="table table-sm table-borderless mb-0">
                                             <tr>
-                                                <td class="text-muted" style="width: 80px;">国家</td>
+                                                <td class="text-muted u-cell-w-80">国家</td>
                                                 <td>
                                                     {% if result.ip_info.country_code %}
                                                     <img src="https://flagcdn.com/24x18/{{ result.ip_info.country_code|lower }}.png" 
@@ -97,7 +97,7 @@
                                         </h6>
                                         <table class="table table-sm table-borderless mb-0">
                                             <tr>
-                                                <td class="text-muted" style="width: 80px;">ISP</td>
+                                                <td class="text-muted u-cell-w-80">ISP</td>
                                                 <td>{{ result.ip_info.isp|default:"-" }}</td>
                                             </tr>
                                             <tr>

@@ -1,16 +1,16 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}工具箱 - {{ site_config.site_title }}{% endblock %}
+{% block title %}宸ュ叿绠?- {{ site_config.site_title }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <!-- 页面标题 -->
+    <!-- 椤甸潰鏍囬 -->
     <div class="text-center mb-4">
         <h1 class="display-5 fw-bold">
-            <i class="bi bi-tools me-2 text-primary"></i>工具箱
+            <i class="bi bi-tools me-2 text-primary"></i>宸ュ叿绠?
         </h1>
-        <p class="text-muted">在线实用工具，助力您的日常工作</p>
+        <p class="text-muted">鍦ㄧ嚎瀹炵敤宸ュ叿锛屽姪鍔涙偍鐨勬棩甯稿伐浣?/p>
     </div>
     
     {% if error %}
@@ -19,7 +19,7 @@
         </div>
     {% endif %}
     
-    <!-- 搜索框 -->
+    <!-- 鎼滅储妗?-->
     <div class="row justify-content-center mb-4">
         <div class="col-md-8 col-lg-6">
             <div class="input-group input-group-lg">
@@ -29,25 +29,25 @@
                 <input type="text" 
                        class="form-control border-start-0" 
                        id="tool-search" 
-                       placeholder="搜索工具名称或功能..."
+                       placeholder="鎼滅储宸ュ叿鍚嶇О鎴栧姛鑳?.."
                        autocomplete="off">
-                <button class="btn btn-outline-secondary" type="button" id="clear-search" style="display: none;">
+                <button class="btn btn-outline-secondary u-hidden" type="button" id="clear-search">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div id="search-hint" class="form-text text-center mt-2" style="display: none;">
-                <span id="search-result-count">0</span> 个匹配结果
+            <div id="search-hint" class="form-text text-center mt-2 u-hidden">
+                <span id="search-result-count">0</span> 涓尮閰嶇粨鏋?
             </div>
         </div>
     </div>
     
-    <!-- 工具统计 -->
+    <!-- 宸ュ叿缁熻 -->
     <div class="row mb-4" id="stats-section">
         <div class="col-md-4">
             <div class="card border-0 bg-light">
                 <div class="card-body text-center">
                     <h3 class="mb-0 text-primary">{{ total_tools }}</h3>
-                    <small class="text-muted">工具总数</small>
+                    <small class="text-muted">宸ュ叿鎬绘暟</small>
                 </div>
             </div>
         </div>
@@ -55,26 +55,26 @@
             <div class="card border-0 bg-light">
                 <div class="card-body text-center">
                     <h3 class="mb-0 text-success">{{ categories|length }}</h3>
-                    <small class="text-muted">工具分类</small>
+                    <small class="text-muted">宸ュ叿鍒嗙被</small>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card border-0 bg-light">
                 <div class="card-body text-center">
-                    <h3 class="mb-0 text-info">免费</h3>
-                    <small class="text-muted">永久免费使用</small>
+                    <h3 class="mb-0 text-info">鍏嶈垂</h3>
+                    <small class="text-muted">姘镐箙鍏嶈垂浣跨敤</small>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- 分类快捷导航 -->
+    <!-- 鍒嗙被蹇嵎瀵艰埅 -->
     <div class="mb-4" id="category-nav">
         <div class="d-flex flex-wrap gap-2 justify-content-center">
             {% for cat in categories %}
             <a href="#cat-{{ cat.key }}" class="btn btn-outline-secondary btn-sm category-btn" data-category="{{ cat.key }}">
-                <i class="{{ cat.icon }} me-1" style="color: {{ cat.color }}"></i>
+                <i class="{{ cat.icon }} me-1" style="--cat-color: {{ cat.color }}; color: var(--cat-color);"></i>
                 {{ cat.name }}
                 <span class="badge bg-secondary ms-1">{{ cat.count }}</span>
             </a>
@@ -82,13 +82,13 @@
         </div>
     </div>
     
-    <!-- 无搜索结果提示 -->
+    <!-- 鏃犳悳绱㈢粨鏋滄彁绀?-->
     <div id="no-results" class="alert alert-info text-center u-hidden">
         <i class="bi bi-search me-2"></i>
-        未找到匹配的工具，请尝试其他关键词
+        鏈壘鍒板尮閰嶇殑宸ュ叿锛岃灏濊瘯鍏朵粬鍏抽敭璇?
     </div>
     
-    <!-- 按分类显示工具 -->
+    <!-- 鎸夊垎绫绘樉绀哄伐鍏?-->
     <div id="tools-container">
     {% for cat in categories %}
     <div class="mb-5 category-section" id="cat-{{ cat.key }}" data-category="{{ cat.key }}">
@@ -100,7 +100,7 @@
                 <h5 class="mb-0 category-title">{{ cat.name }}</h5>
                 <small class="text-muted">{{ cat.description }}</small>
             </div>
-            <span class="badge bg-light text-dark ms-auto category-count">{{ cat.count }} 个工具</span>
+            <span class="badge bg-light text-dark ms-auto category-count">{{ cat.count }} 涓伐鍏?/span>
         </div>
         
         <div class="row">
@@ -121,11 +121,11 @@
                                 </a>
                             </h6>
                         </div>
-                        <p class="card-text text-muted small mb-2 tool-desc" style="font-size: 0.8rem;">
+                        <p class="card-text text-muted small mb-2 tool-desc tool-desc-sm">
                             {{ tool.description|truncatechars:50 }}
                         </p>
                         <a href="{% url 'tools:tool_detail' tool.slug %}" class="btn btn-outline-primary btn-sm btn-block">
-                            <i class="bi bi-play-fill me-1"></i>使用
+                            <i class="bi bi-play-fill me-1"></i>浣跨敤
                         </a>
                     </div>
                 </div>
@@ -135,23 +135,23 @@
     </div>
     {% empty %}
     <div class="alert alert-info text-center">
-        <i class="bi bi-info-circle me-2"></i>暂无可用工具
+        <i class="bi bi-info-circle me-2"></i>鏆傛棤鍙敤宸ュ叿
     </div>
     {% endfor %}
     </div>
     
-    <!-- 使用提示 -->
+    <!-- 浣跨敤鎻愮ず -->
     <div class="mt-5" id="tips-section">
         <div class="card bg-light border-0">
             <div class="card-body">
                 <h5 class="card-title">
-                    <i class="bi bi-lightbulb text-warning me-2"></i>使用提示
+                    <i class="bi bi-lightbulb text-warning me-2"></i>浣跨敤鎻愮ず
                 </h5>
                 <ul class="mb-0 text-muted">
-                    <li>所有工具均为在线使用，无需下载安装</li>
-                    <li>数据在本地处理，安全可靠</li>
-                    <li>使用搜索框快速找到需要的工具</li>
-                    <li>如有问题或建议，欢迎反馈</li>
+                    <li>鎵€鏈夊伐鍏峰潎涓哄湪绾夸娇鐢紝鏃犻渶涓嬭浇瀹夎</li>
+                    <li>鏁版嵁鍦ㄦ湰鍦板鐞嗭紝瀹夊叏鍙潬</li>
+                    <li>浣跨敤鎼滅储妗嗗揩閫熸壘鍒伴渶瑕佺殑宸ュ叿</li>
+                    <li>濡傛湁闂鎴栧缓璁紝娆㈣繋鍙嶉</li>
                 </ul>
             </div>
         </div>
@@ -200,17 +200,17 @@
         width: 100%;
     }
     
-    /* 平滑滚动 */
+    /* 骞虫粦婊氬姩 */
     html {
         scroll-behavior: smooth;
     }
     
-    /* 分类导航按钮 */
+    /* 鍒嗙被瀵艰埅鎸夐挳 */
     .btn-outline-secondary:hover {
         background: #f8f9fa;
     }
     
-    /* 搜索框样式 */
+    /* 鎼滅储妗嗘牱寮?*/
     #tool-search:focus {
         box-shadow: none;
         border-color: #0d6efd;
@@ -220,19 +220,19 @@
         border-color: #0d6efd;
     }
     
-    /* 高亮匹配文字 */
+    /* 楂樹寒鍖归厤鏂囧瓧 */
     .highlight {
         background: #fff3cd;
         padding: 0 2px;
         border-radius: 2px;
     }
     
-    /* 隐藏的分类 */
+    /* 闅愯棌鐨勫垎绫?*/
     .category-section.hidden {
         display: none;
     }
     
-    /* 隐藏的工具卡片 */
+    /* 闅愯棌鐨勫伐鍏峰崱鐗?*/
     .tool-card.hidden {
         display: none;
     }
@@ -252,68 +252,68 @@ document.addEventListener('DOMContentLoaded', function() {
     const categorySections = document.querySelectorAll('.category-section');
     const toolCards = document.querySelectorAll('.tool-card');
     
-    // 搜索输入事件
+    // 鎼滅储杈撳叆浜嬩欢
     searchInput.addEventListener('input', function() {
         const query = this.value.trim().toLowerCase();
         
         if (query === '') {
-            // 清空搜索，恢复所有显示
+            // 娓呯┖鎼滅储锛屾仮澶嶆墍鏈夋樉绀?
             showAll();
             return;
         }
         
-        // 执行搜索
+        // 鎵ц鎼滅储
         performSearch(query);
     });
     
-    // 清除按钮
+    // 娓呴櫎鎸夐挳
     clearBtn.addEventListener('click', function() {
         searchInput.value = '';
         showAll();
         searchInput.focus();
     });
     
-    // 执行搜索
+    // 鎵ц鎼滅储
     function performSearch(query) {
         let matchCount = 0;
         const matchedCategories = new Set();
         
-        // 遍历所有工具卡片
+        // 閬嶅巻鎵€鏈夊伐鍏峰崱鐗?
         toolCards.forEach(card => {
             const name = card.dataset.name.toLowerCase();
             const desc = card.dataset.desc.toLowerCase();
             const category = card.dataset.category;
             
             if (name.includes(query) || desc.includes(query)) {
-                // 匹配成功
+                // 鍖归厤鎴愬姛
                 card.classList.remove('hidden');
                 matchCount++;
                 matchedCategories.add(category);
                 
-                // 高亮匹配文字
+                // 楂樹寒鍖归厤鏂囧瓧
                 highlightText(card, query);
             } else {
-                // 不匹配
+                // 涓嶅尮閰?
                 card.classList.add('hidden');
                 removeHighlight(card);
             }
         });
         
-        // 更新分类显示
+        // 鏇存柊鍒嗙被鏄剧ず
         categorySections.forEach(section => {
             const catKey = section.dataset.category;
             const visibleCards = section.querySelectorAll('.tool-card:not(.hidden)');
             
             if (visibleCards.length > 0) {
                 section.classList.remove('hidden');
-                // 更新分类计数
-                section.querySelector('.category-count').textContent = visibleCards.length + ' 个工具';
+                // 鏇存柊鍒嗙被璁℃暟
+                section.querySelector('.category-count').textContent = visibleCards.length + ' 涓伐鍏?;
             } else {
                 section.classList.add('hidden');
             }
         });
         
-        // 更新UI
+        // 鏇存柊UI
         clearBtn.style.display = query ? 'block' : 'none';
         searchHint.style.display = query ? 'block' : 'none';
         resultCount.textContent = matchCount;
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statsSection.style.display = query ? 'none' : 'flex';
     }
     
-    // 显示所有
+    // 鏄剧ず鎵€鏈?
     function showAll() {
         toolCards.forEach(card => {
             card.classList.remove('hidden');
@@ -331,9 +331,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         categorySections.forEach(section => {
             section.classList.remove('hidden');
-            // 恢复原始计数
+            // 鎭㈠鍘熷璁℃暟
             const originalCount = section.querySelectorAll('.tool-card').length;
-            section.querySelector('.category-count').textContent = originalCount + ' 个工具';
+            section.querySelector('.category-count').textContent = originalCount + ' 涓伐鍏?;
         });
         
         clearBtn.style.display = 'none';
@@ -343,19 +343,19 @@ document.addEventListener('DOMContentLoaded', function() {
         statsSection.style.display = 'flex';
     }
     
-    // 高亮文字
+    // 楂樹寒鏂囧瓧
     function highlightText(card, query) {
         const nameEl = card.querySelector('.tool-name');
         const descEl = card.querySelector('.tool-desc');
         
-        // 高亮名称
+        // 楂樹寒鍚嶇О
         if (nameEl) {
             const originalName = nameEl.textContent;
             const highlighted = highlightMatch(originalName, query);
             nameEl.innerHTML = highlighted;
         }
         
-        // 高亮描述
+        // 楂樹寒鎻忚堪
         if (descEl) {
             const originalDesc = descEl.textContent;
             const highlighted = highlightMatch(originalDesc, query);
@@ -363,19 +363,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 匹配高亮
+    // 鍖归厤楂樹寒
     function highlightMatch(text, query) {
         const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
         return text.replace(regex, '<span class="highlight">$1</span>');
     }
     
-    // 移除高亮
+    // 绉婚櫎楂樹寒
     function removeHighlight(card) {
         const nameEl = card.querySelector('.tool-name');
         const descEl = card.querySelector('.tool-desc');
         
         if (nameEl) {
-            // 移除高亮span
+            // 绉婚櫎楂樹寒span
             nameEl.innerHTML = nameEl.textContent;
         }
         if (descEl) {
@@ -383,20 +383,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 转义正则特殊字符
+    // 杞箟姝ｅ垯鐗规畩瀛楃
     function escapeRegex(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
     
-    // 快捷键支持
+    // 蹇嵎閿敮鎸?
     document.addEventListener('keydown', function(e) {
-        // Ctrl+F 或 / 聚焦搜索框
+        // Ctrl+F 鎴?/ 鑱氱劍鎼滅储妗?
         if ((e.ctrlKey && e.key === 'f') || (e.key === '/' && document.activeElement !== searchInput)) {
             e.preventDefault();
             searchInput.focus();
             searchInput.select();
         }
-        // ESC 清空搜索
+        // ESC 娓呯┖鎼滅储
         if (e.key === 'Escape' && searchInput.value) {
             showAll();
             searchInput.value = '';
@@ -406,3 +406,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+
