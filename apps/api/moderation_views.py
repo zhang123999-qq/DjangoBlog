@@ -1,5 +1,8 @@
 """Moderation API（带 OpenAPI 文档）"""
 
+import logging
+import time
+
 from django.conf import settings
 from django.core.cache import cache
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
@@ -46,9 +49,13 @@ def _check_rate_limit(request):
 
     count = cache.get(key, 0)
     if count >= limit:
+        _metric_incr('rate_limited')
+        logger.warning('moderation_api_rate_limited user=%s count=%s limit=%s', user_id, count, limit)
         return False
 
     cache.set(key, count + 1, 60)
+    _metric_incr('requests_total')
+    _record_user_hotspot(user_id)
     return True
 
 
@@ -60,9 +67,13 @@ def _enter_concurrency_guard(request):
 
     current = cache.get(key, 0)
     if current >= max_conc:
+        _metric_incr('concurrency_limited')
+        logger.warning('moderation_api_concurrency_limited user=%s current=%s limit=%s', user_id, current, max_conc)
         return None
 
-    cache.set(key, current + 1, 120)
+    new_current = current + 1
+    cache.set(key, new_current, 120)
+    _record_peak_concurrency(user_id, new_current)
     return key
 
 
@@ -74,6 +85,43 @@ def _leave_concurrency_guard(key):
         cache.delete(key)
     else:
         cache.set(key, current - 1, 120)
+
+
+def _metric_incr(name: str, delta: int = 1):
+    """轻量计数器（按分钟桶），用于限流/并发命中可观测。"""
+    from django.utils import timezone
+
+    bucket = timezone.now().strftime('%Y%m%d%H%M')
+    key = f'moderation:metric:{name}:{bucket}'
+    count = cache.get(key, 0)
+    cache.set(key, count + delta, 3600)
+
+
+def _record_user_hotspot(user_id):
+    """记录用户维度热点（分钟桶）。"""
+    from django.utils import timezone
+
+    bucket = timezone.now().strftime('%Y%m%d%H%M')
+    key = f'moderation:metric:user:{user_id}:{bucket}'
+    count = cache.get(key, 0)
+    cache.set(key, count + 1, 3600)
+
+
+def _record_peak_concurrency(user_id, current: int):
+    """记录分钟级并发峰值。"""
+    from django.utils import timezone
+
+    bucket = timezone.now().strftime('%Y%m%d%H%M')
+    global_key = f'moderation:metric:peak_concurrency:{bucket}'
+    user_key = f'moderation:metric:peak_concurrency:user:{user_id}:{bucket}'
+
+    global_peak = cache.get(global_key, 0)
+    if current > global_peak:
+        cache.set(global_key, current, 3600)
+
+    user_peak = cache.get(user_key, 0)
+    if current > user_peak:
+        cache.set(user_key, current, 3600)
 
 
 @extend_schema(
@@ -126,7 +174,11 @@ def _leave_concurrency_guard(key):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def moderation_approve_api(request, content_type: str, content_id: int):
+    start = time.perf_counter()
+    user_id = getattr(request.user, 'id', None) or 'anon'
+
     if not _is_moderator(request.user):
+        _metric_incr('permission_denied')
         return Response(api_error_payload(ErrorCodes.MODERATION_PERMISSION_DENIED), status=status.HTTP_403_FORBIDDEN)
 
     if not _check_rate_limit(request):
@@ -139,18 +191,25 @@ def moderation_approve_api(request, content_type: str, content_id: int):
     try:
         model = _get_content_model(content_type)
         if model is None:
+            _metric_incr('invalid_content_type')
             return Response(api_error_payload(ErrorCodes.MODERATION_INVALID_CONTENT_TYPE), status=status.HTTP_400_BAD_REQUEST)
 
         content = model.objects.filter(id=content_id).first()
         if content is None:
+            _metric_incr('content_not_found')
             return Response(api_error_payload(ErrorCodes.MODERATION_CONTENT_NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
 
         approve_instance(content, request.user, note='')
+        _metric_incr('approve_success')
         return Response({'success': True, 'status': 'approved', 'id': content_id}, status=status.HTTP_200_OK)
     except Exception:
+        _metric_incr('approve_failed')
+        logger.exception('moderation_approve_failed user=%s type=%s id=%s', user_id, content_type, content_id)
         return Response(api_error_payload(ErrorCodes.MODERATION_APPROVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     finally:
         _leave_concurrency_guard(guard_key)
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        logger.info('moderation_approve_done user=%s type=%s id=%s elapsed_ms=%s', user_id, content_type, content_id, elapsed_ms)
 
 
 @extend_schema(
@@ -209,7 +268,11 @@ def moderation_approve_api(request, content_type: str, content_id: int):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def moderation_reject_api(request, content_type: str, content_id: int):
+    start = time.perf_counter()
+    user_id = getattr(request.user, 'id', None) or 'anon'
+
     if not _is_moderator(request.user):
+        _metric_incr('permission_denied')
         return Response(api_error_payload(ErrorCodes.MODERATION_PERMISSION_DENIED), status=status.HTTP_403_FORBIDDEN)
 
     if not _check_rate_limit(request):
@@ -222,16 +285,23 @@ def moderation_reject_api(request, content_type: str, content_id: int):
     try:
         model = _get_content_model(content_type)
         if model is None:
+            _metric_incr('invalid_content_type')
             return Response(api_error_payload(ErrorCodes.MODERATION_INVALID_CONTENT_TYPE), status=status.HTTP_400_BAD_REQUEST)
 
         content = model.objects.filter(id=content_id).first()
         if content is None:
+            _metric_incr('content_not_found')
             return Response(api_error_payload(ErrorCodes.MODERATION_CONTENT_NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
 
         review_note = request.data.get('review_note', '') if hasattr(request.data, 'get') else ''
         reject_instance(content, request.user, note=review_note)
+        _metric_incr('reject_success')
         return Response({'success': True, 'status': 'rejected', 'id': content_id}, status=status.HTTP_200_OK)
     except Exception:
+        _metric_incr('reject_failed')
+        logger.exception('moderation_reject_failed user=%s type=%s id=%s', user_id, content_type, content_id)
         return Response(api_error_payload(ErrorCodes.MODERATION_REJECT_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     finally:
         _leave_concurrency_guard(guard_key)
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        logger.info('moderation_reject_done user=%s type=%s id=%s elapsed_ms=%s', user_id, content_type, content_id, elapsed_ms)
