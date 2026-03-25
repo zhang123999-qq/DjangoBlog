@@ -17,6 +17,8 @@ from apps.core.error_codes import ErrorCodes, api_error_payload
 from apps.forum.models import Reply, Topic
 from moderation.services import approve_instance, reject_instance
 
+logger = logging.getLogger(__name__)
+
 ERROR_SCHEMA = {
     'type': 'object',
     'properties': {
