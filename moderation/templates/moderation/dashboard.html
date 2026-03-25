@@ -5,6 +5,27 @@
 {% block content %}
     <div class="container mt-5">
         <h1 class="mb-4">审核中心</h1>
+
+        <!-- 审核保护指标面板（Phase 17） -->
+        <div class="card mb-4" id="moderation-metrics-card">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">审核保护指标（最近 10 分钟）</h2>
+                <small id="metrics-updated-at" class="text-light opacity-75">--:--:--</small>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">总请求</div><div id="m-requests" class="fw-bold">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">限流命中</div><div id="m-rate-limited" class="fw-bold text-danger">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">并发命中</div><div id="m-conc-limited" class="fw-bold text-danger">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">并发峰值</div><div id="m-peak-conc" class="fw-bold">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">通过成功</div><div id="m-approve-ok" class="fw-bold text-success">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">拒绝成功</div><div id="m-reject-ok" class="fw-bold text-success">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">通过失败</div><div id="m-approve-fail" class="fw-bold text-warning">-</div></div></div>
+                    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">拒绝失败</div><div id="m-reject-fail" class="fw-bold text-warning">-</div></div></div>
+                </div>
+                <div class="mt-3 small text-muted" id="m-hotspots">热点用户：-</div>
+            </div>
+        </div>
         
         <!-- 待审核评论 -->
         <div class="card mb-5">
@@ -115,7 +136,47 @@
                 }
             };
 
+            const renderMetrics = async () => {
+                const card = document.getElementById('moderation-metrics-card');
+                if (!card) return;
+
+                try {
+                    const resp = await fetch('/api/moderation/metrics/?minutes=10', { credentials: 'include' });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    const t = data?.totals || {};
+
+                    const setText = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value;
+                    };
+
+                    setText('m-requests', t.requests_total ?? 0);
+                    setText('m-rate-limited', t.rate_limited ?? 0);
+                    setText('m-conc-limited', t.concurrency_limited ?? 0);
+                    setText('m-peak-conc', data?.peak_concurrency ?? 0);
+                    setText('m-approve-ok', t.approve_success ?? 0);
+                    setText('m-reject-ok', t.reject_success ?? 0);
+                    setText('m-approve-fail', t.approve_failed ?? 0);
+                    setText('m-reject-fail', t.reject_failed ?? 0);
+
+                    const hotspots = Array.isArray(data?.hotspots) ? data.hotspots.slice(0, 3) : [];
+                    const hotText = hotspots.length
+                        ? hotspots.map(h => `用户${h.user_id}(${h.count})`).join('、')
+                        : '无';
+                    setText('m-hotspots', `热点用户：${hotText}`);
+
+                    const at = document.getElementById('metrics-updated-at');
+                    if (at) at.textContent = new Date().toLocaleTimeString();
+                } catch (_) {
+                    // 指标失败不影响主流程
+                }
+            };
+
             const REJECT_REASON_KEY = 'moderation.rejectReasons.v1';
+
+            renderMetrics();
+            setInterval(renderMetrics, 30000);
 
             const loadRecentReasons = () => {
                 try {
