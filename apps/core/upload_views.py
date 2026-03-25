@@ -9,6 +9,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import default_storage
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, parser_classes, permission_classes, throttle_classes
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -52,6 +53,16 @@ CLAMAV_FAIL_CLOSED = getattr(settings, 'UPLOAD_CLAMAV_FAIL_CLOSED', False)
 
 UPLOAD_ASYNC_PIPELINE_ENABLED = getattr(settings, 'UPLOAD_ASYNC_PIPELINE_ENABLED', False)
 UPLOAD_STATUS_TTL = getattr(settings, 'UPLOAD_STATUS_TTL', 24 * 3600)
+
+ERROR_RESPONSE_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'error_code': {'type': 'string'},
+        'error': {'type': 'string'},
+        'message': {'type': 'string'},
+    },
+    'required': ['error_code', 'error', 'message'],
+}
 
 
 def _safe_extension(filename: str) -> str:
@@ -132,6 +143,27 @@ def _set_upload_status(upload_id: str, payload: dict):
     cache.set(f'upload:status:{upload_id}', payload, UPLOAD_STATUS_TTL)
 
 
+@extend_schema(
+    operation_id='upload_status',
+    summary='查询异步上传状态',
+    tags=['upload'],
+    responses={
+        200: OpenApiResponse(description='上传状态', response={
+            'type': 'object',
+            'properties': {
+                'status': {'type': 'string'},
+                'upload_id': {'type': 'string'},
+                'location': {'type': 'string'},
+                'reason': {'type': 'string'},
+            },
+        }),
+        404: OpenApiResponse(
+            description='任务不存在',
+            response=ERROR_RESPONSE_SCHEMA,
+            examples=[OpenApiExample('Task not found', value=api_error_payload(ErrorCodes.UPLOAD_TASK_NOT_FOUND))],
+        ),
+    },
+)
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def upload_status(request, upload_id: str):
@@ -141,6 +173,34 @@ def upload_status(request, upload_id: str):
     return Response(data, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    operation_id='upload_image',
+    summary='上传图片（同步）',
+    tags=['upload'],
+    responses={
+        200: OpenApiResponse(description='上传成功', response={
+            'type': 'object',
+            'properties': {'location': {'type': 'string'}},
+            'required': ['location'],
+        }),
+        400: OpenApiResponse(
+            description='上传参数错误',
+            response=ERROR_RESPONSE_SCHEMA,
+            examples=[
+                OpenApiExample('No file', value=api_error_payload(ErrorCodes.UPLOAD_NO_FILE)),
+                OpenApiExample('Image too large', value=api_error_payload(ErrorCodes.UPLOAD_IMAGE_TOO_LARGE)),
+                OpenApiExample('Image type not allowed', value=api_error_payload(ErrorCodes.UPLOAD_IMAGE_TYPE_NOT_ALLOWED)),
+                OpenApiExample('Image magic invalid', value=api_error_payload(ErrorCodes.UPLOAD_IMAGE_MAGIC_INVALID)),
+                OpenApiExample('Scan rejected', value=api_error_payload(ErrorCodes.UPLOAD_SECURITY_SCAN_REJECTED)),
+            ],
+        ),
+        500: OpenApiResponse(
+            description='上传保存失败',
+            response=ERROR_RESPONSE_SCHEMA,
+            examples=[OpenApiExample('Upload save failed', value=api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED))],
+        ),
+    },
+)
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 @throttle_classes([UploadRateThrottle])
@@ -173,6 +233,47 @@ def upload_image(request):
         return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@extend_schema(
+    operation_id='upload_file',
+    summary='上传通用文件（同步/异步）',
+    tags=['upload'],
+    responses={
+        200: OpenApiResponse(description='同步上传成功', response={
+            'type': 'object',
+            'properties': {
+                'location': {'type': 'string'},
+                'filename': {'type': 'string'},
+                'size': {'type': 'integer'},
+            },
+        }),
+        202: OpenApiResponse(description='异步处理已入队', response={
+            'type': 'object',
+            'properties': {
+                'status': {'type': 'string', 'example': 'pending'},
+                'upload_id': {'type': 'string'},
+                'task_id': {'type': 'string'},
+                'status_path': {'type': 'string'},
+            },
+        }),
+        400: OpenApiResponse(
+            description='上传参数错误或安全校验失败',
+            response=ERROR_RESPONSE_SCHEMA,
+            examples=[
+                OpenApiExample('No file', value=api_error_payload(ErrorCodes.UPLOAD_NO_FILE)),
+                OpenApiExample('File too large', value=api_error_payload(ErrorCodes.UPLOAD_FILE_TOO_LARGE)),
+                OpenApiExample('File type denied', value=api_error_payload(ErrorCodes.UPLOAD_FILE_TYPE_DENIED)),
+                OpenApiExample('File ext not allowed', value=api_error_payload(ErrorCodes.UPLOAD_FILE_EXT_NOT_ALLOWED)),
+                OpenApiExample('Dangerous magic', value=api_error_payload(ErrorCodes.UPLOAD_FILE_MAGIC_DENIED)),
+                OpenApiExample('Scan rejected', value=api_error_payload(ErrorCodes.UPLOAD_SECURITY_SCAN_REJECTED)),
+            ],
+        ),
+        500: OpenApiResponse(
+            description='上传保存失败',
+            response=ERROR_RESPONSE_SCHEMA,
+            examples=[OpenApiExample('Upload save failed', value=api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED))],
+        ),
+    },
+)
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 @throttle_classes([UploadRateThrottle])
