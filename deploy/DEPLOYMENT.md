@@ -112,6 +112,15 @@ deploy\precheck.bat
 
 预检项包括：Docker/Compose、.env 必填项、端口占用、Compose 配置校验、DNS（可选）、磁盘空间、回滚命令提示。
 
+### 3.1.0.1 性能压测（可选）
+
+```bash
+# 需要先安装 wrk
+bash deploy/bench.sh http://127.0.0.1:8000
+```
+
+详细压测与 EXPLAIN 模板见：`docs/performance-benchmark-p2.1.md`
+
 ### 3.1.1 一键启动脚本
 
 ```bash
