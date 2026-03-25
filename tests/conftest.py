@@ -103,6 +103,12 @@ def pytest_addoption(parser):
         type=str,
         help="Test captcha value to use"
     )
+    parser.addoption(
+        "--run-e2e",
+        action="store_true",
+        default=False,
+        help="Run Playwright E2E tests that require a live server"
+    )
 
 
 # ============================================
@@ -363,6 +369,21 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "blog: 博客功能测试")
     config.addinivalue_line("markers", "forum: 论坛功能测试")
     config.addinivalue_line("markers", "tools: 工具栏测试")
+    config.addinivalue_line("markers", "e2e: 需要 live server 的端到端测试")
+
+
+def pytest_collection_modifyitems(config, items):
+    """默认跳过依赖 live server 的 E2E 测试，避免本地无服务时误失败。"""
+    if config.getoption("--run-e2e"):
+        return
+
+    skip_e2e = pytest.mark.skip(reason="requires live server; use --run-e2e to enable")
+
+    for item in items:
+        fixturenames = set(getattr(item, 'fixturenames', []) or [])
+        if {'page', 'context', 'browser'} & fixturenames:
+            item.add_marker(skip_e2e)
+            item.add_marker('e2e')
 
 
 # ============================================

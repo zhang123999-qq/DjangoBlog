@@ -1,4 +1,9 @@
-"""DjangoBlog 完整测试套件"""
+"""DjangoBlog 完整测试套件（遗留脚本，非 pytest 自动化用例）"""
+import pytest
+
+if __name__ != '__main__':
+    pytest.skip('legacy script-style suite, skip in pytest collection', allow_module_level=True)
+
 import os
 os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.development'
 import django
