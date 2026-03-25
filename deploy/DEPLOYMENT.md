@@ -100,6 +100,18 @@ docker compose --env-file .env -f deploy/docker-compose.yml exec web python mana
 
 > 安全提示：请勿提交 `.env` 到仓库；仓库仅保留 `deploy/.env.docker.example` 模板。
 
+### 3.1.0 一键预检（强烈推荐先执行）
+
+```bash
+# Linux / macOS
+bash deploy/precheck.sh
+
+# Windows (CMD)
+deploy\precheck.bat
+```
+
+预检项包括：Docker/Compose、.env 必填项、端口占用、Compose 配置校验、DNS（可选）、磁盘空间、回滚命令提示。
+
 ### 3.1.1 一键启动脚本
 
 ```bash
