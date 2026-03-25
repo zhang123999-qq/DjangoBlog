@@ -4,20 +4,25 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseForbidden
 from django.core.paginator import Paginator
 from django.contrib import messages
+from django.db.models import Prefetch
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from moderation.services import smart_moderate_instance
 from .models import Board, Topic, Reply, ReplyLike
 from .forms import TopicForm, ReplyForm
 
 
+@method_decorator(cache_page(60), name='dispatch')
 class BoardListView(ListView):
-    """版块列表视图"""
+    """版块列表视图（匿名短缓存）"""
     model = Board
     template_name = 'forum/board_list.html'
     context_object_name = 'boards'
 
 
+@method_decorator(cache_page(30), name='dispatch')
 class TopicListView(ListView):
-    """主题列表视图"""
+    """主题列表视图（匿名短缓存）"""
     model = Topic
     template_name = 'forum/topic_list.html'
     context_object_name = 'topics'
@@ -45,7 +50,19 @@ class TopicDetailView(DetailView):
     def get_queryset(self):
         """获取查询集，按版块筛选"""
         board = get_object_or_404(Board, slug=self.kwargs.get('board_slug'))
-        return Topic.objects.filter(board=board, review_status='approved').select_related('author', 'board').prefetch_related('replies__author')
+        approved_replies = Reply.objects.filter(
+            is_deleted=False,
+            review_status='approved'
+        ).select_related('author').only(
+            'id', 'content', 'created_at', 'like_count',
+            'author__id', 'author__username', 'author__nickname'
+        )
+
+        return Topic.objects.filter(board=board, review_status='approved').select_related(
+            'author', 'board'
+        ).prefetch_related(
+            Prefetch('replies', queryset=approved_replies)
+        )
 
     def get_object(self, queryset=None):
         """获取主题对象并增加浏览量"""
