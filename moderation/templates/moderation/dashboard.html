@@ -28,6 +28,7 @@
                 <small id="metrics-updated-at" class="text-light opacity-75">--:--:--</small>
             </div>
             <div class="card-body">
+                <div class="small text-muted mb-2" id="m-refresh-status">状态：待拉取</div>
                 <div class="row g-2">
                     <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">总请求</div><div id="m-requests" class="fw-bold">-</div></div></div>
                     <div class="col-6 col-md-3"><div class="border rounded p-2" id="m-card-rate"><div class="text-muted small">限流命中</div><div id="m-rate-limited" class="fw-bold text-danger">-</div></div></div>
@@ -213,13 +214,22 @@
                 const card = document.getElementById('moderation-metrics-card');
                 if (!card) return;
 
+                const statusEl = document.getElementById('m-refresh-status');
+                const startTs = performance.now();
+
                 const minutes = readWindowMinutes();
                 const trendTitle = document.getElementById('m-trend-title');
                 if (trendTitle) trendTitle.textContent = `近 ${minutes} 分钟趋势（请求 / 限流 / 并发命中）`;
+                if (statusEl) statusEl.textContent = '状态：刷新中...';
 
                 try {
                     const resp = await fetch(`/api/moderation/metrics/?minutes=${minutes}`, { credentials: 'include' });
-                    if (!resp.ok) return;
+                    if (!resp.ok) {
+                        const cost = Math.round(performance.now() - startTs);
+                        if (statusEl) statusEl.textContent = `状态：失败（HTTP ${resp.status}，${cost}ms）`;
+                        if (statusEl) statusEl.style.color = '#dc3545';
+                        return;
+                    }
                     const data = await resp.json();
                     const t = data?.totals || {};
 
@@ -307,8 +317,18 @@
 
                     const at = document.getElementById('metrics-updated-at');
                     if (at) at.textContent = new Date().toLocaleTimeString();
+
+                    const cost = Math.round(performance.now() - startTs);
+                    if (statusEl) {
+                        statusEl.textContent = `状态：成功（${cost}ms）`;
+                        statusEl.style.color = '#198754';
+                    }
                 } catch (_) {
-                    // 指标失败不影响主流程
+                    const cost = Math.round(performance.now() - startTs);
+                    if (statusEl) {
+                        statusEl.textContent = `状态：失败（异常，${cost}ms）`;
+                        statusEl.style.color = '#dc3545';
+                    }
                 }
             };
 
