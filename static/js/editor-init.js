@@ -255,21 +255,50 @@ async function createTinyMCE(elementId, options = {}) {
                 document.body.removeChild(input);
                 if (!file) return;
 
+                const activeEditor = window.tinymce && window.tinymce.activeEditor;
+                let lastStatus = '';
                 try {
+                    if (activeEditor) activeEditor.setProgressState(true);
+
                     const result = await window.UploadAsyncClient.uploadFileWithPolling(file, {
                         timeoutMs: 120000,
                         intervalMs: 1500,
                         maxRetries: 3,
+                        onProgress: (data) => {
+                            if (!activeEditor || !data || data.status === lastStatus) return;
+                            lastStatus = data.status;
+                            const statusTextMap = {
+                                pending: '文件已上传，等待扫描...',
+                                scanning: '文件安全扫描中...',
+                                ready: '扫描通过，正在完成上传...',
+                            };
+                            const text = statusTextMap[data.status];
+                            if (text) {
+                                activeEditor.notificationManager.open({
+                                    text,
+                                    type: 'info',
+                                    timeout: 1200,
+                                });
+                            }
+                        },
                     });
 
                     callback(result.location, {
                         text: file.name,
                         title: file.name,
                     });
+
+                    if (activeEditor) {
+                        activeEditor.notificationManager.open({
+                            text: '附件上传成功',
+                            type: 'success',
+                            timeout: 1500,
+                        });
+                    }
                 } catch (err) {
                     const msg = err && err.message ? err.message : '上传失败';
-                    if (window.tinymce && window.tinymce.activeEditor) {
-                        window.tinymce.activeEditor.notificationManager.open({
+                    if (activeEditor) {
+                        activeEditor.notificationManager.open({
                             text: `附件上传失败：${msg}`,
                             type: 'error',
                             timeout: 3000,
@@ -277,6 +306,8 @@ async function createTinyMCE(elementId, options = {}) {
                     } else {
                         alert(`附件上传失败：${msg}`);
                     }
+                } finally {
+                    if (activeEditor) activeEditor.setProgressState(false);
                 }
             };
 
