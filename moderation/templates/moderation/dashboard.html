@@ -9,7 +9,14 @@
         <!-- 审核保护指标面板（Phase 17） -->
         <div class="card mb-4" id="moderation-metrics-card">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h2 class="h6 mb-0">审核保护指标（最近 10 分钟）</h2>
+                <div class="d-flex align-items-center gap-2">
+                    <h2 class="h6 mb-0">审核保护指标</h2>
+                    <select id="m-window-select" class="form-select form-select-sm" style="width:auto;min-width:92px;">
+                        <option value="10">最近10分钟</option>
+                        <option value="30">最近30分钟</option>
+                        <option value="60">最近60分钟</option>
+                    </select>
+                </div>
                 <small id="metrics-updated-at" class="text-light opacity-75">--:--:--</small>
             </div>
             <div class="card-body">
@@ -26,7 +33,7 @@
                 <div class="mt-3 small text-muted" id="m-hotspots">热点用户：-</div>
                 <div class="small text-muted" id="m-thresholds">告警阈值：-</div>
                 <div class="mt-2">
-                    <div class="small text-muted mb-1">近 10 分钟趋势（请求 / 限流 / 并发命中）</div>
+                    <div class="small text-muted mb-1" id="m-trend-title">趋势（请求 / 限流 / 并发命中）</div>
                     <canvas id="m-trend-canvas" height="64" style="width:100%;border:1px solid #eee;border-radius:6px;"></canvas>
                 </div>
             </div>
@@ -141,12 +148,34 @@
                 }
             };
 
+            const METRICS_WINDOW_KEY = 'moderation.metrics.window.v1';
+
+            const readWindowMinutes = () => {
+                const url = new URL(window.location.href);
+                const q = Number(url.searchParams.get('mwin'));
+                if ([10, 30, 60].includes(q)) return q;
+                const saved = Number(localStorage.getItem(METRICS_WINDOW_KEY));
+                if ([10, 30, 60].includes(saved)) return saved;
+                return 10;
+            };
+
+            const writeWindowMinutes = (m) => {
+                localStorage.setItem(METRICS_WINDOW_KEY, String(m));
+                const url = new URL(window.location.href);
+                url.searchParams.set('mwin', String(m));
+                history.replaceState(null, '', url.toString());
+            };
+
             const renderMetrics = async () => {
                 const card = document.getElementById('moderation-metrics-card');
                 if (!card) return;
 
+                const minutes = readWindowMinutes();
+                const trendTitle = document.getElementById('m-trend-title');
+                if (trendTitle) trendTitle.textContent = `近 ${minutes} 分钟趋势（请求 / 限流 / 并发命中）`;
+
                 try {
-                    const resp = await fetch('/api/moderation/metrics/?minutes=10', { credentials: 'include' });
+                    const resp = await fetch(`/api/moderation/metrics/?minutes=${minutes}`, { credentials: 'include' });
                     if (!resp.ok) return;
                     const data = await resp.json();
                     const t = data?.totals || {};
@@ -241,6 +270,18 @@
             };
 
             const REJECT_REASON_KEY = 'moderation.rejectReasons.v1';
+
+            const windowSelect = document.getElementById('m-window-select');
+            if (windowSelect) {
+                const initialWindow = readWindowMinutes();
+                windowSelect.value = String(initialWindow);
+                writeWindowMinutes(initialWindow);
+                windowSelect.addEventListener('change', () => {
+                    const m = Number(windowSelect.value || 10);
+                    writeWindowMinutes([10, 30, 60].includes(m) ? m : 10);
+                    renderMetrics();
+                });
+            }
 
             renderMetrics();
             setInterval(renderMetrics, 30000);
