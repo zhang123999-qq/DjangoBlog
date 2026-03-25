@@ -162,6 +162,9 @@
             const METRICS_REFRESH_INTERVAL_KEY = 'moderation.metrics.refreshInterval.v1';
 
             let metricsTimer = null;
+            let backoffRetryTimer = null;
+            let failStreak = 0;
+            let lastWarnedStreak = 0;
 
             const readWindowMinutes = () => {
                 const url = new URL(window.location.href);
@@ -203,11 +206,27 @@
                     clearInterval(metricsTimer);
                     metricsTimer = null;
                 }
+                if (backoffRetryTimer) {
+                    clearTimeout(backoffRetryTimer);
+                    backoffRetryTimer = null;
+                }
                 const auto = readAutoRefresh();
                 const ms = readRefreshInterval();
                 if (auto) {
                     metricsTimer = setInterval(renderMetrics, ms);
                 }
+            };
+
+            const scheduleBackoffRetry = () => {
+                if (!readAutoRefresh()) return;
+                if (backoffRetryTimer) return;
+
+                const base = readRefreshInterval();
+                const delay = Math.min(base * Math.pow(2, Math.max(0, failStreak - 1)), 120000);
+                backoffRetryTimer = setTimeout(() => {
+                    backoffRetryTimer = null;
+                    renderMetrics();
+                }, delay);
             };
 
             const renderMetrics = async () => {
@@ -226,8 +245,16 @@
                     const resp = await fetch(`/api/moderation/metrics/?minutes=${minutes}`, { credentials: 'include' });
                     if (!resp.ok) {
                         const cost = Math.round(performance.now() - startTs);
-                        if (statusEl) statusEl.textContent = `状态：失败（HTTP ${resp.status}，${cost}ms）`;
+                        failStreak += 1;
+                        if (statusEl) statusEl.textContent = `状态：失败（HTTP ${resp.status}，${cost}ms，连续失败${failStreak}次）`;
                         if (statusEl) statusEl.style.color = '#dc3545';
+
+                        if (failStreak >= 3 && failStreak !== lastWarnedStreak) {
+                            toast(`指标刷新连续失败 ${failStreak} 次，请检查 /api/moderation/metrics`, 'error');
+                            lastWarnedStreak = failStreak;
+                        }
+
+                        scheduleBackoffRetry();
                         return;
                     }
                     const data = await resp.json();
@@ -319,16 +346,30 @@
                     if (at) at.textContent = new Date().toLocaleTimeString();
 
                     const cost = Math.round(performance.now() - startTs);
+                    failStreak = 0;
+                    lastWarnedStreak = 0;
+                    if (backoffRetryTimer) {
+                        clearTimeout(backoffRetryTimer);
+                        backoffRetryTimer = null;
+                    }
                     if (statusEl) {
                         statusEl.textContent = `状态：成功（${cost}ms）`;
                         statusEl.style.color = '#198754';
                     }
                 } catch (_) {
                     const cost = Math.round(performance.now() - startTs);
+                    failStreak += 1;
                     if (statusEl) {
-                        statusEl.textContent = `状态：失败（异常，${cost}ms）`;
+                        statusEl.textContent = `状态：失败（异常，${cost}ms，连续失败${failStreak}次）`;
                         statusEl.style.color = '#dc3545';
                     }
+
+                    if (failStreak >= 3 && failStreak !== lastWarnedStreak) {
+                        toast(`指标刷新连续失败 ${failStreak} 次，请检查 /api/moderation/metrics`, 'error');
+                        lastWarnedStreak = failStreak;
+                    }
+
+                    scheduleBackoffRetry();
                 }
             };
 
