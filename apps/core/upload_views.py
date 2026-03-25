@@ -1,7 +1,6 @@
-"""编辑器/通用上传 API（安全加固版）"""
+"""编辑器/通用上传 API（安全加固版 v2：MIME + 魔数双检）"""
 
 import logging
-import os
 import uuid
 from datetime import datetime
 
@@ -28,9 +27,34 @@ IMAGE_ALLOWED_MIME_TYPES = {
 }
 IMAGE_ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
 
+# 文件上传：保守白名单（可按业务扩展）
+FILE_ALLOWED_EXTENSIONS = {
+    'pdf', 'txt', 'md', 'csv', 'json',
+    'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+    'zip', '7z', 'rar',
+    'jpg', 'jpeg', 'png', 'gif', 'webp',
+}
+
 DANGEROUS_FILE_EXTENSIONS = {
     'exe', 'dll', 'bat', 'cmd', 'ps1', 'sh', 'com', 'msi', 'scr',
     'php', 'phtml', 'jsp', 'asp', 'aspx', 'cgi', 'pl', 'py', 'rb', 'jar',
+}
+
+# 常见可执行/脚本文件头（魔数）
+DANGEROUS_MAGIC_HEADERS = [
+    b'MZ',                 # Windows PE/EXE/DLL
+    b'#!',                 # shebang script
+    b'\x7fELF',            # Linux ELF
+    b'PK\x03\x04',        # zip (不一定危险，后续按扩展放行)
+]
+
+# 图片魔数
+IMAGE_MAGIC = {
+    'jpg': [b'\xff\xd8\xff'],
+    'jpeg': [b'\xff\xd8\xff'],
+    'png': [b'\x89PNG\r\n\x1a\n'],
+    'gif': [b'GIF87a', b'GIF89a'],
+    'webp': [b'RIFF'],  # 需额外检查 WEBP 标识
 }
 
 
@@ -38,6 +62,44 @@ def _safe_extension(filename: str) -> str:
     if '.' not in filename:
         return ''
     return filename.rsplit('.', 1)[-1].lower().strip()
+
+
+def _peek_header(upload, size: int = 32) -> bytes:
+    pos = upload.tell()
+    header = upload.read(size)
+    upload.seek(pos)
+    return header
+
+
+def _looks_like_webp(header: bytes) -> bool:
+    return len(header) >= 12 and header.startswith(b'RIFF') and header[8:12] == b'WEBP'
+
+
+def _validate_image_magic(upload, ext: str) -> bool:
+    header = _peek_header(upload, 32)
+    patterns = IMAGE_MAGIC.get(ext, [])
+    if not patterns:
+        return False
+
+    if ext == 'webp':
+        return _looks_like_webp(header)
+
+    return any(header.startswith(p) for p in patterns)
+
+
+def _contains_dangerous_magic(upload, ext: str) -> bool:
+    """
+    检测危险文件头。
+    注意：ZIP 在业务白名单中允许（docx/xlsx/pptx/zip 等），因此仅对“可执行特征”严格拦截。
+    """
+    header = _peek_header(upload, 32)
+
+    # 强拦截：MZ / ELF / shebang
+    if header.startswith(b'MZ') or header.startswith(b'\x7fELF') or header.startswith(b'#!'):
+        return True
+
+    # PK\x03\x04 是 zip 容器，不直接判危险
+    return False
 
 
 def _save_upload(upload, folder: str) -> str:
@@ -67,6 +129,9 @@ def upload_image(request):
     if upload.content_type not in IMAGE_ALLOWED_MIME_TYPES or ext not in IMAGE_ALLOWED_EXTENSIONS:
         return Response({'error': '不支持的图片类型'}, status=status.HTTP_400_BAD_REQUEST)
 
+    if not _validate_image_magic(upload, ext):
+        return Response({'error': '图片文件头校验失败'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         file_url = _save_upload(upload, 'images')
         return Response({'location': file_url}, status=status.HTTP_200_OK)
@@ -89,8 +154,15 @@ def upload_file(request):
         return Response({'error': '文件大小不能超过10MB'}, status=status.HTTP_400_BAD_REQUEST)
 
     ext = _safe_extension(upload.name)
+
     if ext in DANGEROUS_FILE_EXTENSIONS:
         return Response({'error': '不允许上传该类型文件'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if ext not in FILE_ALLOWED_EXTENSIONS:
+        return Response({'error': '文件类型不在允许列表'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if _contains_dangerous_magic(upload, ext):
+        return Response({'error': '检测到危险文件头，上传被拒绝'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         file_url = _save_upload(upload, 'files')
