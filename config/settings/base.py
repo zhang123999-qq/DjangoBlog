@@ -328,6 +328,13 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+# 上传安全扫描（ClamAV，可选）
+UPLOAD_CLAMAV_ENABLED = env.bool('UPLOAD_CLAMAV_ENABLED', default=False)
+UPLOAD_CLAMAV_HOST = env('UPLOAD_CLAMAV_HOST', default='127.0.0.1')
+UPLOAD_CLAMAV_PORT = env.int('UPLOAD_CLAMAV_PORT', default=3310)
+UPLOAD_CLAMAV_TIMEOUT = env.int('UPLOAD_CLAMAV_TIMEOUT', default=5)
+UPLOAD_CLAMAV_FAIL_CLOSED = env.bool('UPLOAD_CLAMAV_FAIL_CLOSED', default=False)
+
 # =============================================================================
 # Celery 配置
 # =============================================================================

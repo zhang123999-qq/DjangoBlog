@@ -1,6 +1,8 @@
 """编辑器/通用上传 API（安全加固版 v2：MIME + 魔数双检）"""
 
 import logging
+import socket
+import struct
 import uuid
 from datetime import datetime
 
@@ -112,6 +114,54 @@ def _save_upload(upload, folder: str) -> str:
     return f"{settings.MEDIA_URL}{saved_path}"
 
 
+def _clamav_scan_stream(upload) -> tuple[bool, str]:
+    """
+    使用 clamd INSTREAM 协议扫描上传文件（不落盘）。
+    返回: (is_clean, message)
+    """
+    # 兼容不同文件对象
+    upload.seek(0)
+
+    with socket.create_connection((CLAMAV_HOST, CLAMAV_PORT), timeout=CLAMAV_TIMEOUT) as sock:
+        # zINSTREAM\0（新版 clamd 推荐）
+        sock.sendall(b'zINSTREAM\0')
+
+        for chunk in upload.chunks():
+            sock.sendall(struct.pack('!I', len(chunk)))
+            sock.sendall(chunk)
+
+        # 发送结束块
+        sock.sendall(struct.pack('!I', 0))
+
+        resp = sock.recv(4096).decode('utf-8', errors='ignore').strip()
+
+    upload.seek(0)
+
+    if 'OK' in resp:
+        return True, resp
+    if 'FOUND' in resp:
+        return False, resp
+
+    # 未知响应按异常处理
+    raise RuntimeError(f'clamav unexpected response: {resp}')
+
+
+def _scan_with_clamav(upload) -> tuple[bool, str]:
+    """
+    ClamAV 扫描门面：支持 fail-open / fail-closed。
+    """
+    if not CLAMAV_ENABLED:
+        return True, 'clamav disabled'
+
+    try:
+        return _clamav_scan_stream(upload)
+    except Exception as e:
+        logger.exception('clamav scan failed')
+        if CLAMAV_FAIL_CLOSED:
+            return False, f'clamav error (fail-closed): {e}'
+        return True, f'clamav error (fail-open): {e}'
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 @throttle_classes([UploadRateThrottle])
@@ -163,6 +213,11 @@ def upload_file(request):
 
     if _contains_dangerous_magic(upload, ext):
         return Response({'error': '检测到危险文件头，上传被拒绝'}, status=status.HTTP_400_BAD_REQUEST)
+
+    clean, detail = _scan_with_clamav(upload)
+    if not clean:
+        logger.warning('upload_file blocked by clamav: %s', detail)
+        return Response({'error': '文件安全扫描未通过'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         file_url = _save_upload(upload, 'files')
