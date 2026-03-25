@@ -10,7 +10,13 @@
 2. Django 基础检查
 - `uv run python manage.py check`
 
-3. 后端核心回归（52+ 的子集可快速稳定执行）
+3. Scoped 类型检查（发布关键路径）
+- `uv run python -m mypy apps/api/moderation_views.py apps/blog/tasks.py`
+
+4. Scoped lint（发布关键路径）
+- `uv run python -m flake8 apps/api/moderation_views.py apps/blog/tasks.py`
+
+5. 后端核心回归（52+ 的子集可快速稳定执行）
 - `uv run pytest -q tests/test_smoke_backend.py tests/test_core_backend_suite.py tests/test_core_backend_suite_ext.py tests/test_core_backend_suite_auth.py tests/test_core_backend_suite_ops.py`
 
 ## B. 建议过（默认不阻断）

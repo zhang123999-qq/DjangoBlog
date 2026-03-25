@@ -56,3 +56,11 @@ jobs:
           node --check static/js/editor-init.js
           node --check static/js/admin-editor.js
           node --check static/js/upload-async-client.js
+
+      - name: Scoped mypy check (release-blocking paths)
+        run: |
+          uv run python -m mypy apps/api/moderation_views.py apps/blog/tasks.py
+
+      - name: Scoped flake8 check (release-blocking paths)
+        run: |
+          uv run python -m flake8 apps/api/moderation_views.py apps/blog/tasks.py --max-line-length=140 --extend-ignore=W293

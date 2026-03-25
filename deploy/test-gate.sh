@@ -28,7 +28,11 @@ if [[ $DEPLOY_CHECK_CODE -ne 0 ]]; then
   echo "[gate] deploy check has warnings/issues (non-blocking in this gate)."
 fi
 
-echo "[gate] 4/4 backend regression suites"
+echo "[gate] 4/6 scoped quality checks"
+uv run python -m mypy apps/api/moderation_views.py apps/blog/tasks.py
+uv run python -m flake8 apps/api/moderation_views.py apps/blog/tasks.py --max-line-length=140 --extend-ignore=W293
+
+echo "[gate] 5/6 backend regression suites"
 uv run pytest -q \
   tests/test_smoke_backend.py \
   tests/test_core_backend_suite.py \
@@ -37,6 +41,11 @@ uv run pytest -q \
   tests/test_core_backend_suite_ops.py
 
 if [[ "$FULL" == "--full" ]]; then
+   echo "[gate] full mode: run full pytest collection"
+   uv run pytest -q --maxfail=1
+ fi
+
+echo "[gate] 6/6 done"
   echo "[gate] full mode: run full pytest collection"
   uv run pytest -q --maxfail=1
 fi
