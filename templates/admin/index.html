@@ -47,7 +47,7 @@
             <h3>{{ tag_count }}</h3>
             <p><i class="fas fa-tags"></i> 标签</p>
         </div>
-        <div class="stat-card stat-small" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+        <div class="stat-card stat-small is-teal">
             <h3>{{ tool_count }}</h3>
             <p><i class="fas fa-tools"></i> 工具</p>
         </div>
@@ -102,7 +102,7 @@
             <p>暂无工具</p>
             {% endfor %}
         </div>
-        <div style="margin-top: 15px; text-align: center;">
+        <div class="text-center mt-3">
             <a href="/tools/" class="button" target="_blank">
                 <i class="fas fa-external-link-alt"></i> 查看全部 {{ tools_count }} 个工具
             </a>
@@ -183,64 +183,3 @@
 </div>
 {% endblock %}
 
-{% block extrastyle %}
-{{ block.super }}
-<style>
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .stat-card {
-        background: linear-gradient(135deg, #4f46e5, #6366f1);
-        color: white;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-    }
-    
-    .stat-card h2, .stat-card h3 {
-        font-size: 28px;
-        margin: 0 0 5px 0;
-    }
-    
-    .stat-card p {
-        margin: 0;
-        opacity: 0.9;
-    }
-    
-    .stat-card small {
-        display: block;
-        margin-top: 5px;
-        opacity: 0.7;
-        font-size: 11px;
-    }
-    
-    .stat-card.warning {
-        background: linear-gradient(135deg, #f97316, #ea580c);
-    }
-    
-    .tools-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 10px;
-    }
-    
-    .tool-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px;
-        background: #f8fafc;
-        border-radius: 6px;
-        font-size: 13px;
-    }
-    
-    .tool-item i {
-        color: #4f46e5;
-    }
-</style>
-{% endblock %}

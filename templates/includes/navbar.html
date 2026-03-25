@@ -34,17 +34,17 @@
                 {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="position-relative">
+                            <div class="ui-avatar-wrap">
                                 {% if user.profile.avatar %}
-                                    <img src="{{ user.profile.avatar.url }}" alt="头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
+                                    <img src="{{ user.profile.avatar.url }}" alt="头像" class="ui-avatar-32">
                                 {% else %}
-                                    <img src="{% static 'img/avatars/default-avatar.png' %}" alt="默认头像" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(0, 123, 255, 0.3); transition: var(--transition);">
+                                    <img src="{% static 'img/avatars/default-avatar.png' %}" alt="默认头像" class="ui-avatar-32">
                                 {% endif %}
-                                <span class="position-absolute bottom-0 right-0 w-2 h-2 bg-success rounded-full border-2 border-white"></span>
+                                <span class="ui-online-dot"></span>
                             </div>
                             <span>{{ user.username }}</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="border-radius: 12px; box-shadow: var(--card-shadow); border: none;">
+                        <ul class="dropdown-menu dropdown-menu-end ui-dropdown-soft" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'blog:post_create' %}"><i class="bi bi-pencil-square"></i> 写文章</a></li>
                             <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'blog:my_posts' %}"><i class="bi bi-file-text"></i> 我的文章</a></li>
                             <li><hr class="dropdown-divider"></li>

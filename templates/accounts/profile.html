@@ -14,9 +14,9 @@
                     <div class="row">
                         <div class="col-md-4 text-center">
                             {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" alt="头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                                <img src="{{ user.profile.avatar.url }}" alt="头像" class="ui-avatar-150">
                             {% else %}
-                                <img src="{% static 'img/avatars/default-avatar.png' %}" alt="默认头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                                <img src="{% static 'img/avatars/default-avatar.png' %}" alt="默认头像" class="ui-avatar-150">
                             {% endif %}
                             <h3 class="mt-3">{{ user.username }}</h3>
                             {% if user.nickname %}
