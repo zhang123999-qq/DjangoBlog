@@ -149,7 +149,18 @@
                     modal.innerHTML = `
                         <div style="width:min(92vw,520px);background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:16px;">
                             <h5 style="margin:0 0 10px;">填写拒绝原因</h5>
-                            <p style="margin:0 0 10px;color:#666;font-size:13px;">可选，最多 200 字。也可点击模板快速填充。</p>
+                            <p style="margin:0 0 10px;color:#666;font-size:13px;">请选择违规类型，并填写拒绝原因（4-200字）。</p>
+                            <div style="margin-bottom:8px;">
+                                <label for="reject-type-select" style="font-size:12px;color:#666;display:block;margin-bottom:4px;">违规类型</label>
+                                <select id="reject-type-select" class="form-select form-select-sm">
+                                    <option value="">请选择违规类型</option>
+                                    <option value="广告/推广">广告/推广</option>
+                                    <option value="敏感内容">敏感内容</option>
+                                    <option value="辱骂/攻击">辱骂/攻击</option>
+                                    <option value="低质灌水">低质灌水</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
                             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
                                 <button type="button" class="btn btn-sm btn-outline-secondary js-reason-template" data-v="疑似广告/推广内容">广告/推广</button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary js-reason-template" data-v="包含不当或敏感内容">敏感内容</button>
@@ -177,6 +188,7 @@
                     const tplBtns = modal.querySelectorAll('.js-reason-template');
                     const recentWrap = modal.querySelector('#reject-recent-wrap');
                     const recentList = modal.querySelector('#reject-recent-list');
+                    const typeSelect = modal.querySelector('#reject-type-select');
 
                     const recentReasons = loadRecentReasons();
                     if (recentReasons.length && recentWrap && recentList) {
@@ -215,9 +227,24 @@
 
                     cancelBtn.addEventListener('click', () => cleanup(null));
                     confirmBtn.addEventListener('click', () => {
-                        const value = (input.value || '').trim();
-                        if (value) saveRecentReason(value);
-                        cleanup(value);
+                        const reason = (input.value || '').trim();
+                        const type = (typeSelect && typeSelect.value) ? typeSelect.value : '';
+
+                        if (!type) {
+                            toast('请选择违规类型', 'error');
+                            typeSelect && typeSelect.focus();
+                            return;
+                        }
+
+                        if (reason.length < 4 || reason.length > 200) {
+                            toast('拒绝原因需 4-200 字', 'error');
+                            input.focus();
+                            return;
+                        }
+
+                        const finalNote = `[${type}] ${reason}`;
+                        saveRecentReason(reason);
+                        cleanup(finalNote);
                     });
                     modal.addEventListener('click', (ev) => {
                         if (ev.target === modal) cleanup(null);
