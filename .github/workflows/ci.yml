@@ -21,8 +21,10 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
-      - name: Sync deps
-        run: uv sync --all-extras
+      - name: Install deps (requirements)
+        run: |
+          uv venv
+          uv pip install -r requirements/development.txt
 
       - name: Python syntax smoke
         run: |
