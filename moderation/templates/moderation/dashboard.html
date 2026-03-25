@@ -9,12 +9,20 @@
         <!-- 审核保护指标面板（Phase 17） -->
         <div class="card mb-4" id="moderation-metrics-card">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <h2 class="h6 mb-0">审核保护指标</h2>
                     <select id="m-window-select" class="form-select form-select-sm" style="width:auto;min-width:92px;">
                         <option value="10">最近10分钟</option>
                         <option value="30">最近30分钟</option>
                         <option value="60">最近60分钟</option>
+                    </select>
+                    <label class="form-check form-switch m-0" title="自动刷新">
+                        <input class="form-check-input" type="checkbox" id="m-auto-refresh-switch" checked>
+                    </label>
+                    <select id="m-refresh-interval" class="form-select form-select-sm" style="width:auto;min-width:84px;">
+                        <option value="15000">15s</option>
+                        <option value="30000" selected>30s</option>
+                        <option value="60000">60s</option>
                     </select>
                 </div>
                 <small id="metrics-updated-at" class="text-light opacity-75">--:--:--</small>
@@ -149,6 +157,10 @@
             };
 
             const METRICS_WINDOW_KEY = 'moderation.metrics.window.v1';
+            const METRICS_AUTO_REFRESH_KEY = 'moderation.metrics.autoRefresh.v1';
+            const METRICS_REFRESH_INTERVAL_KEY = 'moderation.metrics.refreshInterval.v1';
+
+            let metricsTimer = null;
 
             const readWindowMinutes = () => {
                 const url = new URL(window.location.href);
@@ -164,6 +176,37 @@
                 const url = new URL(window.location.href);
                 url.searchParams.set('mwin', String(m));
                 history.replaceState(null, '', url.toString());
+            };
+
+            const readAutoRefresh = () => {
+                const raw = localStorage.getItem(METRICS_AUTO_REFRESH_KEY);
+                if (raw === null) return true;
+                return raw === '1';
+            };
+
+            const writeAutoRefresh = (on) => {
+                localStorage.setItem(METRICS_AUTO_REFRESH_KEY, on ? '1' : '0');
+            };
+
+            const readRefreshInterval = () => {
+                const v = Number(localStorage.getItem(METRICS_REFRESH_INTERVAL_KEY));
+                return [15000, 30000, 60000].includes(v) ? v : 30000;
+            };
+
+            const writeRefreshInterval = (ms) => {
+                localStorage.setItem(METRICS_REFRESH_INTERVAL_KEY, String(ms));
+            };
+
+            const restartMetricsTimer = () => {
+                if (metricsTimer) {
+                    clearInterval(metricsTimer);
+                    metricsTimer = null;
+                }
+                const auto = readAutoRefresh();
+                const ms = readRefreshInterval();
+                if (auto) {
+                    metricsTimer = setInterval(renderMetrics, ms);
+                }
             };
 
             const renderMetrics = async () => {
@@ -272,6 +315,9 @@
             const REJECT_REASON_KEY = 'moderation.rejectReasons.v1';
 
             const windowSelect = document.getElementById('m-window-select');
+            const autoRefreshSwitch = document.getElementById('m-auto-refresh-switch');
+            const refreshIntervalSelect = document.getElementById('m-refresh-interval');
+
             if (windowSelect) {
                 const initialWindow = readWindowMinutes();
                 windowSelect.value = String(initialWindow);
@@ -283,8 +329,27 @@
                 });
             }
 
+            if (autoRefreshSwitch) {
+                autoRefreshSwitch.checked = readAutoRefresh();
+                autoRefreshSwitch.addEventListener('change', () => {
+                    writeAutoRefresh(!!autoRefreshSwitch.checked);
+                    restartMetricsTimer();
+                });
+            }
+
+            if (refreshIntervalSelect) {
+                const intervalMs = readRefreshInterval();
+                refreshIntervalSelect.value = String(intervalMs);
+                writeRefreshInterval(intervalMs);
+                refreshIntervalSelect.addEventListener('change', () => {
+                    const ms = Number(refreshIntervalSelect.value || 30000);
+                    writeRefreshInterval([15000, 30000, 60000].includes(ms) ? ms : 30000);
+                    restartMetricsTimer();
+                });
+            }
+
             renderMetrics();
-            setInterval(renderMetrics, 30000);
+            restartMetricsTimer();
 
             const loadRecentReasons = () => {
                 try {
