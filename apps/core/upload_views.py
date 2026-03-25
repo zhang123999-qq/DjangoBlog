@@ -15,6 +15,8 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
+from apps.core.error_codes import ErrorCodes, api_error_payload
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +32,6 @@ IMAGE_ALLOWED_MIME_TYPES = {
 }
 IMAGE_ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
 
-# 文件上传：保守白名单（可按业务扩展）
 FILE_ALLOWED_EXTENSIONS = {
     'pdf', 'txt', 'md', 'csv', 'json',
     'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
@@ -43,14 +44,12 @@ DANGEROUS_FILE_EXTENSIONS = {
     'php', 'phtml', 'jsp', 'asp', 'aspx', 'cgi', 'pl', 'py', 'rb', 'jar',
 }
 
-# ClamAV（可选）
 CLAMAV_ENABLED = getattr(settings, 'UPLOAD_CLAMAV_ENABLED', False)
 CLAMAV_HOST = getattr(settings, 'UPLOAD_CLAMAV_HOST', '127.0.0.1')
 CLAMAV_PORT = getattr(settings, 'UPLOAD_CLAMAV_PORT', 3310)
 CLAMAV_TIMEOUT = getattr(settings, 'UPLOAD_CLAMAV_TIMEOUT', 5)
 CLAMAV_FAIL_CLOSED = getattr(settings, 'UPLOAD_CLAMAV_FAIL_CLOSED', False)
 
-# 异步隔离扫描（仅对通用文件上传生效）
 UPLOAD_ASYNC_PIPELINE_ENABLED = getattr(settings, 'UPLOAD_ASYNC_PIPELINE_ENABLED', False)
 UPLOAD_STATUS_TTL = getattr(settings, 'UPLOAD_STATUS_TTL', 24 * 3600)
 
@@ -86,11 +85,8 @@ def _validate_image_magic(upload, ext: str) -> bool:
 
 
 def _contains_dangerous_magic(upload, ext: str) -> bool:
-    """检测危险文件头。"""
     header = _peek_header(upload, 32)
-    if header.startswith(b'MZ') or header.startswith(b'\x7fELF') or header.startswith(b'#!'):
-        return True
-    return False
+    return header.startswith(b'MZ') or header.startswith(b'\x7fELF') or header.startswith(b'#!')
 
 
 def _save_upload(upload, folder: str) -> str:
@@ -98,24 +94,19 @@ def _save_upload(upload, folder: str) -> str:
     today = datetime.now().strftime('%Y/%m')
     filename = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
     relative_path = f"uploads/{folder}/{today}/{filename}"
-
     saved_path = default_storage.save(relative_path, upload)
     return f"{settings.MEDIA_URL}{saved_path}"
 
 
 def _clamav_scan_fileobj(file_obj) -> tuple[bool, str]:
-    """使用 clamd INSTREAM 协议扫描文件对象。"""
     file_obj.seek(0)
     with socket.create_connection((CLAMAV_HOST, CLAMAV_PORT), timeout=CLAMAV_TIMEOUT) as sock:
         sock.sendall(b'zINSTREAM\0')
-
         for chunk in file_obj.chunks():
             sock.sendall(struct.pack('!I', len(chunk)))
             sock.sendall(chunk)
-
         sock.sendall(struct.pack('!I', 0))
         resp = sock.recv(4096).decode('utf-8', errors='ignore').strip()
-
     file_obj.seek(0)
 
     if 'OK' in resp:
@@ -128,7 +119,6 @@ def _clamav_scan_fileobj(file_obj) -> tuple[bool, str]:
 def _scan_with_clamav(file_obj) -> tuple[bool, str]:
     if not CLAMAV_ENABLED:
         return True, 'clamav disabled'
-
     try:
         return _clamav_scan_fileobj(file_obj)
     except Exception as e:
@@ -145,10 +135,9 @@ def _set_upload_status(upload_id: str, payload: dict):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def upload_status(request, upload_id: str):
-    """查询异步上传处理状态。"""
     data = cache.get(f'upload:status:{upload_id}')
     if not data:
-        return Response({'error': '上传任务不存在或已过期'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_TASK_NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
     return Response(data, status=status.HTTP_200_OK)
 
 
@@ -157,32 +146,31 @@ def upload_status(request, upload_id: str):
 @throttle_classes([UploadRateThrottle])
 @parser_classes([MultiPartParser, FormParser])
 def upload_image(request):
-    """TinyMCE 图片上传接口（仅登录用户，同步返回 location）。"""
     upload = request.FILES.get('file')
     if not upload:
-        return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_NO_FILE), status=status.HTTP_400_BAD_REQUEST)
 
     if upload.size > 5 * 1024 * 1024:
-        return Response({'error': '文件大小不能超过5MB'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_IMAGE_TOO_LARGE), status=status.HTTP_400_BAD_REQUEST)
 
     ext = _safe_extension(upload.name)
     if upload.content_type not in IMAGE_ALLOWED_MIME_TYPES or ext not in IMAGE_ALLOWED_EXTENSIONS:
-        return Response({'error': '不支持的图片类型'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_IMAGE_TYPE_NOT_ALLOWED), status=status.HTTP_400_BAD_REQUEST)
 
     if not _validate_image_magic(upload, ext):
-        return Response({'error': '图片文件头校验失败'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_IMAGE_MAGIC_INVALID), status=status.HTTP_400_BAD_REQUEST)
 
     clean, detail = _scan_with_clamav(upload)
     if not clean:
         logger.warning('upload_image blocked by clamav: %s', detail)
-        return Response({'error': '文件安全扫描未通过'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_SECURITY_SCAN_REJECTED), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         file_url = _save_upload(upload, 'images')
         return Response({'location': file_url}, status=status.HTTP_200_OK)
     except Exception:
         logger.exception('upload_image failed')
-        return Response({'error': '上传失败，请稍后重试'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -190,26 +178,23 @@ def upload_image(request):
 @throttle_classes([UploadRateThrottle])
 @parser_classes([MultiPartParser, FormParser])
 def upload_file(request):
-    """通用文件上传接口（仅登录用户）。"""
     upload = request.FILES.get('file')
     if not upload:
-        return Response({'error': '没有上传文件'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_NO_FILE), status=status.HTTP_400_BAD_REQUEST)
 
     if upload.size > 10 * 1024 * 1024:
-        return Response({'error': '文件大小不能超过10MB'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_TOO_LARGE), status=status.HTTP_400_BAD_REQUEST)
 
     ext = _safe_extension(upload.name)
-
     if ext in DANGEROUS_FILE_EXTENSIONS:
-        return Response({'error': '不允许上传该类型文件'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_TYPE_DENIED), status=status.HTTP_400_BAD_REQUEST)
 
     if ext not in FILE_ALLOWED_EXTENSIONS:
-        return Response({'error': '文件类型不在允许列表'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_EXT_NOT_ALLOWED), status=status.HTTP_400_BAD_REQUEST)
 
     if _contains_dangerous_magic(upload, ext):
-        return Response({'error': '检测到危险文件头，上传被拒绝'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_MAGIC_DENIED), status=status.HTTP_400_BAD_REQUEST)
 
-    # v4：可选异步隔离扫描管线
     if UPLOAD_ASYNC_PIPELINE_ENABLED:
         from apps.core.upload_tasks import process_quarantined_upload
 
@@ -226,7 +211,6 @@ def upload_file(request):
                 ext=ext,
                 original_name=upload.name,
             )
-
             _set_upload_status(
                 upload_id,
                 {
@@ -236,25 +220,23 @@ def upload_file(request):
                     'filename': upload.name,
                 },
             )
-
             return Response(
                 {
                     'status': 'pending',
                     'upload_id': upload_id,
                     'task_id': task.id,
-                    'status_path': f"/api/upload/status/{upload_id}/",
+                    'status_path': f'/api/upload/status/{upload_id}/',
                 },
                 status=status.HTTP_202_ACCEPTED,
             )
         except Exception:
             logger.exception('upload_file async pipeline failed')
-            return Response({'error': '上传失败，请稍后重试'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # 同步流程
     clean, detail = _scan_with_clamav(upload)
     if not clean:
         logger.warning('upload_file blocked by clamav: %s', detail)
-        return Response({'error': '文件安全扫描未通过'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_SECURITY_SCAN_REJECTED), status=status.HTTP_400_BAD_REQUEST)
 
     try:
         file_url = _save_upload(upload, 'files')
@@ -268,4 +250,4 @@ def upload_file(request):
         )
     except Exception:
         logger.exception('upload_file failed')
-        return Response({'error': '上传失败，请稍后重试'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

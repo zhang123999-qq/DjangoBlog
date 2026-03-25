@@ -13,6 +13,8 @@ from typing import Any, Dict
 
 from django.core.cache import cache
 
+from apps.core.error_codes import ErrorCodes
+
 logger = logging.getLogger(__name__)
 
 
@@ -131,7 +133,7 @@ class RedisMemoryOptimizer:
             }
         except Exception as e:
             _log_cache_error('analyze_keys', e)
-            return _error_payload('CACHE_ANALYZE_FAILED')
+            return _error_payload(ErrorCodes.CACHE_ANALYZE_FAILED)
 
     @classmethod
     def cleanup_expired_keys(cls):

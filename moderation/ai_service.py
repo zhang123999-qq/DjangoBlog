@@ -14,6 +14,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from django.conf import settings
 
+from apps.core.error_codes import ErrorCodes, error_message
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,7 +50,11 @@ class BaiduModerationService:
     @staticmethod
     def _service_unavailable_payload() -> List[Dict[str, Any]]:
         """统一错误返回，避免把内部异常直接暴露给前端。"""
-        return [{'type': 'error', 'msg': '审核服务暂时不可用，请稍后重试'}]
+        return [{
+            'type': 'error',
+            'code': ErrorCodes.MODERATION_SERVICE_UNAVAILABLE,
+            'msg': error_message(ErrorCodes.MODERATION_SERVICE_UNAVAILABLE),
+        }]
 
     def moderate_text(self, content: str) -> Tuple[str, Optional[List[Dict]]]:
         """文本审核
