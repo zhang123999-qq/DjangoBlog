@@ -115,6 +115,22 @@ deploy\up.bat
 - 数据库迁移
 - collectstatic
 
+### 3.1.2 一键停止脚本
+
+```bash
+# Linux / macOS（保留数据卷）
+bash deploy/down.sh
+
+# Linux / macOS（删除数据卷，谨慎）
+bash deploy/down.sh --purge
+
+# Windows（保留数据卷）
+deploy\down.bat
+
+# Windows（删除数据卷，谨慎）
+deploy\down.bat --purge
+```
+
 
 ### 3.2 单独使用 Docker
 
