@@ -97,7 +97,7 @@
                             <table class="table table-bordered mb-3">
                                 <tbody>
                                     <tr>
-                                        <th class="bg-light" style="width: 40%;">身高</th>
+                                        <th class="bg-light u-cell-w-40">身高</th>
                                         <td>{{ result.height }} cm</td>
                                     </tr>
                                     <tr>
@@ -217,7 +217,7 @@
                             
                             {# 通用文本输出 #}
                             {% else %}
-                            <div class="result-text font-monospace" style="white-space: pre-wrap; word-break: break-all;">
+                            <div class="result-text font-monospace u-pre-wrap-break">
                                 {% if result.result %}{{ result.result }}{% else %}{{ result }}{% endif %}
                             </div>
                             {% endif %}

@@ -83,7 +83,7 @@
     </div>
     
     <!-- 无搜索结果提示 -->
-    <div id="no-results" class="alert alert-info text-center" style="display: none;">
+    <div id="no-results" class="alert alert-info text-center u-hidden">
         <i class="bi bi-search me-2"></i>
         未找到匹配的工具，请尝试其他关键词
     </div>
@@ -93,7 +93,7 @@
     {% for cat in categories %}
     <div class="mb-5 category-section" id="cat-{{ cat.key }}" data-category="{{ cat.key }}">
         <div class="d-flex align-items-center mb-3">
-            <div class="category-icon me-3" style="background: {{ cat.color }}20; color: {{ cat.color }}">
+            <div class="category-icon me-3" style="--cat-color: {{ cat.color }}; background: color-mix(in srgb, var(--cat-color) 16%, white); color: var(--cat-color);">
                 <i class="{{ cat.icon }}"></i>
             </div>
             <div>
@@ -113,7 +113,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-2">
                             <div class="tool-icon-sm me-2">
-                                <i class="bi bi-{{ tool.icon|default:'gear' }}" style="color: {{ cat.color }}"></i>
+                                <i class="bi bi-{{ tool.icon|default:'gear' }}" style="--cat-color: {{ cat.color }}; color: var(--cat-color);"></i>
                             </div>
                             <h6 class="card-title mb-0">
                                 <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none text-dark tool-name">

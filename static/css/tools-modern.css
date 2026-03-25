@@ -1,0 +1,35 @@
+.tool-page { max-width: 1240px; }
+.tool-hero { margin-bottom: 1.25rem; }
+
+.u-hidden { display: none !important; }
+.u-pre-wrap-break { white-space: pre-wrap; word-break: break-all; }
+.u-cell-w-40 { width: 40%; }
+.u-cell-w-200 { width: 200px; }
+.u-cell-w-80 { width: 80px; }
+.u-va-middle { vertical-align: middle; }
+.u-icon-40 { font-size: 40px; opacity: .35; }
+
+.tool-desc-sm { font-size: .82rem; }
+.tool-thumb-box {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  border: 2px solid #dee2e6;
+}
+
+.tool-result-img {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+
+.tool-ip-hero {
+  background: linear-gradient(145deg, #f8fbff, #eef5ff);
+  border: 1px solid rgba(59,130,246,.16);
+}
+
+.tool-ip-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: clamp(1.5rem, 5vw, 2.6rem);
+  letter-spacing: .03em;
+}

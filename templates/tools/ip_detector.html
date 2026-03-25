@@ -66,8 +66,7 @@
                                                     {% if result.ip_info.country_code %}
                                                     <img src="https://flagcdn.com/24x18/{{ result.ip_info.country_code|lower }}.png" 
                                                          alt="{{ result.ip_info.country }}" 
-                                                         class="me-2" 
-                                                         style="vertical-align: middle;">
+                                                         class="me-2 u-va-middle">
                                                     {% endif %}
                                                     {{ result.ip_info.country|default:"-" }}
                                                 </td>
