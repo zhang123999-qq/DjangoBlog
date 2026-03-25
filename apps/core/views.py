@@ -3,7 +3,7 @@ import os
 import json
 import time
 from django.shortcuts import render, redirect
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.contrib import messages
 from django.conf import settings
@@ -41,25 +41,48 @@ def save_env_config(config):
 
 
 def home_view(request):
-    """首页 - 科技风格"""
-    # 获取最新文章
-    latest_posts = Post.objects.filter(status='published').order_by('-created_at')[:6]
-    
-    # 获取热门论坛主题
-    hot_topics = Topic.objects.filter(review_status='approved').order_by('-reply_count')[:5]
-    
+    """首页 - 科技风格（P0：缓存 + SQL 聚合优化）"""
+    cache_key = 'core:home:v1'
+    cached_context = cache.get(cache_key)
+    if cached_context is not None:
+        return render(request, 'home.html', cached_context)
+
+    # 获取最新文章（减少 N+1）
+    latest_posts = list(
+        Post.objects.filter(status='published')
+        .select_related('author', 'category')
+        .only(
+            'id', 'title', 'slug', 'summary', 'created_at', 'published_at',
+            'views_count', 'author__username', 'author__nickname',
+            'category__name', 'category__slug'
+        )
+        .order_by('-created_at')[:6]
+    )
+
+    # 获取热门论坛主题（减少 N+1）
+    hot_topics = list(
+        Topic.objects.filter(review_status='approved')
+        .select_related('board', 'author')
+        .only(
+            'id', 'title', 'reply_count', 'views_count', 'last_reply_at',
+            'board__name', 'board__slug', 'author__username', 'author__nickname'
+        )
+        .order_by('-reply_count')[:5]
+    )
+
     # 获取所有工具
     all_tools = tool_registry.get_all_tools()
     popular_tools = all_tools[:8] if len(all_tools) >= 8 else all_tools
-    
-    # 网站统计
-    post_count = Post.objects.filter(status='published').count()
+
+    # 网站统计（SQL 聚合，避免 Python 层遍历）
+    published_posts = Post.objects.filter(status='published')
+    post_count = published_posts.count()
     topic_count = Topic.objects.filter(review_status='approved').count()
     comment_count = Comment.objects.filter(review_status='approved').count()
     user_count = User.objects.count()
     tool_count = len(all_tools)
-    view_count = sum(post.views_count for post in Post.objects.filter(status='published'))
-    
+    view_count = published_posts.aggregate(total_views=Sum('views_count')).get('total_views') or 0
+
     context = {
         'latest_posts': latest_posts,
         'hot_topics': hot_topics,
@@ -71,7 +94,10 @@ def home_view(request):
         'tool_count': tool_count,
         'view_count': view_count,
     }
-    
+
+    # 首页整体缓存 60 秒，平衡实时性与性能
+    cache.set(cache_key, context, 60)
+
     # 使用与博客论坛一致的模板
     return render(request, 'home.html', context)
 

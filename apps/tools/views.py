@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 @cache_page(60)  # 缓存 1 分钟
 def tool_list(request):
     """工具列表视图"""
-    # 重置工具发现状态，确保发现所有工具
-    registry.reset_discovered()
-    
-    # 获取分类后的工具
+    # 获取分类后的工具（使用 registry 内部缓存）
     categories = registry.get_categories_with_tools()
     
     # 获取所有工具（兼容旧版）

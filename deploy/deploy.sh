@@ -1,5 +1,5 @@
 #!/bin/bash
-# DjangoBlog 服务器部署脚本
+# DjangoBlog 服务器部署脚本（安全模板版）
 # 使用方法: bash deploy.sh
 
 set -e
@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # 项目目录
 PROJECT_DIR="/www/wwwroot/DjangoBlog"
-cd $PROJECT_DIR
+cd "$PROJECT_DIR"
 
 echo ""
 echo -e "${YELLOW}[1/8] 拉取最新代码...${NC}"
@@ -25,13 +25,13 @@ git reset --hard origin/main
 echo -e "${GREEN}✓ 代码更新完成${NC}"
 
 echo ""
-echo -e "${YELLOW}[2/8] 创建 .env 配置文件...${NC}"
+echo -e "${YELLOW}[2/8] 创建 .env 配置文件（模板）...${NC}"
 cat > .env << 'ENVEOF'
 # Django 配置
-DEBUG=True
-SECRET_KEY=&oxraj24si7h%v45_-9o1fm#esm_4q-d7-&#8_okh4p*%#-763
-ALLOWED_HOSTS=localhost,127.0.0.1,www.zhtest.top,zhtest.top,*
-CSRF_TRUSTED_ORIGINS=https://www.zhtest.top,https://zhtest.top,http://www.zhtest.top,http://zhtest.top
+DEBUG=False
+SECRET_KEY=your-secret-key-here-change-in-production
+ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
 # 网站信息
 SITE_NAME=Django Blog
@@ -40,8 +40,8 @@ SITE_TITLE=Django 综合网站
 # MySQL 数据库配置
 DB_ENGINE=django.db.backends.mysql
 DB_NAME=djangoblog
-DB_USER=root
-DB_PASSWORD=bdc196c909535d4c
+DB_USER=your-db-user
+DB_PASSWORD=your-db-password
 DB_HOST=localhost
 DB_PORT=3306
 
@@ -53,11 +53,25 @@ REDIS_URL=redis://localhost:6379/0
 CELERY_BROKER_URL=redis://localhost:6379/2
 CELERY_RESULT_BACKEND=redis://localhost:6379/3
 ENVEOF
-echo -e "${GREEN}✓ .env 配置完成${NC}"
+
+echo -e "${GREEN}✓ .env 模板写入完成${NC}"
+echo -e "${YELLOW}! 请先编辑 .env 填写真实配置，再继续执行部署${NC}"
+
+# 从 .env 加载变量（用于数据库初始化）
+set -a
+source .env
+set +a
+
+if [[ "$DB_USER" == "your-db-user" || "$DB_PASSWORD" == "your-db-password" || "$SECRET_KEY" == "your-secret-key-here-change-in-production" ]]; then
+  echo -e "${RED}✗ 检测到占位符配置，已中止。请先修改 .env 中的真实密钥和数据库账号。${NC}"
+  exit 1
+fi
 
 echo ""
 echo -e "${YELLOW}[3/8] 创建 MySQL 数据库...${NC}"
-mysql -u root -pbdc196c909535d4c -e "CREATE DATABASE IF NOT EXISTS djangoblog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || echo -e "${YELLOW}! 数据库可能已存在${NC}"
+mysql -u"$DB_USER" -p"$DB_PASSWORD" -h"$DB_HOST" -P"$DB_PORT" \
+  -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" \
+  2>/dev/null || echo -e "${YELLOW}! 数据库可能已存在或连接失败，请检查账号权限${NC}"
 echo -e "${GREEN}✓ 数据库准备完成${NC}"
 
 echo ""
@@ -95,6 +109,6 @@ echo "  source .venv/bin/activate"
 echo "  gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 &"
 echo ""
 echo "访问地址:"
-echo "  网站首页: https://www.zhtest.top/"
-echo "  管理后台: https://www.zhtest.top/admin/"
+echo "  网站首页: https://yourdomain.com/"
+echo "  管理后台: https://yourdomain.com/admin/"
 echo ""
