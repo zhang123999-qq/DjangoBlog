@@ -1,18 +1,18 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM 发布前测试门禁（默认快速门禁）
-REM 用法：
+REM Pre-release test gate (quick by default)
+REM Usage:
 REM   deploy\test-gate.bat
 REM   deploy\test-gate.bat --full
 
 set FULL=%1
 
-REM 强制按生产配置执行 deploy 检查，避免误用开发配置产生噪声告警
+REM Use production settings for deploy checks
 set DJANGO_SETTINGS_MODULE=config.settings.production
 set DEBUG=False
 
-echo [gate] 1/4 python 语法冒烟
+echo [gate] 1/4 python syntax smoke
 python -m py_compile manage.py config\settings\base.py apps\api\moderation_views.py apps\blog\tasks.py
 if errorlevel 1 goto :fail
 
@@ -20,10 +20,10 @@ echo [gate] 2/4 Django check
 uv run python manage.py check
 if errorlevel 1 goto :fail
 
-echo [gate] 3/4 Django deploy check (warnings allowed)
+echo [gate] 3/4 Django deploy check - warnings allowed
 uv run python manage.py check --deploy
 if errorlevel 1 (
-  echo [gate] deploy check has warnings/issues (non-blocking in this gate).
+  echo [gate] deploy check has warnings/issues - non-blocking in this gate.
 )
 
 echo [gate] 4/6 scoped quality checks
@@ -44,6 +44,32 @@ if /I "%FULL%"=="--full" (
   if errorlevel 1 goto :fail
 )
 
+echo [gate] 6/6 optional security scans
+where gitleaks >nul 2>nul
+if errorlevel 1 (
+  echo [gate] gitleaks not found, skip
+) else (
+  gitleaks detect --source . --no-git --redact
+  if errorlevel 1 goto :fail
+)
+
+where bandit >nul 2>nul
+if errorlevel 1 (
+  echo [gate] bandit not found, skip
+) else (
+  bandit -q -r apps config -x "**/migrations/**,tests/**"
+  if errorlevel 1 goto :fail
+)
+
+where pip-audit >nul 2>nul
+if errorlevel 1 (
+  echo [gate] pip-audit not found, skip
+) else (
+  pip-audit
+  if errorlevel 1 goto :fail
+)
+
+echo [gate] 7/7 done
 echo [gate] PASS
 goto :eof
 

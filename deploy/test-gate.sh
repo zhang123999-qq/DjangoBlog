@@ -50,5 +50,24 @@ if [[ "$FULL" == "--full" ]]; then
   uv run pytest -q --maxfail=1
 fi
 
-echo "[gate] 6/6 done"
+echo "[gate] 6/6 optional security scans"
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks detect --source . --no-git --redact || { echo "[gate] gitleaks failed"; exit 1; }
+else
+  echo "[gate] gitleaks not found, skip"
+fi
+
+if command -v bandit >/dev/null 2>&1; then
+  bandit -q -r apps config -x "**/migrations/**,tests/**" || { echo "[gate] bandit failed"; exit 1; }
+else
+  echo "[gate] bandit not found, skip"
+fi
+
+if command -v pip-audit >/dev/null 2>&1; then
+  pip-audit || { echo "[gate] pip-audit failed"; exit 1; }
+else
+  echo "[gate] pip-audit not found, skip"
+fi
+
+echo "[gate] 7/7 done"
 echo "[gate] PASS"
