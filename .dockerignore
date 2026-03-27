@@ -1,0 +1,48 @@
+# VCS
+.git
+.gitignore
+.github/
+
+# Python cache / virtual env
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.venv/
+venv/
+ENV/
+
+# Build/test/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage/
+htmlcov/
+.coverage
+
+# Local runtime data
+logs/
+media/
+staticfiles/
+tmp/
+
+# Local DB / lock artifacts
+*.sqlite3
+*.sqlite3-journal
+
+# Secrets
+.env
+.env.*
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Packaging artifacts
+*.egg-info/
+.eggs/
+dist/
+build/
