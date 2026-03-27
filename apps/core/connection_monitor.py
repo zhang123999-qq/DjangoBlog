@@ -11,6 +11,8 @@
 import time
 import logging
 import threading
+
+import redis.exceptions
 from django.db import connections
 from django.core.cache import cache
 
@@ -175,7 +177,7 @@ class ConnectionHealthChecker:
             cache.get(':1:healthcheck', None)
             cache.set(':1:healthcheck', int(time.time()), 10)
             return True
-        except Exception as e:
+        except (redis.exceptions.RedisError, ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error(f'Redis Ping 失败: {e}')
             return False
 

@@ -47,7 +47,7 @@ def _clamav_scan_bytes(content: bytes) -> tuple[bool, str]:
         if 'FOUND' in resp:
             return False, resp
         raise RuntimeError(f'clamav unexpected response: {resp}')
-    except Exception as e:
+    except (socket.timeout, socket.error, OSError, RuntimeError, ValueError) as e:
         logger.exception('clamav scan bytes failed')
         if CLAMAV_FAIL_CLOSED:
             return False, f'clamav error (fail-closed): {e}'

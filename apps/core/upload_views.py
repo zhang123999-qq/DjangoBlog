@@ -6,6 +6,8 @@ import struct
 import uuid
 from datetime import datetime
 
+import redis.exceptions
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import default_storage
@@ -346,8 +348,8 @@ def upload_file(request):
                 },
                 status=status.HTTP_202_ACCEPTED,
             )
-        except Exception:
-            logger.exception('upload_file async pipeline failed')
+        except (OSError, ValueError, RuntimeError, redis.exceptions.RedisError) as e:
+            logger.exception('upload_file async pipeline failed: %s', e)
             return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     clean, detail = _scan_with_clamav(upload)

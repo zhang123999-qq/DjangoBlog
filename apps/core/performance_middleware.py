@@ -14,6 +14,7 @@ import time
 import logging
 import gc
 from django.db import connection
+from django.db.utils import DatabaseError, OperationalError
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -187,5 +188,5 @@ class ConnectionPoolMiddleware:
                 if hasattr(conn, 'is_usable') and not conn.is_usable():
                     logger.warning(f'数据库连接 {alias} 不可用')
                     conn.close_if_unusable_or_obsolete()
-            except Exception as e:
+            except (OperationalError, DatabaseError, OSError, ValueError) as e:
                 logger.error(f'检查连接 {alias} 失败: {e}')

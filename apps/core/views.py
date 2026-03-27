@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.conf import settings
 from django.db import connection
+from django.db.utils import DatabaseError, OperationalError
 from django.core.cache import cache
 from apps.blog.models import Post, Comment
 from apps.forum.models import Topic
@@ -151,7 +152,8 @@ def _check_database():
         with connection.cursor() as cursor:
             cursor.execute('SELECT 1')
         return True
-    except Exception:
+    except (OperationalError, DatabaseError, OSError):
+        logger.exception('health_check_database_failed')
         return False
 
 
@@ -163,7 +165,7 @@ def _check_cache():
         result = cache.get(test_key)
         cache.delete(test_key)
         return result == test_value
-    except Exception:
+    except (ConnectionError, TimeoutError, OSError, ValueError):
         logger.exception('health_check_cache_failed')
         return False
 
