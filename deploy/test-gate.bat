@@ -8,6 +8,10 @@ REM   deploy\test-gate.bat --full
 
 set FULL=%1
 
+REM 强制按生产配置执行 deploy 检查，避免误用开发配置产生噪声告警
+set DJANGO_SETTINGS_MODULE=config.settings.production
+set DEBUG=False
+
 echo [gate] 1/4 python 语法冒烟
 python -m py_compile manage.py config\settings\base.py apps\api\moderation_views.py apps\blog\tasks.py
 if errorlevel 1 goto :fail

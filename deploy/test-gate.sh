@@ -8,6 +8,10 @@ set -euo pipefail
 
 FULL="${1:-}"
 
+# 强制按生产配置执行 deploy 检查，避免误用开发配置产生噪声告警
+export DJANGO_SETTINGS_MODULE="config.settings.production"
+export DEBUG="False"
+
 echo "[gate] 1/4 python 语法冒烟"
 python -m py_compile \
   manage.py \
@@ -41,13 +45,9 @@ uv run pytest -q \
   tests/test_core_backend_suite_ops.py
 
 if [[ "$FULL" == "--full" ]]; then
-   echo "[gate] full mode: run full pytest collection"
-   uv run pytest -q --maxfail=1
- fi
-
-echo "[gate] 6/6 done"
   echo "[gate] full mode: run full pytest collection"
   uv run pytest -q --maxfail=1
 fi
 
+echo "[gate] 6/6 done"
 echo "[gate] PASS"

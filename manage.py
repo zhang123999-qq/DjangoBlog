@@ -10,6 +10,10 @@ def get_settings_module() -> str:
     if os.environ.get('DJANGO_SETTINGS_MODULE'):
         return os.environ['DJANGO_SETTINGS_MODULE']
 
+    # 针对部署检查：默认走生产配置，避免误用开发配置产生 security.W008/W018 噪声告警
+    if len(sys.argv) > 1 and sys.argv[1] == 'check' and '--deploy' in sys.argv[2:]:
+        return 'config.settings.production'
+
     # 根据 DEBUG 自动选择
     debug = os.environ.get('DEBUG', 'True').lower() == 'true'
     if debug:
