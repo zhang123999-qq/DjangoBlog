@@ -59,7 +59,10 @@ coverage.xml
 *.bak
 *.backup
 
-# Test outputs
+# Tests (do not track test directory)
+tests/
+
+# Test outputs (kept for backward compatibility)
 tests/logs/
 tests/screenshots/
 !tests/logs/.gitkeep

@@ -7,6 +7,7 @@ Django Blog 项目管理脚本
 import sys
 import subprocess
 import shutil
+import shlex
 from pathlib import Path
 
 # 项目根目录（scripts 的父目录）
@@ -24,11 +25,19 @@ def safe_print(text):
 
 
 def run_command(cmd, cwd=None):
-    """运行命令"""
+    """运行命令（默认禁用 shell=True，降低命令注入风险）"""
     if cwd is None:
         cwd = BASE_DIR
-    safe_print(f"\n[执行] {cmd}")
-    result = subprocess.run(cmd, shell=True, cwd=cwd)
+
+    if isinstance(cmd, str):
+        cmd_args = shlex.split(cmd)
+        display_cmd = cmd
+    else:
+        cmd_args = cmd
+        display_cmd = " ".join(cmd)
+
+    safe_print(f"\n[执行] {display_cmd}")
+    result = subprocess.run(cmd_args, shell=False, cwd=cwd)
     return result.returncode
 
 
