@@ -37,6 +37,7 @@ uv run python -m mypy apps/api/moderation_views.py apps/blog/tasks.py
 uv run python -m flake8 apps/api/moderation_views.py apps/blog/tasks.py --max-line-length=140 --extend-ignore=W293
 
 echo "[gate] 5/6 backend regression suites"
+DJANGO_SETTINGS_MODULE=config.settings.test DEBUG=False \
 uv run pytest -q \
   tests/test_smoke_backend.py \
   tests/test_core_backend_suite.py \

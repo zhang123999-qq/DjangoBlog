@@ -33,6 +33,8 @@ uv run python -m flake8 apps\api\moderation_views.py apps\blog\tasks.py --max-li
 if errorlevel 1 goto :fail
 
 echo [gate] 5/6 backend regression suites
+set DJANGO_SETTINGS_MODULE=config.settings.test
+set DEBUG=False
 uv run pytest -q tests\test_smoke_backend.py tests\test_core_backend_suite.py tests\test_core_backend_suite_ext.py tests\test_core_backend_suite_auth.py tests\test_core_backend_suite_ops.py
 if errorlevel 1 goto :fail
 
