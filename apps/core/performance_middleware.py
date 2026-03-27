@@ -55,7 +55,7 @@ class PerformanceMonitorMiddleware:
             if tracemalloc.is_tracing():
                 tracemalloc.get_traced_memory()[0] / (1024 * 1024)
         except Exception:
-            pass
+            logger.debug('tracemalloc_probe_failed', exc_info=True)
 
         # 执行请求
         response = self.get_response(request)

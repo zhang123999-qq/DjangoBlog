@@ -185,6 +185,7 @@ def _collect_metrics(minutes: int = 10):
                     count = int(cache.get(s, 0) or 0)
                     hotspots.append({'user_id': uid, 'bucket': bucket, 'count': count})
     except Exception:
+        logger.exception('moderation_metrics_hotspots_collect_failed')
         hotspots = []
 
     hotspots = sorted(hotspots, key=lambda x: x['count'], reverse=True)[:20]
@@ -261,7 +262,7 @@ def moderation_metrics_api(request):
     minutes = request.query_params.get('minutes', 10)
     try:
         minutes = int(minutes)
-    except Exception:
+    except (TypeError, ValueError):
         minutes = 10
 
     data = _collect_metrics(minutes)

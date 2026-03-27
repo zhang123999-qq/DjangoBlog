@@ -1,4 +1,5 @@
 """核心视图"""
+import logging
 import os
 import time
 from django.shortcuts import render, redirect
@@ -13,6 +14,8 @@ from apps.blog.models import Post, Comment
 from apps.forum.models import Topic
 from apps.accounts.models import User
 from apps.tools.registry import registry as tool_registry
+
+logger = logging.getLogger(__name__)
 
 # .env 文件路径
 ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
@@ -161,6 +164,7 @@ def _check_cache():
         cache.delete(test_key)
         return result == test_value
     except Exception:
+        logger.exception('health_check_cache_failed')
         return False
 
 
