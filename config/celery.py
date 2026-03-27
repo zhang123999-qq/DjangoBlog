@@ -17,9 +17,8 @@ import os
 from celery import Celery
 from django.conf import settings
 
-# 设置默认 Django settings 模块
-# 优先使用外部 DJANGO_SETTINGS_MODULE；未设置时回退到统一入口 config.settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+# 设置默认 Django settings 模块（可被环境变量覆盖）
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
 
 logger = logging.getLogger(__name__)
 
