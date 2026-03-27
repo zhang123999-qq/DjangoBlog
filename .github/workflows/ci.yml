@@ -44,7 +44,19 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.development
           SECRET_KEY: ci-test-secret-key
           DEBUG: "True"
+          DB_ENGINE: django.db.backends.sqlite3
+          DB_NAME: db.sqlite3
+          USE_REDIS: "False"
         run: uv run python manage.py check
+
+      - name: Pytest smoke (P2)
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          SECRET_KEY: ci-test-secret-key
+          DEBUG: "False"
+          USE_REDIS: "False"
+        run: |
+          uv run pytest -q tests/test_p2_smoke.py
 
       - name: Node syntax smoke for key front-end files
         uses: actions/setup-node@v4
