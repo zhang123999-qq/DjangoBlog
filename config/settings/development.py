@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 DEBUG = True
 
 # 开发环境允许所有主机
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 # =============================================================================
 # 数据库配置

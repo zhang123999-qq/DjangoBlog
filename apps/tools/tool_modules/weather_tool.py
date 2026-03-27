@@ -42,7 +42,7 @@ class WeatherTool(BaseTool):
             # 使用OpenWeatherMap API查询天气
             # 注意：这里使用了一个示例API密钥，实际使用时需要替换为真实的API密钥
             api_key = "YOUR_API_KEY"
-            base_url = "http://api.openweathermap.org/data/2.5/weather"
+            base_url = "https://api.openweathermap.org/data/2.5/weather"
             params = {
                 "q": city,
                 "appid": api_key,
@@ -50,7 +50,7 @@ class WeatherTool(BaseTool):
                 "units": "metric" if unit == "celsius" else "imperial"
             }
 
-            response = requests.get(base_url, params=params)
+            response = requests.get(base_url, params=params, timeout=10)
             data = response.json()
 
             if response.status_code == 200:

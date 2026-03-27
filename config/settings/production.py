@@ -185,7 +185,7 @@ DATABASES['default']['CONN_MAX_AGE'] = 600
 # =============================================================================
 
 # 确保关键配置已设置
-if not SECRET_KEY or SECRET_KEY == 'your-secret-key-here':
+if not SECRET_KEY or SECRET_KEY == 'your-secret-key-here':  # nosec B105 - 仅用于检测占位符
     import warnings
     warnings.warn("警告: SECRET_KEY 未设置或使用了默认值，请在 .env 文件中设置安全的密钥！")
 

@@ -27,7 +27,7 @@ def get_local_ip():
 
 def get_allowed_hosts():
     """获取 ALLOWED_HOSTS 列表，自动包含本机 IP"""
-    default_hosts = ['localhost', '127.0.0.1', '0.0.0.0']
+    default_hosts = ['localhost', '127.0.0.1']
 
     # 尝试从环境变量读取
     env_hosts = os.environ.get('ALLOWED_HOSTS', '')

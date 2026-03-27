@@ -75,7 +75,7 @@ class TextTranslatorTool(BaseTool):
             # 过滤掉None值的参数
             params = {k: v for k, v in params.items() if v is not None}
 
-            response = requests.post(base_url, json=params)
+            response = requests.post(base_url, json=params, timeout=10)
             data = response.json()
 
             if response.status_code == 200:

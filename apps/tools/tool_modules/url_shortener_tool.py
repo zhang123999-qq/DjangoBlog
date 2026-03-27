@@ -56,9 +56,8 @@ class URLShortenerTool(BaseTool):
 
     def generate_short_code(self, url):
         """生成短代码"""
-        # 使用MD5哈希生成短代码
-        hash_obj = hashlib.md5(url.encode('utf-8'))
-        hash_hex = hash_obj.hexdigest()
-        # 取前8位作为短代码
-        short_code = hash_hex[:8]
+        # 使用 SHA-256 生成短代码（避免 MD5）
+        hash_hex = hashlib.sha256(url.encode('utf-8')).hexdigest()
+        # 取前 10 位作为短代码，提升抗碰撞性
+        short_code = hash_hex[:10]
         return short_code

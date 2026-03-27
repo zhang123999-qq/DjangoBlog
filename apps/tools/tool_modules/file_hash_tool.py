@@ -5,6 +5,7 @@ from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import hashlib
+import os
 
 
 class FileHashForm(forms.Form):
@@ -16,11 +17,13 @@ class FileHashForm(forms.Form):
     algorithm = forms.ChoiceField(
         label='哈希算法',
         choices=[
-            ('md5', 'MD5'),
-            ('sha1', 'SHA1'),
             ('sha256', 'SHA256'),
+            ('sha512', 'SHA512'),
+            ('blake2b', 'BLAKE2b'),
+            ('md5', 'MD5（仅兼容，不建议安全场景）'),
+            ('sha1', 'SHA1（仅兼容，不建议安全场景）'),
         ],
-        initial='md5',
+        initial='sha256',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
@@ -39,13 +42,17 @@ class FileHashTool(BaseTool):
         algorithm = form.cleaned_data['algorithm']
 
         try:
-            # 选择哈希算法
+            # 选择哈希算法（兼容 md5/sha1，但标记非安全用途）
             if algorithm == 'md5':
-                hash_obj = hashlib.md5()
+                hash_obj = hashlib.md5(usedforsecurity=False)
             elif algorithm == 'sha1':
-                hash_obj = hashlib.sha1()
+                hash_obj = hashlib.sha1(usedforsecurity=False)
             elif algorithm == 'sha256':
                 hash_obj = hashlib.sha256()
+            elif algorithm == 'sha512':
+                hash_obj = hashlib.sha512()
+            elif algorithm == 'blake2b':
+                hash_obj = hashlib.blake2b()
             else:
                 return {'error': '不支持的哈希算法'}
 

@@ -206,9 +206,9 @@ def minify_sql(code):
 def beautify_xml(code, indent=2):
     """Beautify XML"""
     try:
-        import xml.dom.minidom as minidom
+        from defusedxml.minidom import parseString
 
-        dom = minidom.parseString(code)
+        dom = parseString(code)
         result = dom.toprettyxml(indent=' ' * indent)
 
         # Remove extra blank lines

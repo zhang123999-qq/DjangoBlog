@@ -5,12 +5,17 @@ from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
+import base64
+
 try:
-    from Crypto.Cipher import AES
-    from Crypto.Util.Padding import pad, unpad
-    import base64
+    # pycryptodome
+    from Crypto.Cipher import AES  # nosec B413 - 使用 pycryptodome（非废弃 pycrypto）
+    from Crypto.Util.Padding import pad, unpad  # nosec B413 - 使用 pycryptodome
     HAS_CRYPTO = True
 except ImportError:
+    AES = None
+    pad = None
+    unpad = None
     HAS_CRYPTO = False
 
 

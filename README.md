@@ -133,6 +133,28 @@ pytest -q
 
 ---
 
+## 🔐 安全扫描工具安装
+
+为了让 `deploy/test-gate.(bat|sh)` 的可选安全扫描不再 skip，可先安装工具：
+
+### Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File deploy\install-security-tools.ps1
+# 如需尝试自动安装 gitleaks：
+powershell -ExecutionPolicy Bypass -File deploy\install-security-tools.ps1 -WithGitleaks
+```
+
+### Linux/macOS
+
+```bash
+bash deploy/install-security-tools.sh
+# 如需尝试安装 gitleaks：
+bash deploy/install-security-tools.sh --with-gitleaks
+```
+
+安装后门禁会自动执行：`bandit`、`pip-audit`、`gitleaks`（存在即执行）。
+
 ## 🔐 生产部署建议
 
 - 使用 HTTPS 反代（Nginx / Ingress）

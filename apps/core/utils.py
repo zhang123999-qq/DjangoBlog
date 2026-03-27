@@ -9,11 +9,12 @@ from django.utils.text import slugify
 
 
 def generate_slug(text):
-    """生成slug，如果是中文或其他非拉丁字符，使用hash"""
+    """生成 slug；非拉丁字符回退到 SHA-256 截断"""
     slug = slugify(text)
     if not slug:
-        # 中文或其他非拉丁字符，使用hash
-        slug = hashlib.md5(text.encode()).hexdigest()[:8]
+        digest = hashlib.sha256(text.encode('utf-8')).hexdigest()
+        # 保持短长度并增加碰撞安全性
+        slug = digest[:12]
     return slug
 
 

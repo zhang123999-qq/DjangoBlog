@@ -218,7 +218,7 @@ def settings_view(request):
         'site_name': config.get('SITE_NAME', 'Django Blog'),
         'site_description': config.get('SITE_DESCRIPTION', ''),
         'site_url': config.get('SITE_URL', ''),
-        'allow_lan': '*' in config.get('ALLOWED_HOSTS', '') or '0.0.0.0' in config.get('ALLOWED_HOSTS', ''),
+        'allow_lan': '*' in config.get('ALLOWED_HOSTS', ''),
         'debug': config.get('DEBUG', 'True') == 'True',
     }
 
