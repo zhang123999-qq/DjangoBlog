@@ -141,7 +141,7 @@ def healthz_view(request):
         'status': 'healthy' if all_healthy else 'unhealthy',
         'checks': checks,
         'duration_ms': round(duration_ms, 2),
-        'version': '2.3.0',
+        'version': '2.3.2',
     }
 
     return JsonResponse(response_data, status=status_code)

@@ -587,7 +587,7 @@ if SENTRY_DSN:
         sentry_sdk.init(
             dsn=SENTRY_DSN,
             environment=environment,
-            release=f'djangoblog@{env("APP_VERSION", default="2.3.0")}',
+            release=f'djangoblog@{env("APP_VERSION", default="2.3.2")}',
 
             # 集成
             integrations=[
