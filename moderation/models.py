@@ -34,7 +34,14 @@ class ModerationAdmin(models.Model):
     )
 
     target_type = models.CharField(max_length=20, choices=TARGET_TYPE_CHOICES, unique=True, verbose_name='内容类型')
-    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='moderation_roles', verbose_name='审核管理员')
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='moderation_roles',
+        verbose_name='审核管理员',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -57,7 +64,13 @@ class ModerationReminder(models.Model):
 
     target_type = models.CharField(max_length=20, choices=TARGET_TYPE_CHOICES, verbose_name='内容类型')
     target_id = models.PositiveIntegerField(verbose_name='内容ID')
-    assigned_admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='moderation_reminders', verbose_name='指派管理员')
+    assigned_admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='moderation_reminders',
+        verbose_name='指派管理员',
+    )
     is_processed = models.BooleanField(default=False, verbose_name='是否已处理')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     processed_at = models.DateTimeField(null=True, blank=True, verbose_name='处理时间')
@@ -104,7 +117,7 @@ class ModerationLog(models.Model):
 
 
 # 导入信誉模型
-from .reputation import UserReputation, ReputationLog
+from .reputation import UserReputation, ReputationLog  # noqa: E402
 
 __all__ = [
     'SensitiveWord',

@@ -65,7 +65,7 @@ class Command(BaseCommand):
         status, details = moderate_text(text)
 
         self.stdout.write(f'审核结果: {status}')
-        self.stdout.write(f'详细信息:')
+        self.stdout.write('详细信息:')
 
         import json
         self.stdout.write(json.dumps(details, ensure_ascii=False, indent=2))

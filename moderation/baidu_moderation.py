@@ -7,7 +7,6 @@ API 文档: https://cloud.baidu.com/doc/ANTIPORN/s/Nk3h6xb2j
 
 import logging
 from django.conf import settings
-from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 

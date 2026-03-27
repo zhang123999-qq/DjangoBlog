@@ -8,7 +8,7 @@
 """
 
 import logging
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Dict, Any
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
