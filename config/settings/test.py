@@ -3,6 +3,7 @@
 目标：完全隔离外部依赖（MySQL/Redis），确保 CI 与本地测试稳定。
 """
 
+from .base import BASE_DIR
 from .development import *  # noqa
 
 # 测试环境标识
