@@ -24,14 +24,14 @@ class SiteConfig(models.Model):
         """获取或创建唯一的 SiteConfig 实例（带缓存）"""
         cache_key = 'site_config_solo'
         instance = cache.get(cache_key)
-        
+
         if instance is None:
             instance, created = cls.objects.get_or_create(pk=1)
             # 缓存 5 分钟
             cache.set(cache_key, instance, 300)
-        
+
         return instance
-    
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # 更新缓存

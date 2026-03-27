@@ -16,7 +16,7 @@ class CommentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
+
         # 如果用户已登录，隐藏姓名和邮箱字段
         if self.user and self.user.is_authenticated:
             # 使用 del 安全删除字段
@@ -66,14 +66,14 @@ class PostForm(forms.ModelForm):
                 'class': 'form-check-input'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # 设置分类和标签选项
         self.fields['category'].queryset = Category.objects.all()
         self.fields['category'].empty_label = '请选择分类'
         self.fields['tags'].queryset = Tag.objects.all()
-        
+
         # 可选字段提示
         self.fields['summary'].required = False
         self.fields['category'].required = False

@@ -25,18 +25,18 @@ class IPDetectorTool(BaseTool):
     def handle(self, request, form):
         # 获取访问者真实IP
         ip = self._get_client_ip(request)
-        
+
         if not ip:
             return {'error': '无法获取IP地址'}
-        
+
         # 查询IP信息
         ip_info = self._query_ip_info(ip)
-        
+
         return {
             'ip': ip,
             'ip_info': ip_info,
         }
-    
+
     def _get_client_ip(self, request):
         """获取客户端真实IP地址"""
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -45,7 +45,7 @@ class IPDetectorTool(BaseTool):
             ip = x_forwarded_for.split(',')[0].strip()
         else:
             ip = request.META.get('REMOTE_ADDR', '')
-        
+
         # 处理本地开发环境
         if ip in ['127.0.0.1', '::1', 'localhost']:
             # 尝试获取公网IP
@@ -53,20 +53,24 @@ class IPDetectorTool(BaseTool):
                 response = requests.get('https://api.ipify.org?format=json', timeout=5)
                 if response.status_code == 200:
                     return response.json().get('ip', ip)
-            except:
+            except Exception:
                 pass
-        
+
         return ip
-    
+
     def _query_ip_info(self, ip):
         """查询IP详细信息"""
         result = {}
-        
+
         # 使用 ip-api.com (免费，支持中文)
         try:
+            fields = (
+                'status,country,countryCode,region,regionName,city,zip,lat,lon,'
+                'timezone,isp,org,as,asname,query'
+            )
             response = requests.get(
-                f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=status,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,query",
-                timeout=10
+                f"http://ip-api.com/json/{ip}?lang=zh-CN&fields={fields}",
+                timeout=10,
             )
             if response.status_code == 200:
                 data = response.json()
@@ -87,7 +91,7 @@ class IPDetectorTool(BaseTool):
                     }
         except Exception as e:
             result['error'] = str(e)
-        
+
         # 补充 ipinfo.io 信息
         try:
             response = requests.get(f"https://ipinfo.io/{ip}/json", timeout=10)
@@ -97,7 +101,7 @@ class IPDetectorTool(BaseTool):
                     result['timezone'] = data.get('timezone', '-')
                 # 添加hostname
                 result['hostname'] = data.get('hostname', '-')
-        except:
+        except Exception:
             pass
-        
+
         return result

@@ -89,7 +89,7 @@ def _peek_header(upload, size: int = 32) -> bytes:
     pos = upload.tell()
     header = upload.read(size)
     upload.seek(pos)
-    return header
+    return bytes(header)
 
 
 def _looks_like_webp(header: bytes) -> bool:
@@ -368,4 +368,3 @@ def upload_file(request):
     except Exception:
         logger.exception('upload_file failed')
         return Response(api_error_payload(ErrorCodes.UPLOAD_SAVE_FAILED), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-

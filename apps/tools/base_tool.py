@@ -1,15 +1,20 @@
-from .categories import ToolCategory, TOOL_CATEGORIES
+from typing import ClassVar
+
+from django import forms
+
+from .categories import TOOL_CATEGORIES, ToolCategory
 
 
 class BaseTool:
     """工具基类"""
-    name = "工具"
-    slug = "tool"
-    description = "工具描述"
-    icon = "bi-tools"
-    category = ToolCategory.OTHER  # 默认分类
-    template_name = "tools/tool_detail.html"
-    form_class = None
+
+    name: ClassVar[str] = "工具"
+    slug: ClassVar[str] = "tool"
+    description: ClassVar[str] = "工具描述"
+    icon: ClassVar[str] = "bi-tools"
+    category: ClassVar[str] = ToolCategory.OTHER
+    template_name: ClassVar[str] = "tools/tool_detail.html"
+    form_class: ClassVar[type[forms.Form] | None] = None
 
     def get_form(self, data=None, files=None):
         """获取表单实例"""

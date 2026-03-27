@@ -101,7 +101,7 @@ class Post(models.Model):
                 # 标题为空时，使用时间戳作为 slug
                 from django.utils import timezone
                 self.slug = f'post-{timezone.now().timestamp():.0f}'
-        
+
         # 确保 slug 唯一
         original_slug = self.slug
         counter = 1
@@ -115,12 +115,12 @@ class Post(models.Model):
             # slug 已存在，添加数字后缀
             self.slug = f'{original_slug}-{counter}'
             counter += 1
-        
+
         # 设置发布时间
         if self.status == 'published' and not self.published_at:
             from django.utils import timezone
             self.published_at = timezone.now()
-        
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -132,7 +132,7 @@ class Post(models.Model):
     def increase_views(self):
         """
         增加浏览量（使用 Redis 计数，异步同步到数据库）
-        
+
         性能优化：
         - 避免每次请求都写数据库
         - 使用 Redis INCR 原子操作
@@ -141,7 +141,7 @@ class Post(models.Model):
         try:
             # 使用 Redis 计数
             cache_key = f'{VIEWS_CACHE_PREFIX}{self.pk}'
-            
+
             # 原子递增
             if hasattr(cache, 'incr'):
                 # django-redis 支持 incr
@@ -155,10 +155,10 @@ class Post(models.Model):
                 Post.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
                 self.refresh_from_db(fields=['views_count'])
                 return
-            
+
             # 更新内存中的值（乐观估计）
             self.views_count = F('views_count') + 1
-            
+
         except Exception as e:
             # 异常时降级到数据库直接更新
             import logging
@@ -174,15 +174,29 @@ class Comment(models.Model):
         ('approved', '已通过'),
         ('rejected', '已拒绝'),
     )
-    
+
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', verbose_name='文章')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='comments', verbose_name='用户')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='comments',
+        verbose_name='用户',
+    )
     name = models.CharField(max_length=50, blank=True, verbose_name='姓名')
     email = models.EmailField(blank=True, verbose_name='邮箱')
     content = models.TextField(verbose_name='评论内容')
     is_approved = models.BooleanField(default=False)  # 保持兼容
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='pending', verbose_name='审核状态')
-    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_comments', verbose_name='审核人')
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_comments',
+        verbose_name='审核人',
+    )
     reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name='审核时间')
     review_note = models.TextField(blank=True, verbose_name='审核备注')
     ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP地址')
@@ -206,19 +220,19 @@ class Comment(models.Model):
         if self.user:
             return f'{self.user.username} 评论了 {self.post.title}'
         return f'{self.name} 评论了 {self.post.title}'
-    
+
     @property
     def is_pending(self):
         return self.review_status == 'pending'
-    
+
     @property
     def is_approved_status(self):
         return self.review_status == 'approved'
-    
+
     @property
     def is_rejected(self):
         return self.review_status == 'rejected'
-    
+
     def update_like_count(self):
         """更新点赞数"""
         self.like_count = self.likes.count()

@@ -38,11 +38,11 @@ class BaseConverterTool(BaseTool):
     def handle(self, request, form):
         number = form.cleaned_data['number'].strip()
         from_base = int(form.cleaned_data['from_base'])
-        
+
         try:
             # 先转换为十进制
             decimal_value = int(number, from_base)
-            
+
             # 转换为各种进制
             results = {
                 'binary': bin(decimal_value)[2:],
@@ -50,7 +50,7 @@ class BaseConverterTool(BaseTool):
                 'decimal': str(decimal_value),
                 'hexadecimal': hex(decimal_value)[2:].upper(),
             }
-            
+
             return {
                 'input': number,
                 'from_base': from_base,

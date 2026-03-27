@@ -36,7 +36,7 @@ class UnicodeTool(BaseTool):
     def handle(self, request, form):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
-        
+
         try:
             if mode == 'encode':
                 # 中文转Unicode
@@ -44,7 +44,7 @@ class UnicodeTool(BaseTool):
             else:
                 # Unicode转中文
                 result = text.encode('utf-8').decode('unicode-escape')
-            
+
             return {
                 'mode': mode,
                 'original': text,

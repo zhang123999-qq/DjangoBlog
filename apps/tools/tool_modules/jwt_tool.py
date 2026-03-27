@@ -59,22 +59,22 @@ class JWTTool(BaseTool):
 
     def handle(self, request, form):
         mode = form.cleaned_data['mode']
-        
+
         try:
             if mode == 'decode':
                 token = form.cleaned_data.get('token', '')
                 if not token:
                     return {'error': '请输入JWT Token'}
-                
+
                 parts = token.split('.')
                 if len(parts) != 3:
                     return {'error': '无效的JWT格式'}
-                
+
                 # 解码各部分
                 header = json.loads(self.base64url_decode(parts[0]))
                 payload = json.loads(self.base64url_decode(parts[1]))
                 signature = parts[2]
-                
+
                 return {
                     'mode': 'decode',
                     'header': header,
@@ -87,17 +87,17 @@ class JWTTool(BaseTool):
                 # 生成JWT（仅作演示，不验证签名）
                 header_str = form.cleaned_data.get('header', '{}')
                 payload_str = form.cleaned_data.get('payload', '{}')
-                
+
                 header = json.loads(header_str) if header_str else {}
                 payload = json.loads(payload_str) if payload_str else {}
-                
+
                 # 编码
                 header_b64 = self.base64url_encode(json.dumps(header).encode())
                 payload_b64 = self.base64url_encode(json.dumps(payload).encode())
                 signature_b64 = self.base64url_encode(b'fake-signature')
-                
+
                 token = f'{header_b64}.{payload_b64}.{signature_b64}'
-                
+
                 return {
                     'mode': 'encode',
                     'token': token,

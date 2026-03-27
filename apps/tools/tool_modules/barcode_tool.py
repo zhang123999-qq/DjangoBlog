@@ -54,15 +54,14 @@ class BarcodeTool(BaseTool):
     def handle(self, request, form):
         text = form.cleaned_data['text']
         barcode_type = form.cleaned_data['barcode_type']
-        width = form.cleaned_data['width']
         height = form.cleaned_data['height']
-        
+
         try:
             import barcode
             from barcode.writer import ImageWriter
         except ImportError:
             return {'error': '请安装 python-barcode: pip install python-barcode pillow'}
-        
+
         try:
             # 获取条形码类
             barcode_class = None
@@ -83,13 +82,13 @@ class BarcodeTool(BaseTool):
                 if len(text) != 11 or not text.isdigit():
                     return {'error': 'UPC-A需要11位数字'}
                 barcode_class = barcode.get_barcode_class('upca')
-            
+
             if not barcode_class:
                 return {'error': '不支持的条形码类型'}
-            
+
             # 创建条形码
             barcode_instance = barcode_class(text, writer=ImageWriter())
-            
+
             # 生成图片 - 优化比例，高度为宽度的1/4左右
             buffer = BytesIO()
             # module_height 控制条的高度，使用较小的值避免图片过高
@@ -103,11 +102,11 @@ class BarcodeTool(BaseTool):
                 'text_distance': 3,  # 文字与条码的距离
             })
             buffer.seek(0)
-            
+
             # 转换为Base64
             image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
             buffer.close()
-            
+
             return {
                 'text': text,
                 'barcode_type': barcode_type,

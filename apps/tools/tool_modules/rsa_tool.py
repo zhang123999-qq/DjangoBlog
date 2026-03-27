@@ -41,15 +41,15 @@ class RSATool(BaseTool):
     def handle(self, request, form):
         try:
             from cryptography.hazmat.primitives import serialization, hashes
-            from cryptography.hazmat.primitives.asymmetric import rsa, padding
+            from cryptography.hazmat.primitives.asymmetric import padding
             import base64
         except ImportError:
             return {'error': '请安装 cryptography: pip install cryptography'}
-        
+
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
         key_pem = form.cleaned_data['key']
-        
+
         try:
             if mode == 'encrypt':
                 # 加载公钥

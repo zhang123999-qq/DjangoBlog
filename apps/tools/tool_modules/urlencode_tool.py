@@ -44,13 +44,13 @@ class URLEncodeTool(BaseTool):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
         safe = form.cleaned_data['safe'] or ''
-        
+
         try:
             if mode == 'encode':
                 result = quote(text, safe=safe)
             else:
                 result = unquote(text)
-            
+
             return {
                 'mode': mode,
                 'original': text,

@@ -25,17 +25,17 @@ class EXIFTool(BaseTool):
 
     def handle(self, request, form):
         uploaded_file = form.cleaned_data['file']
-        
+
         try:
             from PIL import Image
             from PIL.ExifTags import TAGS
         except ImportError:
             return {'error': '请安装 pillow: pip install pillow'}
-        
+
         try:
             # 打开图片
             image = Image.open(uploaded_file)
-            
+
             # 提取EXIF数据
             exif_data = {}
             if hasattr(image, '_getexif'):
@@ -44,11 +44,11 @@ class EXIFTool(BaseTool):
                     for tag, value in exif.items():
                         tag_name = TAGS.get(tag, tag)
                         exif_data[tag_name] = value
-            
+
             # 如果没有EXIF数据
             if not exif_data:
                 return {'filename': uploaded_file.name, 'message': '未找到EXIF元数据'}
-            
+
             return {
                 'filename': uploaded_file.name,
                 'exif_data': exif_data

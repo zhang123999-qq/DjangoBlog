@@ -69,26 +69,26 @@ class MorseCodeTool(BaseTool):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
         separator = form.cleaned_data['separator']
-        
+
         # 获取分隔符
         sep_map = {'space': ' ', 'slash': '/', 'pipe': '|'}
         sep = sep_map.get(separator, ' ')
-        
+
         try:
             if mode == 'encode':
                 result = self._encode(text, sep)
             else:
                 result = self._decode(text, sep)
-            
+
             return {
                 'mode': '编码' if mode == 'encode' else '解码',
                 'original': text,
                 'result': result,
             }
-            
+
         except Exception as e:
             return {'error': f'转换失败: {str(e)}'}
-    
+
     def _encode(self, text, sep):
         """文本转摩斯密码"""
         result = []
@@ -98,9 +98,9 @@ class MorseCodeTool(BaseTool):
             else:
                 # 未知字符用问号表示
                 result.append('..--..')
-        
+
         return sep.join(result)
-    
+
     def _decode(self, text, sep):
         """摩斯密码转文本"""
         # 自动检测分隔符
@@ -115,7 +115,7 @@ class MorseCodeTool(BaseTool):
                     word_result.append(MORSE_CODE_REVERSE.get(code, '?'))
                 result_words.append(''.join(word_result))
             return ' '.join(result_words)
-        
+
         # 尝试不同的分隔符
         for possible_sep in [' ', '/', '|', '\n']:
             if possible_sep in text:
@@ -123,7 +123,7 @@ class MorseCodeTool(BaseTool):
                 break
         else:
             parts = [text]
-        
+
         result = []
         for code in parts:
             code = code.strip()
@@ -132,5 +132,5 @@ class MorseCodeTool(BaseTool):
                     result.append(' ')
                 else:
                     result.append(MORSE_CODE_REVERSE.get(code, '?'))
-        
+
         return ''.join(result)

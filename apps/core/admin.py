@@ -5,8 +5,6 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
-from django.utils.html import format_html
-from django.urls import reverse
 from django.db.models import Sum
 from datetime import datetime, timedelta
 import sys
@@ -18,7 +16,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
     site_header = 'DjangoBlog 管理后台'
     site_title = 'DjangoBlog Admin'
     index_title = '仪表盘'
-    
+
     def index(self, request, extra_context=None):
         """自定义首页，添加统计数据"""
         from django.utils import timezone
@@ -27,17 +25,17 @@ class DjangoBlogAdminSite(admin.AdminSite):
         from apps.blog.models import Post, Comment, Category, Tag
         from apps.forum.models import Topic, Reply, Board
         from apps.tools.registry import tool_registry
-        
+
         extra_context = extra_context or {}
-        
+
         # 工具统计
         tools = tool_registry.get_all_tools()
         tool_count = len(tools)
-        
+
         # 系统信息
         db_backend = settings.DATABASES['default']['ENGINE'].split('.')[-1]
         db_engine_display = {'sqlite3': 'SQLite', 'mysql': 'MySQL', 'postgresql': 'PostgreSQL'}.get(db_backend, db_backend.upper())
-        
+
         # Redis 信息
         redis_info = '未启用'
         try:
@@ -45,9 +43,9 @@ class DjangoBlogAdminSite(admin.AdminSite):
             r = redis.Redis(host='localhost', port=6379, socket_connect_timeout=2)
             info = r.info()
             redis_info = f"Redis {info.get('redis_version', 'Unknown')}"
-        except:
+        except Exception:
             pass
-        
+
         extra_context.update({
             # 系统信息
             'django_version': __import__('django').VERSION,
@@ -58,7 +56,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
             'redis_info': redis_info,
             'server_time': timezone.now(),
             'os_info': f"{platform.system()} {platform.release()}",
-            
+
             # 业务统计
             'user_count': User.objects.count(),
             'post_count': Post.objects.filter(status='published').count(),
@@ -70,22 +68,22 @@ class DjangoBlogAdminSite(admin.AdminSite):
             'board_count': Board.objects.count(),
             'tools_list': tools[:10],
         })
-        
+
         # 今日统计
         today = datetime.now().date()
         extra_context['today_users'] = User.objects.filter(date_joined__date=today).count()
         extra_context['today_posts'] = Post.objects.filter(created_at__date=today).count()
         extra_context['today_comments'] = Comment.objects.filter(created_at__date=today).count()
-        
+
         # 待审核
         extra_context['pending_comments'] = Comment.objects.filter(review_status='pending').count()
         extra_context['pending_replies'] = Reply.objects.filter(review_status='pending').count()
         extra_context['pending_topics'] = Topic.objects.filter(review_status='pending').count()
-        
+
         # 总浏览量
         total_views = Post.objects.aggregate(total=Sum('views_count'))['total'] or 0
         extra_context['total_views'] = total_views
-        
+
         # 最近7天数据
         week_data = []
         for i in range(7):
@@ -98,7 +96,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
                 'comments': day_comments
             })
         extra_context['week_data'] = week_data
-        
+
         return super().index(request, extra_context)
 
 
@@ -126,7 +124,7 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ['username', 'email', 'nickname']
     ordering = ['-date_joined']
     actions = ['activate_users', 'deactivate_users']
-    
+
     fieldsets = (
         ('基本信息', {
             'fields': ('username', 'email', 'nickname', 'password')
@@ -140,12 +138,12 @@ class CustomUserAdmin(UserAdmin):
             'classes': ('collapse',)
         }),
     )
-    
+
     def activate_users(self, request, queryset):
         count = queryset.update(is_active=True)
         self.message_user(request, f'成功激活 {count} 个用户')
     activate_users.short_description = '激活所选用户'
-    
+
     def deactivate_users(self, request, queryset):
         count = queryset.update(is_active=False)
         self.message_user(request, f'成功禁用 {count} 个用户')
@@ -189,7 +187,7 @@ class PostAdmin(admin.ModelAdmin):
     filter_horizontal = ['tags']
     date_hierarchy = 'published_at'
     actions = ['publish_posts', 'unpublish_posts']
-    
+
     # 为 content 字段添加更多行
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -207,7 +205,7 @@ class PostAdmin(admin.ModelAdmin):
                 'style': 'width: 100%;',
             })
         return form
-    
+
     # 添加 TinyMCE 编辑器媒体文件
     class Media:
         js = (
@@ -217,7 +215,7 @@ class PostAdmin(admin.ModelAdmin):
         css = {
             'all': ('css/admin-editor.css',),
         }
-    
+
     fieldsets = (
         ('文章内容', {
             'fields': ('title', 'slug', 'summary', 'content', 'author')
@@ -229,12 +227,12 @@ class PostAdmin(admin.ModelAdmin):
             'fields': ('status', 'allow_comments', 'published_at')
         }),
     )
-    
+
     def publish_posts(self, request, queryset):
         count = queryset.update(status='published')
         self.message_user(request, f'成功发布 {count} 篇文章')
     publish_posts.short_description = '发布所选文章'
-    
+
     def unpublish_posts(self, request, queryset):
         count = queryset.update(status='draft')
         self.message_user(request, f'成功取消发布 {count} 篇文章')
@@ -249,18 +247,18 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ['content', 'user__username', 'post__title']
     actions = ['approve_comments', 'reject_comments']
     list_editable = ['review_status']
-    
+
     def content_short(self, obj):
         return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
     content_short.short_description = '内容'
-    
+
     def approve_comments(self, request, queryset):
         from moderation.services import approve_instance
         for comment in queryset:
             approve_instance(comment, request.user, note="")
         self.message_user(request, f'成功审核通过 {queryset.count()} 条评论')
     approve_comments.short_description = '审核通过所选评论'
-    
+
     def reject_comments(self, request, queryset):
         from moderation.services import reject_instance
         for comment in queryset:
@@ -278,11 +276,11 @@ class BoardAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'topic_count', 'reply_count', 'created_at']
     search_fields = ['name', 'description']
     prepopulated_fields = {'slug': ('name',)}
-    
+
     def topic_count(self, obj):
         return obj.topics.count()
     topic_count.short_description = '主题数'
-    
+
     def reply_count(self, obj):
         from apps.forum.models import Reply
         return Reply.objects.filter(topic__board=obj).count()
@@ -297,26 +295,26 @@ class TopicAdmin(admin.ModelAdmin):
     search_fields = ['title', 'content', 'author__username']
     date_hierarchy = 'created_at'
     actions = ['approve_topics', 'reject_topics', 'pin_topics', 'lock_topics']
-    
+
     def approve_topics(self, request, queryset):
         from moderation.services import approve_instance
         for topic in queryset:
             approve_instance(topic, request.user, note="")
         self.message_user(request, f'成功审核通过 {queryset.count()} 个主题')
     approve_topics.short_description = '审核通过所选主题'
-    
+
     def reject_topics(self, request, queryset):
         from moderation.services import reject_instance
         for topic in queryset:
             reject_instance(topic, request.user, note="")
         self.message_user(request, f'成功拒绝 {queryset.count()} 个主题')
     reject_topics.short_description = '拒绝所选主题'
-    
+
     def pin_topics(self, request, queryset):
         count = queryset.update(is_pinned=True)
         self.message_user(request, f'成功置顶 {count} 个主题')
     pin_topics.short_description = '置顶所选主题'
-    
+
     def lock_topics(self, request, queryset):
         count = queryset.update(is_locked=True)
         self.message_user(request, f'成功锁定 {count} 个主题')
@@ -330,18 +328,18 @@ class ReplyAdmin(admin.ModelAdmin):
     list_filter = ['review_status', 'created_at']
     search_fields = ['content', 'author__username', 'topic__title']
     actions = ['approve_replies', 'reject_replies']
-    
+
     def content_short(self, obj):
         return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
     content_short.short_description = '内容'
-    
+
     def approve_replies(self, request, queryset):
         from moderation.services import approve_instance
         for reply in queryset:
             approve_instance(reply, request.user, note="")
         self.message_user(request, f'成功审核通过 {queryset.count()} 条回复')
     approve_replies.short_description = '审核通过所选回复'
-    
+
     def reject_replies(self, request, queryset):
         from moderation.services import reject_instance
         for reply in queryset:
@@ -361,12 +359,12 @@ class SensitiveWordAdmin(admin.ModelAdmin):
     search_fields = ['word']
     list_editable = ['is_active', 'category']
     actions = ['activate_words', 'deactivate_words']
-    
+
     def activate_words(self, request, queryset):
         count = queryset.update(is_active=True)
         self.message_user(request, f'成功启用 {count} 个敏感词')
     activate_words.short_description = '启用所选敏感词'
-    
+
     def deactivate_words(self, request, queryset):
         count = queryset.update(is_active=False)
         self.message_user(request, f'成功禁用 {count} 个敏感词')
@@ -388,7 +386,7 @@ class ModerationReminderAdmin(admin.ModelAdmin):
     search_fields = ['target_id']
     readonly_fields = ['target_type', 'target_id', 'assigned_admin', 'created_at']
     actions = ['mark_as_processed']
-    
+
     def mark_as_processed(self, request, queryset):
         from django.utils import timezone
         count = queryset.filter(is_processed=False).update(is_processed=True, processed_at=timezone.now())
@@ -414,23 +412,23 @@ class UserReputationAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'user__email']
     readonly_fields = ['created_at', 'updated_at']
     actions = ['add_bonus', 'add_penalty', 'reset_score']
-    
+
     def level_display(self, obj):
         return obj.get_level_display()
     level_display.short_description = '信誉等级'
-    
+
     def add_bonus(self, request, queryset):
         for rep in queryset:
             rep.update_score(5, '管理员奖励')
         self.message_user(request, f'已为 {queryset.count()} 个用户奖励 5 分')
     add_bonus.short_description = '奖励 5 分'
-    
+
     def add_penalty(self, request, queryset):
         for rep in queryset:
             rep.update_score(-5, '管理员惩罚')
         self.message_user(request, f'已对 {queryset.count()} 个用户扣 5 分')
     add_penalty.short_description = '惩罚 5 分'
-    
+
     def reset_score(self, request, queryset):
         for rep in queryset:
             rep.update_score(50 - rep.score, '管理员重置')

@@ -24,30 +24,30 @@ def setup_logging():
     """配置日志记录器"""
     log_dir = Path(__file__).parent / "logs"
     log_dir.mkdir(exist_ok=True)
-    
+
     log_file = log_dir / f"test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    
+
     formatter = logging.Formatter(
         '%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    
+
     # 文件处理器
     file_handler = logging.FileHandler(log_file, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
-    
+
     # 控制台处理器
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
-    
+
     # 配置根日志
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-    
+
     return logging.getLogger(__name__)
 
 logger = setup_logging()
@@ -149,7 +149,7 @@ def test_captcha(request):
 def browser(headless, slow_mo):
     """创建浏览器实例"""
     logger.info(f"启动浏览器，headless={headless}, slow_mo={slow_mo}ms")
-    
+
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=headless,
@@ -255,10 +255,10 @@ def screenshot_helper(page) -> ScreenshotHelper:
 def logged_in_page(page, base_url, test_captcha):
     """已登录的页面实例"""
     logger.info("执行自动登录")
-    
+
     login_page = LoginPage(page, base_url)
     login_page.login('admin', 'asd123456', test_captcha)
-    
+
     # 等待登录结果
     if login_page.is_login_success():
         logger.info("登录成功")
@@ -267,7 +267,7 @@ def logged_in_page(page, base_url, test_captcha):
         error_msg = login_page.get_error_message()
         if error_msg:
             logger.warning(f"错误信息: {error_msg}")
-    
+
     yield page
 
 
@@ -310,7 +310,7 @@ def pytest_runtest_makereport(item, call):
     """测试失败时自动截图和记录"""
     outcome = yield
     report = outcome.get_result()
-    
+
     if report.when == "call" and report.failed:
         try:
             if "page" in item.funcargs:
@@ -319,7 +319,7 @@ def pytest_runtest_makereport(item, call):
                 screenshot_path = SCREENSHOT_DIR / screenshot_name
                 page.screenshot(path=str(screenshot_path))
                 logger.error(f"测试失败，截图已保存: {screenshot_path}")
-                
+
                 # 附加到报告
                 report.extra = getattr(report, 'extra', [])
                 report.extra.append({
@@ -327,12 +327,12 @@ def pytest_runtest_makereport(item, call):
                     'content': str(screenshot_path),
                     'type': 'image'
                 })
-                
+
                 # 保存页面内容
                 html_path = SCREENSHOT_DIR / f"{item.name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
                 html_path.write_text(page.content(), encoding='utf-8')
                 logger.info(f"页面HTML已保存: {html_path}")
-                
+
         except Exception as e:
             logger.error(f"截图失败: {e}")
 
@@ -347,9 +347,9 @@ def setup_test_environment(request):
     logger.info(f"超时时间: {request.config.getoption('--timeout')}ms")
     logger.info(f"重试次数: {request.config.getoption('--retries')}")
     logger.info("=" * 60)
-    
+
     yield
-    
+
     logger.info("=" * 60)
     logger.info("测试会话结束")
     logger.info("=" * 60)
@@ -396,7 +396,7 @@ def pytest_runtest_protocol(item, nextitem):
     retries = item.config.getoption("--retries")
     if retries <= 0:
         return
-    
+
     # 使用 pytest-rerunfailures 插件实现重试
     # 或者手动实现
     pass

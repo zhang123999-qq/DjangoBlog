@@ -1,5 +1,4 @@
 from django.test import TestCase
-from django.urls import reverse
 import os
 
 
@@ -20,11 +19,11 @@ class ToolsTestCase(TestCase):
     def test_tool_registry(self):
         """测试工具注册表"""
         from .registry import registry
-        
+
         # 测试获取所有工具
         tools = registry.get_all_tools()
         self.assertGreater(len(tools), 0)
-        
+
         # 测试获取单个工具
         base64_tool = registry.get_tool('base64-codec')
         self.assertIsNotNone(base64_tool)
@@ -33,16 +32,16 @@ class ToolsTestCase(TestCase):
     def test_base64_codec_logic(self):
         """测试Base64编解码逻辑"""
         from .registry import registry
-        
+
         # 获取Base64工具
         tool = registry.get_tool('base64-codec')
         self.assertIsNotNone(tool)
-        
+
         # 测试编码功能
         form_data = {'action': 'encode', 'text': 'test'}
         form = tool.get_form(form_data)
         self.assertTrue(form.is_valid())
-        
+
         # 测试解码功能
         form_data = {'action': 'decode', 'text': 'dGVzdA=='}
         form = tool.get_form(form_data)
@@ -51,11 +50,11 @@ class ToolsTestCase(TestCase):
     def test_text_counter_logic(self):
         """测试文本计数逻辑"""
         from .registry import registry
-        
+
         # 获取文本计数工具
         tool = registry.get_tool('text-counter')
         self.assertIsNotNone(tool)
-        
+
         # 测试文本计数
         form_data = {'text': 'Hello world! This is a test.'}
         form = tool.get_form(form_data)

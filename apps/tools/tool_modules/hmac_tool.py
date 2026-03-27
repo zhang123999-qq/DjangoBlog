@@ -57,7 +57,7 @@ class HMACTool(BaseTool):
         message = form.cleaned_data['message'].encode('utf-8')
         algorithm = form.cleaned_data['algorithm']
         output_format = form.cleaned_data['output_format']
-        
+
         try:
             # 选择哈希算法
             if algorithm == 'md5':
@@ -70,17 +70,17 @@ class HMACTool(BaseTool):
                 hash_func = hashlib.sha512
             else:
                 return {'error': '不支持的哈希算法'}
-            
+
             # 生成HMAC
             h = hmac.new(key, message, hash_func)
             digest = h.digest()
-            
+
             # 格式化输出
             if output_format == 'hex':
                 result = digest.hex()
             else:
                 result = base64.b64encode(digest).decode('utf-8')
-            
+
             return {
                 'key': form.cleaned_data['key'],
                 'message': form.cleaned_data['message'],

@@ -48,9 +48,9 @@ def install_prod():
 def clean():
     """清理缓存和临时文件"""
     safe_print("[清理] 缓存和临时文件...")
-    
+
     count = 0
-    
+
     # 清理 __pycache__
     for pycache in BASE_DIR.rglob("__pycache__"):
         try:
@@ -58,7 +58,7 @@ def clean():
             count += 1
         except Exception:
             pass
-    
+
     # 清理 .pyc 文件
     for pyc in BASE_DIR.rglob("*.pyc"):
         try:
@@ -66,22 +66,22 @@ def clean():
             count += 1
         except Exception:
             pass
-    
+
     # 清理 .pytest_cache
     pytest_cache = BASE_DIR / ".pytest_cache"
     if pytest_cache.exists():
         shutil.rmtree(pytest_cache, ignore_errors=True)
         count += 1
-    
+
     # 清理 tmp 目录
     tmp_dir = BASE_DIR / "tmp"
     if tmp_dir.exists():
         shutil.rmtree(tmp_dir, ignore_errors=True)
         count += 1
-    
+
     # 清理 .venv 中的缓存（排除）
     # 不清理 .venv 目录
-    
+
     safe_print(f"[完成] 已清理 {count} 项")
     return 0
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         show_help()
         sys.exit(0)
-    
+
     command = sys.argv[1]
     commands = {
         "install-dev": install_dev,
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         "collectstatic": collectstatic,
         "help": show_help,
     }
-    
+
     if command in commands:
         sys.exit(commands[command]())
     else:

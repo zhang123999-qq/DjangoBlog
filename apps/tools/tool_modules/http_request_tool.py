@@ -12,7 +12,7 @@ class HTTPRequestForm(forms.Form):
     url = forms.CharField(
         label='URL',
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'placeholder': 'https://api.example.com/endpoint'
         }),
         required=True,
@@ -35,8 +35,8 @@ class HTTPRequestForm(forms.Form):
     headers = forms.CharField(
         label='请求头（JSON格式）',
         widget=forms.Textarea(attrs={
-            'rows': 4, 
-            'class': 'form-control', 
+            'rows': 4,
+            'class': 'form-control',
             'placeholder': '{"Content-Type": "application/json", "Authorization": "Bearer token"}'
         }),
         required=False,
@@ -45,7 +45,7 @@ class HTTPRequestForm(forms.Form):
     data = forms.CharField(
         label='请求体（POST/PUT/PATCH）',
         widget=forms.Textarea(attrs={
-            'rows': 5, 
+            'rows': 5,
             'class': 'form-control',
             'placeholder': '{"key": "value"}'
         }),
@@ -95,12 +95,12 @@ class HTTPRequestTool(BaseTool):
         content_type = form.cleaned_data['content_type']
         timeout = form.cleaned_data['timeout']
         follow_redirects = form.cleaned_data['follow_redirects']
-        
+
         try:
             import requests
         except ImportError:
             return {'error': '请安装 requests: pip install requests'}
-        
+
         try:
             # 解析请求头
             headers_dict = {}
@@ -109,18 +109,18 @@ class HTTPRequestTool(BaseTool):
                     headers_dict = json.loads(headers)
                 except json.JSONDecodeError as e:
                     return {'error': f'请求头JSON解析错误: {str(e)}'}
-            
+
             # 添加Content-Type
             if method in ['POST', 'PUT', 'PATCH'] and data:
                 headers_dict['Content-Type'] = content_type
-            
+
             # 发送请求
             session = requests.Session()
-            
+
             if method == 'GET':
                 response = session.get(
-                    url, 
-                    headers=headers_dict, 
+                    url,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
@@ -128,12 +128,12 @@ class HTTPRequestTool(BaseTool):
                 if content_type == 'application/json' and data:
                     try:
                         data = json.loads(data)
-                    except:
+                    except Exception:
                         pass
                 response = session.post(
-                    url, 
-                    data=data, 
-                    headers=headers_dict, 
+                    url,
+                    data=data,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
@@ -141,19 +141,19 @@ class HTTPRequestTool(BaseTool):
                 if content_type == 'application/json' and data:
                     try:
                         data = json.loads(data)
-                    except:
+                    except Exception:
                         pass
                 response = session.put(
-                    url, 
-                    data=data, 
-                    headers=headers_dict, 
+                    url,
+                    data=data,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
             elif method == 'DELETE':
                 response = session.delete(
-                    url, 
-                    headers=headers_dict, 
+                    url,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
@@ -161,30 +161,30 @@ class HTTPRequestTool(BaseTool):
                 if content_type == 'application/json' and data:
                     try:
                         data = json.loads(data)
-                    except:
+                    except Exception:
                         pass
                 response = session.patch(
-                    url, 
-                    data=data, 
-                    headers=headers_dict, 
+                    url,
+                    data=data,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
             elif method == 'HEAD':
                 response = session.head(
-                    url, 
-                    headers=headers_dict, 
+                    url,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
             elif method == 'OPTIONS':
                 response = session.options(
-                    url, 
-                    headers=headers_dict, 
+                    url,
+                    headers=headers_dict,
                     timeout=timeout,
                     allow_redirects=follow_redirects
                 )
-            
+
             # 解析响应
             result = {
                 'url': response.url,
@@ -193,30 +193,30 @@ class HTTPRequestTool(BaseTool):
                 'status_text': response.reason,
                 'headers': dict(response.headers),
             }
-            
+
             # 响应时间
             result['response_time'] = f"{response.elapsed.total_seconds() * 1000:.2f}ms"
-            
+
             # 响应内容
             if method != 'HEAD':
                 try:
                     # 尝试解析为JSON
                     result['content'] = response.json()
                     result['content_type'] = 'json'
-                except:
+                except Exception:
                     # 返回文本
                     result['content'] = response.text[:5000] if len(response.text) > 5000 else response.text
                     result['content_type'] = 'text'
-                
+
                 # 内容编码
                 result['encoding'] = response.encoding
-            
+
             # Cookies
             if response.cookies:
                 result['cookies'] = dict(response.cookies)
-            
+
             return result
-            
+
         except requests.Timeout:
             return {'error': '请求超时'}
         except requests.ConnectionError as e:

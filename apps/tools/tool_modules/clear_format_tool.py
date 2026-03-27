@@ -70,33 +70,33 @@ class ClearFormatTool(BaseTool):
         normalize_whitespace = form.cleaned_data['normalize_whitespace']
         remove_urls = form.cleaned_data['remove_urls']
         remove_emails = form.cleaned_data['remove_emails']
-        
+
         original_length = len(text)
-        
+
         try:
             result = text
-            
+
             # 移除HTML标签
             if remove_html:
                 result = self._remove_html(result)
-            
+
             # 解码HTML实体
             if decode_entities:
                 result = html.unescape(result)
-            
+
             # 移除Markdown格式
             if remove_markdown:
                 result = self._remove_markdown(result)
-            
+
             # 移除URL
             if remove_urls:
                 result = re.sub(r'https?://[^\s<>"{}|\\^`\[\]]+', '', result)
                 result = re.sub(r'www\.[^\s<>"{}|\\^`\[\]]+', '', result)
-            
+
             # 移除邮箱
             if remove_emails:
                 result = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '', result)
-            
+
             # 规范化空白字符
             if normalize_whitespace:
                 # 将多个空白字符替换为单个空格
@@ -106,10 +106,10 @@ class ClearFormatTool(BaseTool):
                 # 去除每行首尾空白
                 lines = [line.strip() for line in result.split('\n')]
                 result = '\n'.join(lines)
-            
+
             result = result.strip()
             result_length = len(result)
-            
+
             return {
                 'result': result,
                 'stats': {
@@ -119,10 +119,10 @@ class ClearFormatTool(BaseTool):
                     'compression': f'{((original_length - result_length) / original_length * 100):.1f}%' if original_length > 0 else '0%',
                 }
             }
-            
+
         except Exception as e:
             return {'error': f'处理失败: {str(e)}'}
-    
+
     def _remove_html(self, text):
         """移除HTML标签"""
         # 移除style标签及其内容
@@ -142,7 +142,7 @@ class ClearFormatTool(BaseTool):
         # 移除所有其他HTML标签
         text = re.sub(r'<[^>]+>', '', text)
         return text
-    
+
     def _remove_markdown(self, text):
         """移除Markdown格式"""
         # 移除代码块

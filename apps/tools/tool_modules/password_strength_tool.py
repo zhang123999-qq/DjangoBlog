@@ -27,7 +27,7 @@ class PasswordStrengthTool(BaseTool):
 
     def handle(self, request, form):
         password = form.cleaned_data['password']
-        
+
         # 检测各项指标
         checks = {
             'length': len(password) >= 8,
@@ -40,7 +40,7 @@ class PasswordStrengthTool(BaseTool):
             'no_sequential': not self._has_sequential(password),
             'no_repeated': not self._has_repeated(password),
         }
-        
+
         # 计算分数
         score = sum([
             checks['length'] * 10,
@@ -53,7 +53,7 @@ class PasswordStrengthTool(BaseTool):
             checks['no_sequential'] * 10,
             checks['no_repeated'] * 5,
         ])
-        
+
         # 确定强度等级
         if score >= 80:
             level = '非常强'
@@ -71,7 +71,7 @@ class PasswordStrengthTool(BaseTool):
             level = '弱'
             level_class = 'danger'
             emoji = '❌'
-        
+
         # 生成建议
         suggestions = []
         if not checks['length']:
@@ -92,7 +92,7 @@ class PasswordStrengthTool(BaseTool):
             suggestions.append('避免使用连续字符（如123、abc）')
         if not checks['no_repeated']:
             suggestions.append('避免使用重复字符（如111、aaa）')
-        
+
         return {
             'score': min(score, 100),
             'level': level,
@@ -102,7 +102,7 @@ class PasswordStrengthTool(BaseTool):
             'suggestions': suggestions,
             'length': len(password),
         }
-    
+
     def _has_sequential(self, password):
         """检测连续字符"""
         sequences = [
@@ -118,7 +118,7 @@ class PasswordStrengthTool(BaseTool):
                 if seq[i:i+3] in password_lower or seq[i:i+3][::-1] in password_lower:
                     return True
         return False
-    
+
     def _has_repeated(self, password):
         """检测重复字符"""
         for i in range(len(password) - 2):

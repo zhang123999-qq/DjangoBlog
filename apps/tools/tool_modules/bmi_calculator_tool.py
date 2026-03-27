@@ -1,7 +1,6 @@
 """
 BMI计算器工具
 """
-from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 
@@ -41,12 +40,12 @@ class BMICalculatorTool(BaseTool):
     def handle(self, request, form):
         height = float(form.cleaned_data['height'])  # cm
         weight = float(form.cleaned_data['weight'])  # kg
-        
+
         # BMI计算
         height_m = height / 100
         bmi = weight / (height_m * height_m)
         bmi = round(bmi, 1)
-        
+
         # 评估BMI
         if bmi < 18.5:
             category = '偏瘦'
@@ -68,11 +67,11 @@ class BMICalculatorTool(BaseTool):
             category = '重度肥胖'
             color = '#DC3545'
             advice = '建议咨询医生，制定科学的减肥方案'
-        
+
         # 标准体重范围
         normal_min = 18.5 * height_m * height_m
         normal_max = 24 * height_m * height_m
-        
+
         return {
             'height': height,
             'weight': weight,

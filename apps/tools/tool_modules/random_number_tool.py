@@ -49,11 +49,11 @@ class RandomNumberTool(BaseTool):
         max_value = form.cleaned_data['max_value']
         count = form.cleaned_data['count']
         number_type = form.cleaned_data['number_type']
-        
+
         try:
             if min_value > max_value:
                 return {'error': '最小值不能大于最大值'}
-            
+
             # 生成随机数
             results = []
             for _ in range(count):
@@ -65,7 +65,7 @@ class RandomNumberTool(BaseTool):
                     results.append(random.randint(min_int, max_int))
                 else:
                     results.append(random.uniform(min_value, max_value))
-            
+
             return {
                 'min_value': min_value,
                 'max_value': max_value,

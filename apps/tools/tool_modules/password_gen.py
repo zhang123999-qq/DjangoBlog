@@ -30,7 +30,7 @@ class PasswordGenTool(BaseTool):
         include_lowercase = form.cleaned_data['include_lowercase']
         include_digits = form.cleaned_data['include_digits']
         include_symbols = form.cleaned_data['include_symbols']
-        
+
         # 构建字符集
         char_set = ''
         if include_uppercase:
@@ -41,12 +41,12 @@ class PasswordGenTool(BaseTool):
             char_set += string.digits
         if include_symbols:
             char_set += string.punctuation
-        
+
         # 确保至少有一个字符集被选中
         if not char_set:
             return {"error": "至少需要选择一种字符类型"}
-        
+
         # 生成密码
         password = ''.join(random.choice(char_set) for _ in range(length))
-        
+
         return {"password": password}

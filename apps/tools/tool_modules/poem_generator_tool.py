@@ -1,9 +1,7 @@
 """
 古诗生成器
 """
-from ..categories import ToolCategory
 from django import forms
-from django.http import HttpResponse
 from apps.tools.base_tool import BaseTool
 import random
 
@@ -59,16 +57,16 @@ class PoemGeneratorTool(BaseTool):
     def handle(self, request, form):
         category = form.cleaned_data['category']
         count = form.cleaned_data['count']
-        
+
         # 根据类别筛选
         if category == 'all':
             poems = self.POEMS
         else:
             poems = self.POEMS  # 简化处理，全部返回
-        
+
         # 随机选择
         selected = random.sample(poems, min(count, len(poems)))
-        
+
         return {
             'poems': selected,
             'count': len(selected),

@@ -34,18 +34,18 @@ class URLShortenerTool(BaseTool):
     def handle(self, request, form):
         url = form.cleaned_data['url']
         custom_code = form.cleaned_data['custom_code']
-        
+
         try:
             if custom_code:
                 short_code = custom_code
             else:
                 # 生成短代码
                 short_code = self.generate_short_code(url)
-            
+
             # 构建短链接
             base_url = request.build_absolute_uri('/')
             short_url = f"{base_url}s/{short_code}"
-            
+
             return {
                 'original_url': url,
                 'short_code': short_code,

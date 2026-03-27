@@ -4,7 +4,6 @@
 from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
-from datetime import datetime
 
 
 class TimeDiffForm(forms.Form):
@@ -39,30 +38,30 @@ class TimeDiffTool(BaseTool):
     def handle(self, request, form):
         start = form.cleaned_data['start_date']
         end = form.cleaned_data['end_date']
-        
+
         # 计算差值
         diff = end - start
-        
+
         total_seconds = int(diff.total_seconds())
-        
+
         # 分解
         days = diff.days
         hours = total_seconds % 86400 // 3600
         minutes = total_seconds % 3600 // 60
         seconds = total_seconds % 60
-        
+
         # 周数
         weeks = days // 7
         remaining_days = days % 7
-        
+
         # 月数（估算）
         months = days // 30
         remaining_days_month = days % 30
-        
+
         # 年数（估算）
         years = days // 365
         remaining_days_year = days % 365
-        
+
         return {
             'start': start.strftime('%Y-%m-%d %H:%M:%S'),
             'end': end.strftime('%Y-%m-%d %H:%M:%S'),

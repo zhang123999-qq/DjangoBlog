@@ -29,7 +29,7 @@ def setup_terminal():
             os.system('chcp 65001 > nul 2>&1')
             if hasattr(sys.stdout, 'reconfigure'):
                 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-        except:
+        except Exception:
             pass
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
@@ -43,7 +43,7 @@ class Colors:
         (hasattr(sys.stdout, 'isatty') and sys.stdout.isatty())
         or os.environ.get('FORCE_COLOR', '') == '1'
     )
-    
+
     OKGREEN = '\033[92m' if SUPPORTS_COLOR else ''
     OKCYAN = '\033[96m' if SUPPORTS_COLOR else ''
     WARNING = '\033[93m' if SUPPORTS_COLOR else ''
@@ -80,15 +80,15 @@ def get_venv_python() -> str:
     """获取虚拟环境中的 Python 路径"""
     project_root = Path(__file__).parent.resolve()
     is_windows = platform.system() == 'Windows'
-    
+
     if is_windows:
         venv_python = project_root / '.venv' / 'Scripts' / 'python.exe'
     else:
         venv_python = project_root / '.venv' / 'bin' / 'python'
-    
+
     if not venv_python.exists():
         return sys.executable
-    
+
     return str(venv_python)
 
 
@@ -100,7 +100,7 @@ def get_local_ip() -> str:
         ip = s.getsockname()[0]
         s.close()
         return ip
-    except:
+    except Exception:
         return '127.0.0.1'
 
 
@@ -112,7 +112,7 @@ def check_server_running(port: int) -> bool:
         result = s.connect_ex(('127.0.0.1', port))
         s.close()
         return result == 0
-    except:
+    except Exception:
         return False
 
 
@@ -131,7 +131,7 @@ def print_banner():
 
 def main():
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description='DjangoBlog 快速启动脚本',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -142,60 +142,60 @@ def main():
   python start.py --port 8080  # 自定义端口
         '''
     )
-    
+
     parser.add_argument('--lan', action='store_true', help='允许局域网访问')
     parser.add_argument('--port', type=int, default=8000, help='端口 (默认: 8000)')
     parser.add_argument('--no-browser', action='store_true', help='不打开浏览器')
-    
+
     args = parser.parse_args()
-    
+
     # 设置终端
     setup_terminal()
-    
+
     # 获取参数
     python = get_venv_python()
     project_root = Path(__file__).parent.resolve()
     manage_py = project_root / 'manage.py'
-    
+
     host = '0.0.0.0' if args.lan else '127.0.0.1'
     port = args.port
-    
+
     # 打印横幅
     print_banner()
-    
+
     # 检查端口
     if check_server_running(port):
         print_warning(f"端口 {port} 已被占用!")
         print_info("请使用 --port 指定其他端口")
         return 1
-    
+
     # 打印信息
     print_info(f"Python: {python}")
     print_info(f"地址: http://{host}:{port}/")
     print_info(f"管理后台: http://{host}:{port}/admin/")
-    
+
     if args.lan:
         print_warning("局域网访问已启用")
         local_ip = get_local_ip()
         print_info(f"本机IP: http://{local_ip}:{port}/")
-    
+
     safe_print("")
     print_success("按 Ctrl+C 停止服务器")
     safe_print("")
-    
+
     # 构建命令
     cmd = [python, str(manage_py), 'runserver', f'{host}:{port}']
-    
+
     # 设置环境变量
     os.environ['PYTHONIOENCODING'] = 'utf-8'
-    
+
     # 启动服务器
     try:
         subprocess.run(cmd)
     except KeyboardInterrupt:
         safe_print("")
         print_warning("服务器已停止")
-    
+
     return 0
 
 

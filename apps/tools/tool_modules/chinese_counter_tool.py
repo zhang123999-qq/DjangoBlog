@@ -12,7 +12,7 @@ class ChineseCounterForm(forms.Form):
     text = forms.CharField(
         label='输入文本',
         widget=forms.Textarea(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'rows': 8,
             'placeholder': '请输入要统计的中文文本...'
         }),
@@ -31,37 +31,37 @@ class ChineseCounterTool(BaseTool):
 
     def handle(self, request, form):
         text = form.cleaned_data['text']
-        
+
         # 统计中文字符
         chinese_chars = re.findall(r'[\u4e00-\u9fff]', text)
         chinese_count = len(chinese_chars)
-        
+
         # 统计英文单词
         english_words = re.findall(r'[a-zA-Z]+', text)
         english_count = len(english_words)
-        
+
         # 统计数字
         numbers = re.findall(r'\d+', text)
         number_count = len(''.join(numbers))
-        
+
         # 总字符数
         total_chars = len(text)
-        
+
         # 去除空白后的字符数
         non_space_chars = len(text.replace(' ', '').replace('\n', '').replace('\t', ''))
-        
+
         # 行数
         lines = text.split('\n')
         line_count = len(lines)
-        
+
         # 段落数（非空段落）
         paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
         paragraph_count = len(paragraphs) or (1 if text.strip() else 0)
-        
+
         # 标点符号统计
         punctuation = re.findall(r'[，。、！？；：""''（）【】《》…—]', text)
         punctuation_count = len(punctuation)
-        
+
         return {
             'text': text,
             'chinese_count': chinese_count,

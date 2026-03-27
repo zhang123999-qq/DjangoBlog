@@ -20,7 +20,7 @@ class TextCounterTool(BaseTool):
     def handle(self, request, form):
         """处理文本统计"""
         text = form.cleaned_data['text']
-        
+
         # 统计字符数（包括空格）
         char_count = len(text)
         # 统计字符数（不包括空格）
@@ -34,7 +34,7 @@ class TextCounterTool(BaseTool):
         # 统计段落数
         paragraphs = [p for p in text.split('\n\n') if p.strip()]
         paragraph_count = len(paragraphs)
-        
+
         return {
             "char_count": char_count,
             "char_count_no_space": char_count_no_space,

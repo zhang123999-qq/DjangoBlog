@@ -26,10 +26,10 @@ class StringReverseTool(BaseTool):
 
     def handle(self, request, form):
         text = form.cleaned_data['text']
-        
+
         try:
             result = text[::-1]
-            
+
             return {
                 'original': text,
                 'result': result

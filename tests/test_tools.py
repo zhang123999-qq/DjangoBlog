@@ -29,7 +29,7 @@ def test_tool(name, slug, post_data=None, expected_status=200):
             response = client.post(f'/tools/{slug}/', post_data)
         else:
             response = client.get(f'/tools/{slug}/')
-        
+
         if response.status_code == expected_status:
             results['passed'] += 1
             print(f'  [PASS] {name}')

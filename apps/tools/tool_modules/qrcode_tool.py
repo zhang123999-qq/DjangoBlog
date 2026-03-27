@@ -45,16 +45,16 @@ class QRCodeTool(BaseTool):
     def handle(self, request, form):
         if not HAS_QRCODE:
             return {'error': '请安装 qrcode: pip install qrcode[pil]'}
-        
+
         text = form.cleaned_data['text']
         size = form.cleaned_data['size']
-        
+
         sizes = {
             'small': 200,
             'medium': 300,
             'large': 400,
         }
-        
+
         try:
             qr = qrcode.QRCode(
                 version=1,
@@ -64,17 +64,17 @@ class QRCodeTool(BaseTool):
             )
             qr.add_data(text)
             qr.make(fit=True)
-            
+
             img = qr.make_image(fill_color="black", back_color="white")
-            
+
             # 调整大小
             img = img.resize((sizes[size], sizes[size]))
-            
+
             # 转换为base64
             buffer = BytesIO()
             img.save(buffer, format='PNG')
             img_base64 = base64.b64encode(buffer.getvalue()).decode()
-            
+
             return {
                 'text': text,
                 'image': f'data:image/png;base64,{img_base64}',

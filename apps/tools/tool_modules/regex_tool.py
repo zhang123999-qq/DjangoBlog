@@ -44,7 +44,7 @@ class RegexTool(BaseTool):
         pattern = form.cleaned_data['pattern']
         text = form.cleaned_data['text']
         flags_list = form.cleaned_data.get('flags', [])
-        
+
         # 构建flags
         flags = 0
         if 'ignore' in flags_list:
@@ -53,11 +53,11 @@ class RegexTool(BaseTool):
             flags |= re.MULTILINE
         if 'dotall' in flags_list:
             flags |= re.DOTALL
-        
+
         try:
             # 编译正则
             regex = re.compile(pattern, flags)
-            
+
             # 查找所有匹配
             matches = []
             for match in regex.finditer(text):
@@ -67,7 +67,7 @@ class RegexTool(BaseTool):
                     'end': match.end(),
                     'groups': match.groups() if match.groups() else None,
                 })
-            
+
             return {
                 'pattern': pattern,
                 'text': text,

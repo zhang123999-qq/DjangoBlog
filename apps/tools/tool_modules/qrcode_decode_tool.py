@@ -25,23 +25,23 @@ class QRCodeDecodeTool(BaseTool):
 
     def handle(self, request, form):
         uploaded_file = form.cleaned_data['file']
-        
+
         try:
             from pyzbar import pyzbar
             from PIL import Image
         except ImportError:
             return {'error': '请安装 pyzbar 和 pillow: pip install pyzbar pillow'}
-        
+
         try:
             # 打开图片
             image = Image.open(uploaded_file)
-            
+
             # 识别二维码
             decoded_objects = pyzbar.decode(image)
-            
+
             if not decoded_objects:
                 return {'error': '未识别到二维码'}
-            
+
             # 提取解码结果
             results = []
             for obj in decoded_objects:
@@ -49,7 +49,7 @@ class QRCodeDecodeTool(BaseTool):
                     'type': obj.type,
                     'data': obj.data.decode('utf-8')
                 })
-            
+
             return {
                 'filename': uploaded_file.name,
                 'results': results

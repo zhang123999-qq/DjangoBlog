@@ -29,7 +29,7 @@ class AccountsTestCase(TestCase):
         # 先获取验证码
         response = self.client.get(reverse('accounts:register'))
         captcha_code = self.client.session.get('captcha_code')
-        
+
         data = {
             'username': 'testuser',
             'email': 'test@example.com',
@@ -47,16 +47,16 @@ class AccountsTestCase(TestCase):
     def test_login_success(self):
         """测试登录成功"""
         # 创建测试用户
-        user = User.objects.create_user(
+        User.objects.create_user(
             username='testuser',
             email='test@example.com',
             password='testpassword123'
         )
-        
+
         # 先获取验证码
         response = self.client.get(reverse('accounts:login'))
         captcha_code = self.client.session.get('captcha_code')
-        
+
         # 登录
         data = {
             'username': 'testuser',
@@ -65,7 +65,7 @@ class AccountsTestCase(TestCase):
         }
         response = self.client.post(reverse('accounts:login'), data)
         self.assertEqual(response.status_code, 302)  # 重定向
-        
+
         # 验证用户已登录
         response = self.client.get(reverse('core:home'))
         self.assertContains(response, 'testuser')

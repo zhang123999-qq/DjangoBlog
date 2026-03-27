@@ -606,14 +606,14 @@ class GitignoreGeneratorTool(BaseTool):
         ides = form.cleaned_data.get('ides', [])
         os_types = form.cleaned_data.get('os_types', [])
         extras = form.cleaned_data.get('extras', [])
-        
+
         # 合并所有选择
         all_selections = project_types + ides + os_types + extras
-        
+
         # 生成gitignore内容
         result_parts = []
         used_templates = []
-        
+
         for selection in all_selections:
             if selection in GITIGNORE_TEMPLATES:
                 template = GITIGNORE_TEMPLATES[selection]
@@ -622,12 +622,12 @@ class GitignoreGeneratorTool(BaseTool):
                     result_parts.append(f'\n# === {self._get_name(selection)} ===')
                     result_parts.append(template.strip())
                     used_templates.append(self._get_name(selection))
-        
+
         result = '\n'.join(result_parts)
-        
+
         # 清理多余空行
         result = '\n'.join(line for line in result.split('\n') if line.strip() or line == '')
-        
+
         return {
             'result': result.strip(),
             'used_templates': used_templates,
@@ -636,7 +636,7 @@ class GitignoreGeneratorTool(BaseTool):
                 'line_count': len(result.strip().split('\n')),
             }
         }
-    
+
     def _get_name(self, key):
         """获取友好名称"""
         names = {

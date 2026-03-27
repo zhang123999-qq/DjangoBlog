@@ -37,13 +37,13 @@ class HTMLEntityTool(BaseTool):
     def handle(self, request, form):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
-        
+
         try:
             if mode == 'encode':
                 result = html.escape(text)
             else:
                 result = html.unescape(text)
-            
+
             return {
                 'mode': '编码' if mode == 'encode' else '解码',
                 'text': text,

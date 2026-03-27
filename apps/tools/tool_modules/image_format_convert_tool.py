@@ -113,7 +113,7 @@ class ImageFormatConvertTool(BaseTool):
         custom_width = form.cleaned_data.get('custom_width')
         custom_height = form.cleaned_data.get('custom_height')
         maintain_aspect = form.cleaned_data.get('maintain_aspect', True)
-        
+
         try:
             # 读取图片
             img = Image.open(image_file)
@@ -121,10 +121,10 @@ class ImageFormatConvertTool(BaseTool):
             original_size = image_file.size
             original_width, original_height = img.size
             original_mode = img.mode
-            
+
             # 处理尺寸调整
             new_width, new_height = original_width, original_height
-            
+
             if resize_option == 'percent' and resize_percent:
                 scale = resize_percent / 100
                 new_width = int(original_width * scale)
@@ -139,11 +139,11 @@ class ImageFormatConvertTool(BaseTool):
                 elif custom_height:
                     new_height = custom_height
                     new_width = int(original_width * (custom_height / original_height))
-            
+
             # 调整尺寸
             if (new_width, new_height) != (original_width, original_height):
                 img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            
+
             # 处理颜色模式转换
             if output_format == 'JPEG':
                 # JPEG不支持透明通道
@@ -159,11 +159,11 @@ class ImageFormatConvertTool(BaseTool):
             elif output_format == 'BMP':
                 if img.mode not in ('RGB', 'L'):
                     img = img.convert('RGB')
-            
+
             # 转换格式
             output = io.BytesIO()
             save_kwargs = {'format': output_format}
-            
+
             if output_format == 'JPEG':
                 save_kwargs['quality'] = quality
                 save_kwargs['optimize'] = True
@@ -173,11 +173,11 @@ class ImageFormatConvertTool(BaseTool):
                 save_kwargs['optimize'] = True
             elif output_format == 'TIFF':
                 save_kwargs['compression'] = 'tiff_lzw'
-            
+
             img.save(output, **save_kwargs)
             converted_size = output.tell()
             output.seek(0)
-            
+
             # 生成预览
             preview_img = img.copy()
             preview_img.thumbnail((400, 400), Image.Resampling.LANCZOS)
@@ -185,10 +185,10 @@ class ImageFormatConvertTool(BaseTool):
             preview_format = 'PNG' if output_format in ('PNG', 'GIF', 'BMP', 'TIFF') else 'JPEG'
             preview_img.save(preview, format=preview_format, quality=85)
             preview_base64 = base64.b64encode(preview.getvalue()).decode()
-            
+
             # 生成下载链接
             download_base64 = base64.b64encode(output.getvalue()).decode()
-            
+
             return {
                 'success': True,
                 'original': {
@@ -213,10 +213,10 @@ class ImageFormatConvertTool(BaseTool):
                 'download_filename': f'converted.{output_format.lower()}',
                 'compression_ratio': f'{(1 - converted_size / original_size) * 100:.1f}%' if original_size > 0 else '0%',
             }
-            
+
         except Exception as e:
             return {'error': f'转换失败: {str(e)}'}
-    
+
     def _format_size(self, bytes_size):
         """格式化文件大小"""
         for unit in ['B', 'KB', 'MB', 'GB']:

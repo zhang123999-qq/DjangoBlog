@@ -33,23 +33,23 @@ class JSONPathTool(BaseTool):
     def handle(self, request, form):
         json_data = form.cleaned_data['json_data']
         json_path = form.cleaned_data['json_path']
-        
+
         try:
             from jsonpath_ng import parse
         except ImportError:
             return {'error': '请安装 jsonpath-ng: pip install jsonpath-ng'}
-        
+
         try:
             # 解析JSON数据
             data = json.loads(json_data)
-            
+
             # 解析JSON Path表达式
             jsonpath_expr = parse(json_path)
-            
+
             # 提取匹配结果
             matches = jsonpath_expr.find(data)
             results = [match.value for match in matches]
-            
+
             return {
                 'json_path': json_path,
                 'results': results

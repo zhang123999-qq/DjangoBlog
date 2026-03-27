@@ -3,6 +3,8 @@
 """
 
 # 工具分类常量
+
+
 class ToolCategory:
     ENCRYPT = 'encrypt'           # 加密解密
     ENCODE = 'encode'             # 编码转换

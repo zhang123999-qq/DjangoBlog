@@ -183,7 +183,7 @@ for url, name in endpoints:
         start = time.time()
         client.get(url)
         times.append((time.time() - start) * 1000)
-    
+
     avg = sum(times) / len(times)
     p95 = sorted(times)[int(len(times) * 0.95)]
     print(f'  {name}: avg={avg:.2f}ms, P95={p95:.2f}ms')

@@ -39,7 +39,7 @@ class MarkdownEditorTool(BaseTool):
     def handle(self, request, form):
         markdown_text = form.cleaned_data['markdown_text']
         output_format = form.cleaned_data['output_format']
-        
+
         # 配置Markdown扩展
         extensions = [
             'extra',           # 支持表格、代码块等
@@ -48,7 +48,7 @@ class MarkdownEditorTool(BaseTool):
             'tables',          # 表格
             'fenced_code',     # 围栏代码块
         ]
-        
+
         try:
             # 转换为HTML
             html_content = markdown.markdown(
@@ -56,7 +56,7 @@ class MarkdownEditorTool(BaseTool):
                 extensions=extensions,
                 output_format='html5'
             )
-            
+
             # 安全过滤（防止XSS）
             allowed_tags = [
                 'p', 'br', 'strong', 'em', 'u', 's', 'del', 'ins',
@@ -75,19 +75,19 @@ class MarkdownEditorTool(BaseTool):
                 'code': ['class'],
                 'pre': ['class'],
             }
-            
+
             html_content = bleach.clean(
                 html_content,
                 tags=allowed_tags,
                 attributes=allowed_attrs,
                 strip=False
             )
-            
+
             # 统计信息
             lines = markdown_text.count('\n') + 1
             words = len(markdown_text.split())
             chars = len(markdown_text)
-            
+
             result = {
                 'markdown': markdown_text,
                 'stats': {
@@ -96,14 +96,14 @@ class MarkdownEditorTool(BaseTool):
                     'chars': chars,
                 }
             }
-            
+
             if output_format in ['preview', 'both']:
                 result['preview'] = html_content
-            
+
             if output_format in ['html', 'both']:
                 result['html'] = html_content
-            
+
             return result
-            
+
         except Exception as e:
             return {'error': f'转换失败: {str(e)}'}

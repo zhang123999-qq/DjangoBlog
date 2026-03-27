@@ -39,7 +39,7 @@ class TimestampTool(BaseTool):
     def handle(self, request, form):
         mode = form.cleaned_data['mode']
         input_value = form.cleaned_data.get('input_value', '')
-        
+
         try:
             if mode == 'now':
                 now = datetime.now()
@@ -67,12 +67,12 @@ class TimestampTool(BaseTool):
                         try:
                             dt = datetime.strptime(input_value, fmt)
                             break
-                        except:
+                        except Exception:
                             continue
-                    
+
                     if not dt:
                         return {'error': '日期格式不正确，支持: YYYY-MM-DD HH:MM:SS 或 YYYY-MM-DD'}
-                
+
                 return {
                     'mode': mode,
                     'input': input_value or '当前时间',
@@ -82,13 +82,13 @@ class TimestampTool(BaseTool):
             else:
                 # 时间戳转日期时间
                 ts = int(input_value) if input_value else int(time.time())
-                
+
                 # 毫秒时间戳处理
                 if ts > 10000000000:
                     ts = ts / 1000
-                
+
                 dt = datetime.fromtimestamp(ts)
-                
+
                 return {
                     'mode': mode,
                     'input': input_value,

@@ -24,7 +24,7 @@ class PortScanForm(forms.Form):
     host = forms.CharField(
         label='主机名/IP',
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'placeholder': 'example.com 或 192.168.1.1'
         }),
         required=True,
@@ -88,7 +88,7 @@ class PortScanTool(BaseTool):
         host = form.cleaned_data['host']
         scan_type = form.cleaned_data['scan_type']
         timeout = form.cleaned_data['timeout']
-        
+
         # 解析端口
         ports = []
         if scan_type == 'single':
@@ -111,19 +111,19 @@ class PortScanTool(BaseTool):
                 return {'error': '请输入端口'}
             # 支持逗号分隔的端口列表
             ports = [int(p.strip()) for p in port_range.split(',') if p.strip().isdigit()]
-        
+
         if not ports:
             return {'error': '没有要扫描的端口'}
-        
+
         # 限制端口数量，防止滥用
         if len(ports) > 1000:
             return {'error': f'端口数量过多 ({len(ports)})，最多支持1000个端口'}
-        
+
         # 开始扫描
         results = []
         open_ports = []
         closed_count = 0
-        
+
         for port in ports:
             status, message = self._scan_port(host, port, timeout)
             result = {
@@ -137,7 +137,7 @@ class PortScanTool(BaseTool):
                 open_ports.append(port)
             else:
                 closed_count += 1
-        
+
         return {
             'host': host,
             'total_ports': len(ports),
@@ -146,7 +146,7 @@ class PortScanTool(BaseTool):
             'closed_count': closed_count,
             'results': results[:50]  # 只返回前50个结果详情
         }
-    
+
     def _parse_port_range(self, port_range):
         """解析端口范围"""
         ports = []
@@ -164,7 +164,7 @@ class PortScanTool(BaseTool):
         elif ',' in port_range:
             ports = [int(p.strip()) for p in port_range.split(',') if p.strip().isdigit()]
         return ports
-    
+
     def _scan_port(self, host, port, timeout):
         """扫描单个端口"""
         try:
@@ -172,7 +172,7 @@ class PortScanTool(BaseTool):
             sock.settimeout(timeout)
             result = sock.connect_ex((host, port))
             sock.close()
-            
+
             if result == 0:
                 return ('开放', f'端口 {port} 是开放的')
             else:
@@ -180,10 +180,10 @@ class PortScanTool(BaseTool):
         except socket.timeout:
             return ('超时', f'端口 {port} 扫描超时')
         except socket.gaierror:
-            return ('错误', f'无法解析主机名')
+            return ('错误', '无法解析主机名')
         except Exception as e:
             return ('错误', str(e))
-    
+
     def _get_service_name(self, port):
         """获取常见服务名称"""
         services = {

@@ -4,9 +4,7 @@ Convert image to Base64 string and vice versa
 """
 from ..categories import ToolCategory
 from django import forms
-from django.core.exceptions import ValidationError
 import base64
-import struct
 from apps.tools.base_tool import BaseTool
 
 
@@ -38,7 +36,7 @@ class ImageBase64Form(forms.Form):
         ('image_to_base64', 'Image to Base64'),
         ('base64_to_image', 'Base64 to Image'),
     ]
-    
+
     mode = forms.ChoiceField(
         choices=MODE_CHOICES,
         initial='image_to_base64',
@@ -70,18 +68,18 @@ def image_to_base64(image_file, output_format='data_uri'):
     try:
         # Read image data
         image_data = image_file.read()
-        
+
         # Detect image type
         image_type = detect_image_type(image_data)
-        
+
         # Encode to base64
         base64_str = base64.b64encode(image_data).decode('utf-8')
-        
+
         if output_format == 'data_uri':
             result = f'data:image/{image_type};base64,{base64_str}'
         else:
             result = base64_str
-        
+
         return {
             'base64': result,
             'image_type': image_type,
@@ -103,7 +101,7 @@ def base64_to_image(base64_str):
             if len(parts) == 2:
                 header = parts[0]
                 base64_str = parts[1]
-                
+
                 # Extract image type from header
                 if 'image/' in header:
                     image_type = header.split('image/')[1].split(';')[0]
@@ -113,10 +111,10 @@ def base64_to_image(base64_str):
                 image_type = 'png'
         else:
             image_type = 'png'
-        
+
         # Decode base64
         image_data = base64.b64decode(base64_str)
-        
+
         return {
             'image_data': image_data,
             'image_type': image_type,
@@ -141,33 +139,33 @@ def process(form):
     """Process the form and return result"""
     if not form.is_valid():
         return {'error': 'Invalid input'}
-    
+
     cleaned = form.cleaned_data
     mode = cleaned.get('mode', 'image_to_base64')
     output_format = cleaned.get('output_format', 'data_uri')
-    
+
     if mode == 'image_to_base64':
         image_file = cleaned.get('image_file')
         if not image_file:
             return {'error': 'Please upload an image file'}
-        
+
         # Check file size (2MB limit)
         if image_file.size > 2 * 1024 * 1024:
             return {'error': 'Image file too large (max 2MB)'}
-        
+
         result = image_to_base64(image_file, output_format)
         result['mode'] = 'image_to_base64'
         return result
-        
+
     elif mode == 'base64_to_image':
         base64_input = cleaned.get('base64_input', '').strip()
         if not base64_input:
             return {'error': 'Please enter a base64 string'}
-        
+
         result = base64_to_image(base64_input)
         result['mode'] = 'base64_to_image'
         return result
-    
+
     return {'error': 'Invalid mode'}
 
 

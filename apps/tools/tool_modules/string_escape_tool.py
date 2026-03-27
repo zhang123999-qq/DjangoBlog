@@ -36,7 +36,7 @@ class StringEscapeTool(BaseTool):
     def handle(self, request, form):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
-        
+
         try:
             if mode == 'escape':
                 # 转义特殊字符
@@ -44,7 +44,7 @@ class StringEscapeTool(BaseTool):
             else:
                 # 去转义
                 result = text.encode('utf-8').decode('unicode_escape')
-            
+
             return {
                 'mode': '转义' if mode == 'escape' else '去转义',
                 'text': text,

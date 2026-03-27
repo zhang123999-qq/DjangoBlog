@@ -19,10 +19,10 @@ def get_settings_module():
     # 如果已设置，使用环境变量
     if os.environ.get('DJANGO_SETTINGS_MODULE'):
         return os.environ['DJANGO_SETTINGS_MODULE']
-    
+
     # 根据 DEBUG 自动选择
     debug = os.environ.get('DEBUG', 'True').lower() == 'true'
-    
+
     if debug:
         return 'config.settings.development'
     else:
@@ -32,14 +32,14 @@ def main():
     """Run administrative tasks."""
     # 配置 PyMySQL（在使用 Django 之前）
     setup_pymysql()
-    
+
     settings_module = get_settings_module()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
-    
+
     # 打印当前使用的配置
     if len(sys.argv) > 1 and sys.argv[1] in ['runserver', 'shell', 'dbshell']:
         print(f"[INFO] 使用配置: {settings_module}")
-    
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

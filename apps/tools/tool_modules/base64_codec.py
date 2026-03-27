@@ -26,7 +26,7 @@ class Base64CodecTool(BaseTool):
         """处理 Base64 编解码"""
         action = form.cleaned_data['action']
         text = form.cleaned_data['text']
-        
+
         try:
             if action == 'encode':
                 # 编码

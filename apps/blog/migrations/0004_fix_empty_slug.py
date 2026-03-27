@@ -8,7 +8,7 @@ def fix_empty_slug(apps, schema_editor):
     Post = apps.get_model('blog', 'Post')
     # 查找所有 slug 为空或 None 的文章
     posts = Post.objects.filter(slug__isnull=True) | Post.objects.filter(slug='')
-    
+
     for post in posts:
         # 生成 slug
         if post.title:
@@ -16,7 +16,7 @@ def fix_empty_slug(apps, schema_editor):
         else:
             # 标题为空时，使用时间戳作为 slug
             post.slug = f'post-{timezone.now().timestamp():.0f}'
-        
+
         # 确保 slug 唯一
         original_slug = post.slug
         counter = 1
@@ -30,7 +30,7 @@ def fix_empty_slug(apps, schema_editor):
             # slug 已存在，添加数字后缀
             post.slug = f'{original_slug}-{counter}'
             counter += 1
-        
+
         post.save()
 
 

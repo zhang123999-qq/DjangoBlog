@@ -15,7 +15,7 @@ class LoremForm(forms.Form):
         ('words', 'Words'),
         ('list', 'List Items'),
     ]
-    
+
     text_type = forms.ChoiceField(
         choices=TYPE_CHOICES,
         initial='paragraphs',
@@ -89,14 +89,14 @@ def generate_sentence(min_words=8, max_words=15, start_with_lorem=True, language
     """Generate a sentence"""
     if start_with_lorem and first_sentence and language == 'la':
         return 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
-    
+
     word_count = random.randint(min_words, max_words)
     words = [generate_word(language) for _ in range(word_count)]
-    
+
     # Capitalize first word
     if words:
         words[0] = words[0].capitalize()
-    
+
     sentence = ' '.join(words) + '.'
     return sentence
 
@@ -105,11 +105,11 @@ def generate_paragraph(min_sentences=4, max_sentences=7, start_with_lorem=True, 
     """Generate a paragraph"""
     sentence_count = random.randint(min_sentences, max_sentences)
     sentences = []
-    
+
     for i in range(sentence_count):
         is_first = first_paragraph and i == 0
         sentences.append(generate_sentence(start_with_lorem=start_with_lorem, language=language, first_sentence=is_first))
-    
+
     return ' '.join(sentences)
 
 
@@ -117,48 +117,48 @@ def process(form):
     """Process the form and return result"""
     if not form.is_valid():
         return {'error': 'Invalid input', 'text': ''}
-    
+
     cleaned = form.cleaned_data
     text_type = cleaned.get('text_type', 'paragraphs')
     count = cleaned.get('count', 3)
     start_with_lorem = cleaned.get('start_with_lorem', True)
     language = cleaned.get('language', 'la')
-    
+
     result = []
-    
+
     if text_type == 'paragraphs':
         for i in range(count):
             para = generate_paragraph(
-                start_with_lorem=start_with_lorem, 
-                language=language, 
+                start_with_lorem=start_with_lorem,
+                language=language,
                 first_paragraph=(i == 0)
             )
             result.append(para)
         text = '\n\n'.join(result)
-        
+
     elif text_type == 'sentences':
         for i in range(count):
             sent = generate_sentence(
-                start_with_lorem=start_with_lorem, 
-                language=language, 
+                start_with_lorem=start_with_lorem,
+                language=language,
                 first_sentence=(i == 0)
             )
             result.append(sent)
         text = ' '.join(result)
-        
+
     elif text_type == 'words':
         words = [generate_word(language) for _ in range(count)]
         text = ' '.join(words)
-        
+
     elif text_type == 'list':
         for _ in range(count):
             item = generate_sentence(min_words=5, max_words=10, start_with_lorem=False, language=language)
             result.append(item)
         text = '\n'.join([f'• {item}' for item in result])
-    
+
     else:
         text = ''
-    
+
     return {
         'text': text,
         'type': text_type,

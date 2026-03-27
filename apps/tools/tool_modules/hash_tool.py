@@ -40,17 +40,17 @@ class HashTool(BaseTool):
         """处理哈希计算"""
         text = form.cleaned_data['text']
         algorithm = form.cleaned_data['algorithm']
-        
+
         algorithms = {
             'md5': hashlib.md5,
             'sha1': hashlib.sha1,
             'sha256': hashlib.sha256,
             'sha512': hashlib.sha512,
         }
-        
+
         hash_obj = algorithms[algorithm](text.encode('utf-8'))
         result = hash_obj.hexdigest()
-        
+
         return {
             'original': text,
             'algorithm': algorithm.upper(),

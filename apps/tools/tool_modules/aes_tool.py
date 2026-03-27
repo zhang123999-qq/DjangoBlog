@@ -8,7 +8,6 @@ from apps.tools.base_tool import BaseTool
 try:
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
-    from Crypto.Random import get_random_bytes
     import base64
     HAS_CRYPTO = True
 except ImportError:
@@ -51,11 +50,11 @@ class AESTool(BaseTool):
     def handle(self, request, form):
         if not HAS_CRYPTO:
             return {'error': '请安装 pycryptodome: pip install pycryptodome'}
-        
+
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
         key = form.cleaned_data['key'].encode('utf-8')
-        
+
         # 密钥长度调整
         if len(key) < 16:
             key = key.ljust(16, b'0')
@@ -65,7 +64,7 @@ class AESTool(BaseTool):
             key = key.ljust(32, b'0')
         else:
             key = key[:32]
-        
+
         try:
             if mode == 'encrypt':
                 cipher = AES.new(key, AES.MODE_CBC)

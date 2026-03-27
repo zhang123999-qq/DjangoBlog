@@ -21,7 +21,7 @@ class JSONFormatterTool(BaseTool):
     def handle(self, request, form):
         """处理 JSON 格式化"""
         json_text = form.cleaned_data['json_text']
-        
+
         try:
             # 解析 JSON
             data = json.loads(json_text)

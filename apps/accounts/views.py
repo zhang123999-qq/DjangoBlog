@@ -36,38 +36,38 @@ def profile_view(request):
     # 获取用户的待审核内容
     from apps.blog.models import Comment
     from apps.forum.models import Topic, Reply
-    
+
     pending_comments = Comment.objects.filter(
         user=request.user,
         review_status='pending'
     ).order_by('-created_at')
-    
+
     pending_topics = Topic.objects.filter(
         author=request.user,
         review_status='pending'
     ).order_by('-created_at')
-    
+
     pending_replies = Reply.objects.filter(
         author=request.user,
         review_status='pending'
     ).order_by('-created_at')
-    
+
     # 获取用户的已拒绝内容
     rejected_comments = Comment.objects.filter(
         user=request.user,
         review_status='rejected'
     ).order_by('-created_at')
-    
+
     rejected_topics = Topic.objects.filter(
         author=request.user,
         review_status='rejected'
     ).order_by('-created_at')
-    
+
     rejected_replies = Reply.objects.filter(
         author=request.user,
         review_status='rejected'
     ).order_by('-created_at')
-    
+
     context = {
         'pending_comments': pending_comments,
         'pending_topics': pending_topics,
@@ -76,7 +76,7 @@ def profile_view(request):
         'rejected_topics': rejected_topics,
         'rejected_replies': rejected_replies,
     }
-    
+
     return render(request, 'accounts/profile.html', context)
 
 

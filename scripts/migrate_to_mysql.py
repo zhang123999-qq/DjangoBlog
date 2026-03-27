@@ -33,10 +33,10 @@ from apps.accounts.models import User, Profile
 
 def migrate():
     print("开始迁移数据...")
-    
+
     conn = sqlite3.connect('db.sqlite3')
     cursor = conn.cursor()
-    
+
     # 1. 用户
     print("迁移用户...")
     cursor.execute("SELECT id, username, email, password, is_staff, is_active, is_superuser, date_joined, last_login FROM accounts_user")
@@ -47,7 +47,7 @@ def migrate():
             'date_joined': u[7], 'last_login': u[8]
         })
     print(f"  用户: {cursor.execute('SELECT COUNT(*) FROM accounts_user').fetchone()[0]} 条")
-    
+
     # 2. 用户资料
     print("迁移用户资料...")
     cursor.execute("SELECT id, user_id, avatar, bio, website, created_at, updated_at FROM accounts_profile")
@@ -56,7 +56,7 @@ def migrate():
             'user_id': p[1], 'avatar': p[2], 'bio': p[3],
             'website': p[4], 'created_at': p[5], 'updated_at': p[6]
         })
-    
+
     # 3. 分类
     print("迁移分类...")
     cursor.execute("SELECT id, name, slug, created_at, updated_at FROM blog_category")
@@ -64,7 +64,7 @@ def migrate():
         Category.objects.update_or_create(id=c[0], defaults={
             'name': c[1], 'slug': c[2], 'created_at': c[3], 'updated_at': c[4]
         })
-    
+
     # 4. 标签
     print("迁移标签...")
     cursor.execute("SELECT id, name, slug, created_at, updated_at FROM blog_tag")
@@ -72,12 +72,12 @@ def migrate():
         Tag.objects.update_or_create(id=t[0], defaults={
             'name': t[1], 'slug': t[2], 'created_at': t[3], 'updated_at': t[4]
         })
-    
+
     # 5. 文章
     print("迁移文章...")
     cursor.execute("""
-        SELECT id, title, slug, summary, content, status, views_count, published_at, 
-               created_at, updated_at, author_id, category_id, allow_comments 
+        SELECT id, title, slug, summary, content, status, views_count, published_at,
+               created_at, updated_at, author_id, category_id, allow_comments
         FROM blog_post
     """)
     posts = {}
@@ -90,14 +90,14 @@ def migrate():
         })[0]
         posts[p[0]] = post
     print(f"  文章: {len(posts)} 条")
-    
+
     # 6. 文章标签
     print("迁移文章标签...")
     cursor.execute("SELECT post_id, tag_id FROM blog_post_tags")
     for pt in cursor.fetchall():
         if pt[0] in posts:
             posts[pt[0]].tags.add(pt[1])
-    
+
     # 7. 评论
     print("迁移评论...")
     cursor.execute("""
@@ -112,11 +112,11 @@ def migrate():
             'ip_address': c[8], 'user_agent': c[9], 'like_count': c[10],
             'created_at': c[11], 'updated_at': c[12]
         })
-    
+
     # 8. 版块（没有 order 字段）
     print("迁移版块...")
     cursor.execute("""
-        SELECT id, name, slug, description, topic_count, reply_count, 
+        SELECT id, name, slug, description, topic_count, reply_count,
                last_post_at, created_at, updated_at
         FROM forum_board
     """)
@@ -126,7 +126,7 @@ def migrate():
             'topic_count': b[4], 'reply_count': b[5], 'last_post_at': b[6],
             'created_at': b[7], 'updated_at': b[8]
         })
-    
+
     # 9. 主题
     print("迁移主题...")
     cursor.execute("""
@@ -141,11 +141,11 @@ def migrate():
             'last_reply_at': t[7], 'created_at': t[8], 'updated_at': t[9],
             'author_id': t[10], 'board_id': t[11], 'review_status': t[12]
         })
-    
+
     # 10. 回复
     print("迁移回复...")
     cursor.execute("""
-        SELECT id, content, like_count, is_deleted, created_at, updated_at, 
+        SELECT id, content, like_count, is_deleted, created_at, updated_at,
                author_id, topic_id, review_status
         FROM forum_reply
     """)
@@ -155,7 +155,7 @@ def migrate():
             'created_at': r[4], 'updated_at': r[5], 'author_id': r[6],
             'topic_id': r[7], 'review_status': r[8]
         })
-    
+
     conn.close()
     print("\n迁移完成！")
 

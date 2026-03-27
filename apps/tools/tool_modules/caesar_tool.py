@@ -44,7 +44,7 @@ class CaesarTool(BaseTool):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
         shift = form.cleaned_data['shift']
-        
+
         try:
             result = []
             for char in text:
@@ -60,7 +60,7 @@ class CaesarTool(BaseTool):
                 else:
                     # 非字母字符保持不变
                     result.append(char)
-            
+
             return {
                 'mode': '加密' if mode == 'encrypt' else '解密',
                 'text': text,

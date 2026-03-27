@@ -52,24 +52,24 @@ class JsonFormatterEnhancedTool(BaseTool):
         json_content = form.cleaned_data['json_content']
         indent = form.cleaned_data['indent']
         sort_keys = form.cleaned_data['sort_keys']
-        
+
         try:
             # 解析JSON
             data = json.loads(json_content)
-            
+
             # 格式化
             if indent == 'tab':
                 indent_str = '\t'
             else:
                 indent_str = int(indent)
-            
+
             result = json.dumps(
                 data,
                 indent=indent_str,
                 ensure_ascii=False,
                 sort_keys=sort_keys
             )
-            
+
             return {
                 'success': True,
                 'original': json_content,
@@ -81,7 +81,7 @@ class JsonFormatterEnhancedTool(BaseTool):
                     'depth': self._get_depth(data),
                 }
             }
-            
+
         except json.JSONDecodeError as e:
             return {
                 'success': False,
@@ -89,7 +89,7 @@ class JsonFormatterEnhancedTool(BaseTool):
                 'line': e.lineno,
                 'column': e.colno,
             }
-    
+
     def _count_keys(self, data, count=0):
         """统计键数量"""
         if isinstance(data, dict):
@@ -100,7 +100,7 @@ class JsonFormatterEnhancedTool(BaseTool):
             for item in data:
                 count = self._count_keys(item, count)
         return count
-    
+
     def _get_depth(self, data, depth=0):
         """获取嵌套深度"""
         if isinstance(data, dict):

@@ -39,7 +39,7 @@ class CSVJSONTool(BaseTool):
     def handle(self, request, form):
         mode = form.cleaned_data['mode']
         data = form.cleaned_data['data']
-        
+
         try:
             if mode == 'csv_to_json':
                 # CSV转JSON
@@ -53,14 +53,14 @@ class CSVJSONTool(BaseTool):
                     return {'error': 'JSON数据必须是数组格式'}
                 if not json_data:
                     return {'error': 'JSON数组不能为空'}
-                
+
                 # 获取所有字段名
                 fieldnames = set()
                 for item in json_data:
                     if isinstance(item, dict):
                         fieldnames.update(item.keys())
                 fieldnames = list(fieldnames)
-                
+
                 # 写入CSV
                 csv_output = io.StringIO()
                 writer = csv.DictWriter(csv_output, fieldnames=fieldnames)
@@ -69,7 +69,7 @@ class CSVJSONTool(BaseTool):
                     if isinstance(item, dict):
                         writer.writerow(item)
                 result = csv_output.getvalue()
-            
+
             return {
                 'mode': 'CSV转JSON' if mode == 'csv_to_json' else 'JSON转CSV',
                 'result': result

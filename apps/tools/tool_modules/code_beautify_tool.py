@@ -17,7 +17,7 @@ class CodeBeautifyForm(forms.Form):
         ('sql', 'SQL'),
         ('xml', 'XML'),
     ]
-    
+
     mode = forms.ChoiceField(
         choices=MODE_CHOICES,
         initial='json',
@@ -69,30 +69,30 @@ def beautify_css(code, indent=2):
     try:
         # Remove extra whitespace
         code = re.sub(r'\s+', ' ', code)
-        
+
         # Add newlines after braces and semicolons
         result = code.replace('{', ' {\n' + ' ' * indent)
         result = result.replace('}', '\n}\n')
         result = result.replace(';', ';\n')
-        
+
         # Clean up
         lines = result.split('\n')
         formatted = []
         indent_level = 0
-        
+
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            
+
             if line.startswith('}'):
                 indent_level = max(0, indent_level - 1)
-            
+
             formatted.append(' ' * indent * indent_level + line)
-            
+
             if line.endswith('{'):
                 indent_level += 1
-        
+
         result = '\n'.join(formatted)
         return {'result': result, 'valid': True}
     except Exception as e:
@@ -120,32 +120,32 @@ def beautify_html(code, indent=2):
     try:
         # Simple HTML beautifier
         code = re.sub(r'>\s+<', '>\n<', code)
-        
+
         lines = code.split('\n')
         formatted = []
         indent_level = 0
-        
+
         # Tags that increase indent
         opening_tags = re.compile(r'^<(?!/|!|br|hr|img|input|meta|link)(\w+)[^>]*>$')
         closing_tags = re.compile(r'^</(\w+)>$')
         self_closing = re.compile(r'^<(br|hr|img|input|meta|link|area|base|col|embed|param|source|track|wbr)[^>]*/?>$')
-        
+
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            
+
             # Check for closing tag first
             closing_match = closing_tags.match(line)
             if closing_match:
                 indent_level = max(0, indent_level - 1)
-            
+
             formatted.append(' ' * indent * indent_level + line)
-            
+
             # Check for opening tag
             if opening_tags.match(line) and not self_closing.match(line):
                 indent_level += 1
-        
+
         result = '\n'.join(formatted)
         return {'result': result, 'valid': True}
     except Exception as e:
@@ -170,21 +170,21 @@ def beautify_sql(code, indent=2):
     """Beautify SQL"""
     try:
         # Keywords to uppercase and newline
-        keywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 
+        keywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY',
                     'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN',
                     'INNER JOIN', 'OUTER JOIN', 'ON', 'INSERT INTO', 'VALUES',
                     'UPDATE', 'SET', 'DELETE FROM', 'CREATE TABLE', 'ALTER TABLE',
                     'DROP TABLE', 'UNION', 'UNION ALL']
-        
+
         result = code.upper()
-        
+
         for keyword in sorted(keywords, key=len, reverse=True):
             result = re.sub(r'\b' + keyword + r'\b', '\n' + keyword, result, flags=re.IGNORECASE)
-        
+
         # Clean up
         result = re.sub(r'\n\s*\n', '\n', result)
         result = result.strip()
-        
+
         return {'result': result, 'valid': True}
     except Exception as e:
         return {'error': str(e), 'valid': False}
@@ -207,13 +207,13 @@ def beautify_xml(code, indent=2):
     """Beautify XML"""
     try:
         import xml.dom.minidom as minidom
-        
+
         dom = minidom.parseString(code)
         result = dom.toprettyxml(indent=' ' * indent)
-        
+
         # Remove extra blank lines
         result = '\n'.join([line for line in result.split('\n') if line.strip()])
-        
+
         return {'result': result, 'valid': True}
     except Exception as e:
         return {'error': str(e), 'valid': False}
@@ -223,13 +223,13 @@ def process(form):
     """Process the form and return result"""
     if not form.is_valid():
         return {'error': 'Invalid input'}
-    
+
     cleaned = form.cleaned_data
     mode = cleaned.get('mode', 'json')
     code = cleaned.get('code', '')
     action = cleaned.get('action', 'beautify')
     indent = cleaned.get('indent', 2)
-    
+
     if mode == 'json':
         if action == 'beautify':
             result = beautify_json(code, indent)
@@ -257,13 +257,13 @@ def process(form):
             result = minify_json(code)  # XML minify similar to JSON
     else:
         return {'error': 'Unknown mode'}
-    
+
     # Add statistics
     if 'result' in result:
         result['original_size'] = len(code)
         result['result_size'] = len(result['result'])
         result['compression_ratio'] = round(len(result['result']) / max(len(code), 1) * 100, 1)
-    
+
     return result
 
 

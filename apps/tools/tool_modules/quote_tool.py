@@ -1,7 +1,6 @@
 """
 名言警句工具
 """
-from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import random
@@ -59,16 +58,16 @@ class QuoteTool(BaseTool):
     def handle(self, request, form):
         category = form.cleaned_data['category']
         count = form.cleaned_data['count']
-        
+
         # 根据类别筛选
         if category == 'all':
             quotes = self.QUOTES
         else:
             quotes = [q for q in self.QUOTES if q['category'] == category]
-        
+
         # 随机选择
         selected = random.sample(quotes, min(count, len(quotes)))
-        
+
         return {
             'quotes': selected,
             'count': len(selected),

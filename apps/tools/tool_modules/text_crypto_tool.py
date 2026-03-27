@@ -43,7 +43,7 @@ class TextCryptoTool(BaseTool):
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']
         key = form.cleaned_data['key']
-        
+
         try:
             if mode == 'encrypt':
                 result = self.encrypt(text, key)

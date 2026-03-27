@@ -31,7 +31,7 @@ class IPQueryTool(BaseTool):
 
     def handle(self, request, form):
         ip = form.cleaned_data['ip']
-        
+
         # 如果输入的是域名，先解析IP
         original_input = ip
         if not self._is_ip(ip):
@@ -40,41 +40,41 @@ class IPQueryTool(BaseTool):
                 ip = resolved_ip
             else:
                 return {'error': f'无法解析域名: {original_input}'}
-        
+
         # 使用多个API获取更全面的信息
         result = {
             'input': original_input,
             'query_ip': ip,
         }
-        
+
         # 1. ipinfo.io API
         ipinfo = self._query_ipinfo(ip)
         if ipinfo:
             result['ipinfo'] = ipinfo
-        
+
         # 2. ip-api.com (免费，支持中文)
         ipapi = self._query_ipapi(ip)
         if ipapi:
             result['ipapi'] = ipapi
-        
+
         return result
-    
+
     def _is_ip(self, ip_str):
         """检查是否为IP地址"""
         try:
             parts = ip_str.split('.')
             return len(parts) == 4 and all(0 <= int(p) <= 255 for p in parts)
-        except:
+        except Exception:
             return False
-    
+
     def _resolve_domain(self, domain):
         """解析域名到IP"""
         import socket
         try:
             return socket.gethostbyname(domain)
-        except:
+        except Exception:
             return None
-    
+
     def _query_ipinfo(self, ip):
         """查询 ipinfo.io"""
         try:
@@ -84,7 +84,7 @@ class IPQueryTool(BaseTool):
         except Exception as e:
             return {'error': str(e)}
         return None
-    
+
     def _query_ipapi(self, ip):
         """查询 ip-api.com"""
         try:

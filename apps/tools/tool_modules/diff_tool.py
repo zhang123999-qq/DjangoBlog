@@ -36,18 +36,18 @@ def diff_texts(text1, text2, show_line_numbers=True, context_lines=3):
     """Compare two texts and return unified diff"""
     lines1 = text1.splitlines(keepends=True)
     lines2 = text2.splitlines(keepends=True)
-    
+
     # Generate unified diff
     diff = difflib.unified_diff(
-        lines1, 
-        lines2, 
+        lines1,
+        lines2,
         fromfile='Original',
         tofile='Modified',
         n=context_lines
     )
-    
+
     diff_text = ''.join(diff)
-    
+
     # Parse diff for HTML display
     diff_lines = []
     for line in diff_text.splitlines():
@@ -62,16 +62,16 @@ def diff_texts(text1, text2, show_line_numbers=True, context_lines=3):
             line_type = 'removed'
         elif line.startswith('+') and not line.startswith('+++'):
             line_type = 'added'
-        
+
         diff_lines.append({
             'text': line,
             'type': line_type
         })
-    
+
     # Calculate statistics
     additions = sum(1 for line in diff_lines if line['type'] == 'added')
     removals = sum(1 for line in diff_lines if line['type'] == 'removed')
-    
+
     return {
         'diff_text': diff_text,
         'diff_lines': diff_lines,
@@ -85,13 +85,13 @@ def side_by_side_diff(text1, text2):
     """Generate side-by-side diff view"""
     lines1 = text1.splitlines()
     lines2 = text2.splitlines()
-    
+
     # Use SequenceMatcher for better alignment
     matcher = difflib.SequenceMatcher(None, lines1, lines2)
-    
+
     left_lines = []
     right_lines = []
-    
+
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == 'equal':
             for i in range(i1, i2):
@@ -119,7 +119,7 @@ def side_by_side_diff(text1, text2):
             for j in range(j1, j2):
                 left_lines.append({'text': '', 'type': 'empty'})
                 right_lines.append({'text': lines2[j], 'type': 'added'})
-    
+
     return {
         'left_lines': left_lines,
         'right_lines': right_lines,
@@ -131,19 +131,19 @@ def process(form):
     """Process the form and return result"""
     if not form.is_valid():
         return {'error': 'Invalid input'}
-    
+
     cleaned = form.cleaned_data
     text1 = cleaned.get('text1', '')
     text2 = cleaned.get('text2', '')
     show_line_numbers = cleaned.get('show_line_numbers', True)
     context_lines = cleaned.get('context_lines', 3)
-    
+
     # Generate unified diff
     unified = diff_texts(text1, text2, show_line_numbers, context_lines)
-    
+
     # Generate side-by-side diff
     side_by_side = side_by_side_diff(text1, text2)
-    
+
     return {
         'unified_diff': unified['diff_text'],
         'diff_lines': unified['diff_lines'],

@@ -35,7 +35,7 @@ from apps.blog.models import Category, Tag
 def init_boards():
     """创建默认论坛板块"""
     print('\n[论坛板块]')
-    
+
     boards_data = [
         {'name': '技术交流', 'slug': 'tech', 'description': '分享技术文章、开发经验、学习心得'},
         {'name': '问题求助', 'slug': 'help', 'description': '遇到问题？在这里寻求帮助'},
@@ -46,7 +46,7 @@ def init_boards():
         {'name': '人工智能', 'slug': 'ai', 'description': 'AI、机器学习、深度学习'},
         {'name': '数据库', 'slug': 'database', 'description': 'MySQL、Redis、MongoDB等数据库讨论'},
     ]
-    
+
     created = 0
     for data in boards_data:
         board, is_created = Board.objects.get_or_create(
@@ -56,7 +56,7 @@ def init_boards():
         if is_created:
             created += 1
             print(f'  + {board.name}')
-    
+
     print(f'  新建: {created} 个，总计: {Board.objects.count()} 个')
     return created
 
@@ -64,7 +64,7 @@ def init_boards():
 def init_categories():
     """创建默认博客分类"""
     print('\n[博客分类]')
-    
+
     categories_data = [
         {'name': '技术笔记', 'slug': 'tech-notes'},
         {'name': '项目实战', 'slug': 'projects'},
@@ -73,7 +73,7 @@ def init_categories():
         {'name': '编程学习', 'slug': 'learning'},
         {'name': '源码解析', 'slug': 'source-code'},
     ]
-    
+
     created = 0
     for data in categories_data:
         category, is_created = Category.objects.get_or_create(
@@ -83,7 +83,7 @@ def init_categories():
         if is_created:
             created += 1
             print(f'  + {category.name}')
-    
+
     print(f'  新建: {created} 个，总计: {Category.objects.count()} 个')
     return created
 
@@ -91,7 +91,7 @@ def init_categories():
 def init_tags():
     """创建默认标签"""
     print('\n[博客标签]')
-    
+
     tags_data = [
         {'name': 'Python', 'slug': 'python'},
         {'name': 'Django', 'slug': 'django'},
@@ -100,7 +100,7 @@ def init_tags():
         {'name': '后端开发', 'slug': 'backend'},
         {'name': '网络安全', 'slug': 'security'},
     ]
-    
+
     created = 0
     for data in tags_data:
         try:
@@ -119,7 +119,7 @@ def init_tags():
             if is_created:
                 created += 1
                 print(f'  + {tag.name}')
-    
+
     print(f'  新建: {created} 个，总计: {Tag.objects.count()} 个')
     return created
 
@@ -129,11 +129,11 @@ def main():
     print('='*50)
     print('初始化默认数据')
     print('='*50)
-    
+
     boards = init_boards()
     categories = init_categories()
     tags = init_tags()
-    
+
     print('\n' + '='*50)
     print(f'完成！新建: {boards + categories + tags} 项')
     print('='*50)

@@ -265,26 +265,26 @@ class AsciiArtTool(BaseTool):
     def handle(self, request, form):
         text = form.cleaned_data['text'].upper()
         style = form.cleaned_data['style']
-        
+
         try:
             font = ASCII_FONTS.get(style, ASCII_FONTS['standard'])
             result = self._generate_ascii_art(text, font, style)
-            
+
             return {
                 'text': text,
                 'style': style,
                 'result': result,
                 'copy_text': result,
             }
-            
+
         except Exception as e:
             return {'error': f'生成失败: {str(e)}'}
-    
-    def _generate_ascii_art(self, text, font):
+
+    def _generate_ascii_art(self, text, font, style):
         """生成ASCII艺术字"""
         # 获取每行的高度
         line_height = 5 if style != 'mini' else 2
-        
+
         # 收集每个字符的艺术字
         char_lines = []
         for char in text:
@@ -298,7 +298,7 @@ class AsciiArtTool(BaseTool):
                     char_lines.append(['  ', '  '])
                 else:
                     char_lines.append(['   '] * 5)
-        
+
         # 合并所有字符
         result_lines = []
         for i in range(line_height):
@@ -307,5 +307,5 @@ class AsciiArtTool(BaseTool):
                 if i < len(char_line):
                     line_parts.append(char_line[i])
             result_lines.append(' '.join(line_parts))
-        
+
         return '\n'.join(result_lines)

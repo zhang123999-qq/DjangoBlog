@@ -147,7 +147,11 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     def replies(self, request, pk=None):
         """获取主题回复（分页）"""
         topic = self.get_object()
-        replies = Reply.objects.filter(topic=topic, review_status='approved', is_deleted=False).select_related('author', 'topic').order_by('created_at')
+        replies = (
+            Reply.objects.filter(topic=topic, review_status='approved', is_deleted=False)
+            .select_related('author', 'topic')
+            .order_by('created_at')
+        )
 
         page = self.paginate_queryset(replies)
         if page is not None:

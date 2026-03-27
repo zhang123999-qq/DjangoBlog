@@ -54,16 +54,16 @@ class FakeDataTool(BaseTool):
         data_type = form.cleaned_data['data_type']
         count = form.cleaned_data['count']
         locale = form.cleaned_data['locale']
-        
+
         try:
             from faker import Faker
         except ImportError:
             return {'error': '请安装 faker: pip install faker'}
-        
+
         try:
             # 创建Faker实例
             fake = Faker(locale)
-            
+
             # 生成数据
             results = []
             for _ in range(count):
@@ -104,7 +104,7 @@ class FakeDataTool(BaseTool):
                         results.append(fake.city())
                     else:
                         results.append(fake.city())
-            
+
             return {
                 'data_type': data_type,
                 'count': count,

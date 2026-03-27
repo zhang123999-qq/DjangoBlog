@@ -117,6 +117,17 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "apps.core.migrations.*",
+    "apps.tools.migrations.*",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["apps.core.admin"]
+disable_error_code = ["attr-defined"]
+
 [build-system]
 requires = ["setuptools>=75.0", "wheel"]
 build-backend = "setuptools.build_meta"

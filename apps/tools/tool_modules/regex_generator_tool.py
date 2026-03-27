@@ -40,7 +40,7 @@ class RegexGeneratorTool(BaseTool):
     def handle(self, request, form):
         text = form.cleaned_data['text']
         pattern_type = form.cleaned_data['pattern_type']
-        
+
         try:
             # 预定义正则模板
             patterns = {
@@ -51,16 +51,16 @@ class RegexGeneratorTool(BaseTool):
                 'date': r'\d{4}-\d{2}-\d{2}',
                 'ip': r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b',
             }
-            
+
             # 获取对应的正则表达式
             regex_pattern = patterns.get(pattern_type)
             if not regex_pattern:
                 return {'error': '不支持的模式类型'}
-            
+
             # 测试正则表达式
             import re
             matches = re.findall(regex_pattern, text)
-            
+
             return {
                 'text': text,
                 'pattern_type': pattern_type,

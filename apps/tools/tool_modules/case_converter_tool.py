@@ -11,7 +11,7 @@ class CaseConverterForm(forms.Form):
     text = forms.CharField(
         label='输入文本',
         widget=forms.Textarea(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'rows': 6,
             'placeholder': '请输入要转换的文本...'
         }),
@@ -30,7 +30,7 @@ class CaseConverterTool(BaseTool):
 
     def handle(self, request, form):
         text = form.cleaned_data['text']
-        
+
         return {
             'original': text,
             'uppercase': text.upper(),

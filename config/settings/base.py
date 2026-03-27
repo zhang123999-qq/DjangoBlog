@@ -2,7 +2,9 @@
 
 import os
 import socket
+import sys
 from pathlib import Path
+
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,24 +28,24 @@ def get_local_ip():
 def get_allowed_hosts():
     """获取 ALLOWED_HOSTS 列表，自动包含本机 IP"""
     default_hosts = ['localhost', '127.0.0.1', '0.0.0.0']
-    
+
     # 尝试从环境变量读取
     env_hosts = os.environ.get('ALLOWED_HOSTS', '')
     if env_hosts:
         hosts = [h.strip() for h in env_hosts.split(',') if h.strip()]
     else:
         hosts = default_hosts.copy()
-    
+
     # 添加本机局域网 IP
     local_ip = get_local_ip()
     if local_ip and local_ip not in hosts:
         hosts.append(local_ip)
-    
+
     # 开发模式添加通配符（仅在 DEBUG=True 时）
     if os.environ.get('DEBUG', 'False').lower() == 'true':
         if '*' not in hosts:
             hosts.append('*')
-    
+
     return hosts
 
 
@@ -56,7 +58,7 @@ env = environ.Env(
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY', default='')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
@@ -74,14 +76,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sites',
-    
+
     # Third-party apps
     'rest_framework',
     'django_filters',
     'drf_spectacular',
     'compressor',
     'axes',
-    
+
     # Local apps
     'apps.core',
     'apps.accounts',
@@ -277,7 +279,6 @@ LOGGING = {
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 
 # Disable colorama on Windows to avoid OSError
-import sys
 if sys.platform == 'win32':
     os.environ['NO_COLOR'] = '1'
 
@@ -577,17 +578,17 @@ if SENTRY_DSN:
         from sentry_sdk.integrations.celery import CeleryIntegration
         from sentry_sdk.integrations.redis import RedisIntegration
         import logging
-        
+
         _logger = logging.getLogger(__name__)
-        
+
         # 环境标识
         environment = 'production' if not DEBUG else 'development'
-        
+
         sentry_sdk.init(
             dsn=SENTRY_DSN,
             environment=environment,
             release=f'djangoblog@{env("APP_VERSION", default="2.3.0")}',
-            
+
             # 集成
             integrations=[
                 DjangoIntegration(
@@ -601,26 +602,26 @@ if SENTRY_DSN:
                 ),
                 RedisIntegration(),
             ],
-            
+
             # 性能监控采样率
             traces_sample_rate=env.float('SENTRY_TRACES_SAMPLE_RATE', default=0.1),
             profiles_sample_rate=env.float('SENTRY_PROFILES_SAMPLE_RATE', default=0.1),
-            
+
             # 忽略特定异常
             ignore_errors=[
                 'django.http.Http404',
                 'django.core.exceptions.PermissionDenied',
             ],
-            
+
             # 发送用户信息
             send_default_pii=False,  # 不发送个人敏感信息
-            
+
             # 附加请求体
             request_bodies='small',  # 只发送小型请求体
         )
-        
+
         _logger.info(f'Sentry 初始化成功 (环境: {environment})')
-        
+
     except ImportError:
         pass  # sentry-sdk 未安装
     except Exception:

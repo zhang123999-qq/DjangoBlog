@@ -11,7 +11,7 @@ class PinyinConverterForm(forms.Form):
     text = forms.CharField(
         label='输入中文',
         widget=forms.Textarea(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'rows': 4,
             'placeholder': '请输入要转换的中文...'
         }),
@@ -46,7 +46,7 @@ class PinyinConverterTool(BaseTool):
         '爱': 'ai', '学': 'xue', '习': 'xi', '中': 'zhong', '国': 'guo',
         '人': 'ren', '民': 'min', '有': 'you', '梦': 'meng', '想': 'xiang',
     }
-    
+
     # 带声调版本
     PINYIN_WITH_TONE = {
         '啊': 'ā', '八': 'bā', '擦': 'cā', '大': 'dà', '饿': 'è',
@@ -63,17 +63,17 @@ class PinyinConverterTool(BaseTool):
     def handle(self, request, form):
         text = form.cleaned_data['text']
         use_tone = form.cleaned_data['tone']
-        
+
         # 简单的拼音转换（基于映射表）
         pinyin_map = self.PINYIN_WITH_TONE if use_tone else self.PINYIN_MAP
-        
+
         result = ''
         for char in text:
             if char.strip():  # 非空白字符
                 result += pinyin_map.get(char, char) + ' '
             else:
                 result += char
-        
+
         return {
             'original': text,
             'pinyin': result.strip(),

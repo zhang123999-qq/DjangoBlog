@@ -37,7 +37,7 @@ class WeatherTool(BaseTool):
     def handle(self, request, form):
         city = form.cleaned_data['city']
         unit = form.cleaned_data['unit']
-        
+
         try:
             # 使用OpenWeatherMap API查询天气
             # 注意：这里使用了一个示例API密钥，实际使用时需要替换为真实的API密钥
@@ -49,10 +49,10 @@ class WeatherTool(BaseTool):
                 "lang": "zh_cn",
                 "units": "metric" if unit == "celsius" else "imperial"
             }
-            
+
             response = requests.get(base_url, params=params)
             data = response.json()
-            
+
             if response.status_code == 200:
                 weather_data = {
                     "city": data.get("name"),

@@ -4,7 +4,6 @@
 from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
-import unicodedata
 
 
 # 简繁体对照表（常用字）
@@ -27,7 +26,7 @@ class ChineseConversionForm(forms.Form):
     text = forms.CharField(
         label='输入文本',
         widget=forms.Textarea(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'rows': 6,
             'placeholder': '请输入要转换的文本...'
         }),
@@ -95,14 +94,14 @@ class ChineseConversionTool(BaseTool):
     def handle(self, request, form):
         text = form.cleaned_data['text']
         conversion_type = form.cleaned_data['conversion_type']
-        
+
         if conversion_type == 's2t':
             result = self.s2t(text)
             direction = '简体 → 繁体'
         else:
             result = self.t2s(text)
             direction = '繁体 → 简体'
-        
+
         return {
             'original': text,
             'converted': result,

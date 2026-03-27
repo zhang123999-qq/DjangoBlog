@@ -32,11 +32,11 @@ class EmailValidatorTool(BaseTool):
 
     def handle(self, request, form):
         email = form.cleaned_data['email'].strip()
-        
+
         # 基本格式检查
         is_valid = True
         message = ''
-        
+
         # 正则检查
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(pattern, email):
@@ -51,10 +51,10 @@ class EmailValidatorTool(BaseTool):
             except ValidationError:
                 is_valid = False
                 message = '邮箱格式不正确'
-        
+
         # 提取邮箱各部分
         parts = email.split('@') if '@' in email else ['', '']
-        
+
         return {
             'email': email,
             'is_valid': is_valid,

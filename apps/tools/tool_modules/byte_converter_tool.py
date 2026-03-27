@@ -44,7 +44,7 @@ class ByteConverterTool(BaseTool):
     def handle(self, request, form):
         value = float(form.cleaned_data['value'])
         unit = form.cleaned_data['unit']
-        
+
         # 转换为字节
         units = {
             'B': 1,
@@ -53,9 +53,9 @@ class ByteConverterTool(BaseTool):
             'GB': 1024 ** 3,
             'TB': 1024 ** 4,
         }
-        
+
         bytes_value = value * units[unit]
-        
+
         # 转换为各单位的值
         result = {
             'original': {
@@ -68,7 +68,7 @@ class ByteConverterTool(BaseTool):
             'GB': round(bytes_value / (1024 ** 3), 6),
             'TB': round(bytes_value / (1024 ** 4), 8),
         }
-        
+
         # 智能推荐显示
         if bytes_value < 1024:
             display = f"{result['B']} B"
@@ -80,7 +80,7 @@ class ByteConverterTool(BaseTool):
             display = f"{result['GB']} GB"
         else:
             display = f"{result['TB']} TB"
-        
+
         result['smart_display'] = display
-        
+
         return result

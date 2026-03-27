@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.utils.text import slugify
 from django.urls import reverse
 from django.db.models import F
 from apps.core.utils import generate_slug
@@ -57,7 +56,7 @@ class Topic(models.Model):
         ('approved', '已通过'),
         ('rejected', '已拒绝'),
     )
-    
+
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='topics')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='topics')
     title = models.CharField(max_length=200)
@@ -67,7 +66,13 @@ class Topic(models.Model):
     is_pinned = models.BooleanField(default=False)
     is_locked = models.BooleanField(default=False)
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='pending')
-    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_topics')
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_topics',
+    )
     reviewed_at = models.DateTimeField(null=True, blank=True)
     review_note = models.TextField(blank=True)
     last_reply_at = models.DateTimeField(null=True, blank=True)
@@ -113,15 +118,15 @@ class Topic(models.Model):
         self.save()
         # 更新版块的统计信息
         self.board.update_counts()
-    
+
     @property
     def is_pending(self):
         return self.review_status == 'pending'
-    
+
     @property
     def is_approved(self):
         return self.review_status == 'approved'
-    
+
     @property
     def is_rejected(self):
         return self.review_status == 'rejected'
@@ -133,14 +138,20 @@ class Reply(models.Model):
         ('approved', '已通过'),
         ('rejected', '已拒绝'),
     )
-    
+
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='replies')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='replies')
     content = models.TextField()
     like_count = models.PositiveIntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='pending')
-    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_replies')
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_replies',
+    )
     reviewed_at = models.DateTimeField(null=True, blank=True)
     review_note = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -164,15 +175,15 @@ class Reply(models.Model):
         """更新点赞数"""
         self.like_count = self.likes.count()
         self.save()
-    
+
     @property
     def is_pending(self):
         return self.review_status == 'pending'
-    
+
     @property
     def is_approved(self):
         return self.review_status == 'approved'
-    
+
     @property
     def is_rejected(self):
         return self.review_status == 'rejected'

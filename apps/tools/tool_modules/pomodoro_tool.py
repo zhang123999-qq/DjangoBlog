@@ -42,11 +42,11 @@ class PomodoroTool(BaseTool):
         duration = form.cleaned_data['duration']
         break_duration = form.cleaned_data['break_duration']
         rounds = form.cleaned_data['rounds']
-        
+
         total_work = duration * rounds
         total_break = break_duration * (rounds - 1) if rounds > 1 else 0
         total_time = total_work + total_break
-        
+
         # 计算时间安排
         schedule = []
         for i in range(rounds):
@@ -54,7 +54,7 @@ class PomodoroTool(BaseTool):
                 'round': i + 1,
                 'type': '工作',
                 'duration': duration,
-                'start': f"第{i* (duration + break_duration)}分钟",
+                'start': f"第{i * (duration + break_duration)}分钟",
                 'end': f"第{(i+1)*duration + i*break_duration}分钟"
             })
             if i < rounds - 1:
@@ -65,7 +65,7 @@ class PomodoroTool(BaseTool):
                     'start': f"第{(i+1)*duration + i*break_duration}分钟",
                     'end': f"第{(i+1)*(duration + break_duration)}分钟"
                 })
-        
+
         return {
             'duration': duration,
             'break_duration': break_duration,

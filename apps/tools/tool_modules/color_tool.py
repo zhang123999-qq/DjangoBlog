@@ -42,7 +42,7 @@ class ColorTool(BaseTool):
         r, g, b = r / 255, g / 255, b / 255
         max_c = max(r, g, b)
         min_c = min(r, g, b)
-        l = (max_c + min_c) / 2
+        lightness = (max_c + min_c) / 2
 
         if max_c == min_c:
             h = s = 0
@@ -57,14 +57,14 @@ class ColorTool(BaseTool):
                 h = (r - g) / d + 4
             h /= 6
 
-        return round(h * 360), round(s * 100), round(l * 100)
+        return round(h * 360), round(s * 100), round(lightness * 100)
 
     def handle(self, request, form):
         color = form.cleaned_data['color'].strip()
-        
+
         try:
             r, g, b = None, None, None
-            
+
             # 解析颜色值
             if color.startswith('#'):
                 r, g, b = self.hex_to_rgb(color)
@@ -81,22 +81,22 @@ class ColorTool(BaseTool):
                     r, g, b = self.hex_to_rgb('#' + color)
                 else:
                     return {'error': '无法识别的颜色格式'}
-            
+
             if r is None:
                 return {'error': '无法解析颜色值'}
-            
+
             # 转换为各种格式
-            h, s, l = self.rgb_to_hsl(r, g, b)
-            
+            h, s, lightness = self.rgb_to_hsl(r, g, b)
+
             return {
                 'input': color,
                 'hex': self.rgb_to_hex(r, g, b),
                 'rgb': f'rgb({r}, {g}, {b})',
                 'rgba': f'rgba({r}, {g}, {b}, 1)',
-                'hsl': f'hsl({h}, {s}%, {l}%)',
+                'hsl': f'hsl({h}, {s}%, {lightness}%)',
                 'values': {
                     'r': r, 'g': g, 'b': b,
-                    'h': h, 's': s, 'l': l,
+                    'h': h, 's': s, 'lightness': lightness,
                 },
                 'preview': self.rgb_to_hex(r, g, b),
             }

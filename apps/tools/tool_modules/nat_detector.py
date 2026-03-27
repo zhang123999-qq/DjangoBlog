@@ -25,15 +25,15 @@ class NATDetectorTool(BaseTool):
         # NAT检测主要在前端通过WebRTC完成
         # 这里返回服务器端信息
         import socket
-        
+
         # 获取服务器信息
         try:
             hostname = socket.gethostname()
             local_ip = socket.gethostbyname(hostname)
-        except:
+        except Exception:
             hostname = "未知"
             local_ip = "未知"
-        
+
         # 尝试获取公网IP（作为备用）
         public_ip = None
         try:
@@ -41,9 +41,9 @@ class NATDetectorTool(BaseTool):
             response = requests.get('https://api.ipify.org?format=json', timeout=5)
             if response.status_code == 200:
                 public_ip = response.json().get('ip')
-        except:
+        except Exception:
             pass
-        
+
         return {
             'server_info': {
                 'hostname': hostname,

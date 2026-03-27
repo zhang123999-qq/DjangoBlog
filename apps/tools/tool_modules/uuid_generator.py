@@ -51,7 +51,7 @@ class UUIDForm(forms.Form):
 def generate_uuids(version, count, namespace=None, name=None, uppercase=False, no_hyphens=False):
     """Generate UUIDs based on version"""
     uuids = []
-    
+
     for _ in range(count):
         if version == '4':
             new_uuid = uuid.uuid4()
@@ -86,17 +86,17 @@ def generate_uuids(version, count, namespace=None, name=None, uppercase=False, n
                 new_uuid = uuid.uuid4()  # Fallback
         else:
             new_uuid = uuid.uuid4()
-        
+
         uuid_str = str(new_uuid)
-        
+
         if uppercase:
             uuid_str = uuid_str.upper()
-        
+
         if no_hyphens:
             uuid_str = uuid_str.replace('-', '')
-        
+
         uuids.append(uuid_str)
-    
+
     return uuids
 
 
@@ -104,7 +104,7 @@ def process(form):
     """Process the form and return result"""
     if not form.is_valid():
         return {'error': 'Invalid input', 'uuids': []}
-    
+
     cleaned = form.cleaned_data
     version = cleaned.get('version', '4')
     count = cleaned.get('count', 1)
@@ -112,9 +112,9 @@ def process(form):
     name = cleaned.get('name', '')
     uppercase = cleaned.get('uppercase', False)
     no_hyphens = cleaned.get('no_hyphens', False)
-    
+
     uuids = generate_uuids(version, count, namespace, name, uppercase, no_hyphens)
-    
+
     return {
         'uuids': uuids,
         'count': len(uuids),

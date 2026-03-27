@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 from apps.tools.base_tool import BaseTool
 from PIL import Image
 import io
-import os
 
 
 class ImageCompressForm(forms.Form):
@@ -85,26 +84,25 @@ class ImageCompressTool(BaseTool):
         output_format = form.cleaned_data['output_format']
         max_width = form.cleaned_data.get('max_width')
         max_height = form.cleaned_data.get('max_height')
-        
+
         try:
             # 读取图片
             img = Image.open(image_file)
             original_size = image_file.size
             original_format = img.format or 'PNG'
-            original_mode = img.mode
-            
+
             # 转换RGBA为RGB（JPEG不支持透明通道）
             if output_format == 'jpeg' and img.mode in ('RGBA', 'P'):
                 img = img.convert('RGB')
             elif output_format == 'auto' and original_format == 'JPEG' and img.mode in ('RGBA', 'P'):
                 img = img.convert('RGB')
-            
+
             # 缩放图片
             if max_width or max_height:
                 max_width = max_width or img.width
                 max_height = max_height or img.height
                 img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-            
+
             # 确定输出格式
             if output_format == 'auto':
                 if original_format == 'JPEG':
@@ -117,24 +115,24 @@ class ImageCompressTool(BaseTool):
                 fmt = output_format.upper()
                 if fmt == 'WEBP':
                     fmt = 'WEBP'
-            
+
             # 压缩图片
             output = io.BytesIO()
             save_kwargs = {'format': fmt}
-            
+
             if fmt in ('JPEG', 'WEBP'):
                 save_kwargs['quality'] = quality
                 save_kwargs['optimize'] = True
             elif fmt == 'PNG':
                 save_kwargs['optimize'] = True
-            
+
             img.save(output, **save_kwargs)
             compressed_size = output.tell()
             output.seek(0)
-            
+
             # 计算压缩比
             compression_ratio = (1 - compressed_size / original_size) * 100
-            
+
             # 生成预览（base64）
             preview = io.BytesIO()
             preview_img = img.copy()
@@ -143,7 +141,7 @@ class ImageCompressTool(BaseTool):
             preview_img.save(preview, format=preview_format, quality=85)
             import base64
             preview_base64 = base64.b64encode(preview.getvalue()).decode()
-            
+
             return {
                 'success': True,
                 'original': {
@@ -165,10 +163,10 @@ class ImageCompressTool(BaseTool):
                 'preview_base64': preview_base64,
                 'preview_format': f'image/{preview_format.lower()}',
             }
-            
+
         except Exception as e:
             return {'error': f'压缩失败: {str(e)}'}
-    
+
     def _format_size(self, bytes_size):
         """格式化文件大小"""
         for unit in ['B', 'KB', 'MB', 'GB']:

@@ -46,7 +46,7 @@ class NumberConverterForm(forms.Form):
 def parse_number(number_str, base='auto'):
     """Parse number string to integer"""
     number_str = number_str.strip().lower()
-    
+
     if base == 'auto':
         # Auto detect base
         if number_str.startswith('0x') or number_str.startswith('0X'):
@@ -60,7 +60,7 @@ def parse_number(number_str, base='auto'):
             number_str = number_str[2:]
         else:
             base = '10'
-    
+
     try:
         return int(number_str, int(base))
     except ValueError:
@@ -85,7 +85,7 @@ def format_with_separators(number, base, separator='_', group_size=None):
     """Format number with separators for readability"""
     if group_size is None:
         group_size = {2: 8, 8: 3, 10: 3, 16: 4}.get(base, 4)
-    
+
     if base == 2:
         s = bin(number)[2:]
     elif base == 8:
@@ -96,11 +96,11 @@ def format_with_separators(number, base, separator='_', group_size=None):
         s = hex(number)[2:]
     else:
         s = str(number)
-    
+
     # Pad to multiple of group_size
     if len(s) % group_size != 0:
         s = '0' * (group_size - len(s) % group_size) + s
-    
+
     # Add separators
     groups = [s[i:i+group_size] for i in range(0, len(s), group_size)]
     return separator.join(groups)
@@ -110,25 +110,25 @@ def process(form):
     """Process the form and return result"""
     if not form.is_valid():
         return {'error': 'Invalid input'}
-    
+
     cleaned = form.cleaned_data
     number_str = cleaned.get('number', '').strip()
     input_base = cleaned.get('input_base', 'auto')
     output_base = cleaned.get('output_base', 'all')
     show_float = cleaned.get('show_float', False)
-    
+
     # Parse the number
     number = parse_number(number_str, input_base)
-    
+
     if number is None:
         return {'error': 'Invalid number format'}
-    
+
     result = {
         'input': number_str,
         'parsed': number,
         'is_float': isinstance(number, float),
     }
-    
+
     # Generate conversions
     if output_base == 'all':
         if isinstance(number, int):
@@ -158,19 +158,19 @@ def process(form):
                 result['output_formatted'] = format_with_separators(number, 16).upper()
         else:
             result['output'] = str(number)
-    
+
     # Additional representations
     if isinstance(number, int):
         result['ascii'] = ''
         if 0 <= number <= 0x10FFFF:
             try:
                 result['ascii'] = chr(number)
-            except:
+            except Exception:
                 pass
-        
+
         result['byte_count'] = (number.bit_length() + 7) // 8 or 1
         result['signed'] = number if number < 2**63 else f'{number} (too large for signed 64-bit)'
-    
+
     return result
 
 
