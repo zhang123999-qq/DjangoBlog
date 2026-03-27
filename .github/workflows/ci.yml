@@ -56,7 +56,7 @@ jobs:
           DEBUG: "False"
           USE_REDIS: "False"
         run: |
-          uv run pytest -q tests/test_p2_smoke.py
+          uv run pytest -q tests/test_p2_smoke.py tests/test_moderation_smoke.py
 
       - name: Node syntax smoke for key front-end files
         uses: actions/setup-node@v4
