@@ -4,7 +4,6 @@
 Django Blog 项目管理脚本
 用法: python manage_project.py [命令]
 """
-import os
 import sys
 import subprocess
 import shutil

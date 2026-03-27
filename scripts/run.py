@@ -20,11 +20,9 @@ import shutil
 import argparse
 import logging
 import traceback
-import time
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 from datetime import datetime
-from enum import Enum
 
 
 # ============================================
@@ -392,7 +390,7 @@ class DjangoBlogSetup:
         returncode, _, stderr = self._run_command(cmd, check=False, timeout=120)
 
         if returncode == 0:
-            print_success(f"虚拟环境创建成功")
+            print_success("虚拟环境创建成功")
             self.step_results['venv'] = 'success'
             return True
 
@@ -617,7 +615,7 @@ CSRF_TRUSTED_ORIGINS=http://localhost:8000
         """创建启动脚本"""
         # Linux/Mac
         sh = self.project_root / 'start_server.sh'
-        sh.write_text(f'''#!/bin/bash
+        sh.write_text('''#!/bin/bash
 cd "$(dirname "$0")"
 source .venv/bin/activate
 mkdir -p logs
@@ -629,7 +627,7 @@ gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120
 
         # Windows
         bat = self.project_root / 'start_server.bat'
-        bat.write_text(f'''@echo off
+        bat.write_text('''@echo off
 cd /d "%~dp0"
 call .venv\\Scripts\\activate.bat
 pip install waitress -q

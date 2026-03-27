@@ -10,6 +10,7 @@
 - 创建默认博客分类 (6个)
 - 创建默认标签 (6个)
 """
+
 import os
 import sys
 from pathlib import Path
@@ -23,13 +24,25 @@ sys.path.insert(0, str(BASE_DIR))
 # 设置 Django 设置（可被外部 DJANGO_SETTINGS_MODULE 覆盖）
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
 
-# 初始化 Django
-import django
-django.setup()
+# 延迟导入（避免 E402）
+Board = None
+Category = None
+Tag = None
 
-# 导入模型
-from apps.forum.models import Board
-from apps.blog.models import Category, Tag
+
+def _setup_django():
+    """初始化 Django 并导入模型。"""
+    global Board, Category, Tag
+
+    import django
+    django.setup()
+
+    from apps.forum.models import Board as _Board
+    from apps.blog.models import Category as _Category, Tag as _Tag
+
+    Board = _Board
+    Category = _Category
+    Tag = _Tag
 
 
 def init_boards():
@@ -49,10 +62,7 @@ def init_boards():
 
     created = 0
     for data in boards_data:
-        board, is_created = Board.objects.get_or_create(
-            name=data['name'],
-            defaults=data
-        )
+        board, is_created = Board.objects.get_or_create(name=data['name'], defaults=data)
         if is_created:
             created += 1
             print(f'  + {board.name}')
@@ -76,10 +86,7 @@ def init_categories():
 
     created = 0
     for data in categories_data:
-        category, is_created = Category.objects.get_or_create(
-            name=data['name'],
-            defaults=data
-        )
+        category, is_created = Category.objects.get_or_create(name=data['name'], defaults=data)
         if is_created:
             created += 1
             print(f'  + {category.name}')
@@ -104,21 +111,16 @@ def init_tags():
     created = 0
     for data in tags_data:
         try:
-            tag, is_created = Tag.objects.get_or_create(
-                slug=data['slug'],
-                defaults=data
-            )
-            if is_created:
-                created += 1
-                print(f'  + {tag.name}')
+            tag, is_created = Tag.objects.get_or_create(slug=data['slug'], defaults=data)
         except Exception:
             tag, is_created = Tag.objects.get_or_create(
                 name=data['name'],
-                defaults={'slug': data['slug']}
+                defaults={'slug': data['slug']},
             )
-            if is_created:
-                created += 1
-                print(f'  + {tag.name}')
+
+        if is_created:
+            created += 1
+            print(f'  + {tag.name}')
 
     print(f'  新建: {created} 个，总计: {Tag.objects.count()} 个')
     return created
@@ -126,17 +128,19 @@ def init_tags():
 
 def main():
     """主函数"""
-    print('='*50)
+    _setup_django()
+
+    print('=' * 50)
     print('初始化默认数据')
-    print('='*50)
+    print('=' * 50)
 
     boards = init_boards()
     categories = init_categories()
     tags = init_tags()
 
-    print('\n' + '='*50)
+    print('\n' + '=' * 50)
     print(f'完成！新建: {boards + categories + tags} 项')
-    print('='*50)
+    print('=' * 50)
 
 
 if __name__ == '__main__':
