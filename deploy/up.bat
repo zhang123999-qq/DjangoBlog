@@ -25,9 +25,7 @@ echo [3/4] 执行数据库迁移
 docker compose --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" exec web python manage.py migrate
 if errorlevel 1 exit /b 1
 
-echo [4/4] 收集静态文件
-docker compose --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" exec web python manage.py collectstatic --noinput
-if errorlevel 1 exit /b 1
+echo [4/4] 跳过 collectstatic（已在镜像构建阶段完成）
 
 echo 完成 ✅
 echo 访问: http://localhost:8000/
