@@ -20,8 +20,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 添加项目路径
 sys.path.insert(0, str(BASE_DIR))
 
-# 设置 Django 设置
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+# 配置 PyMySQL（与 manage.py / wsgi.py 保持一致）
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    pymysql.version_info = (2, 2, 0, 'final', 0)
+except ImportError:
+    pass
+
+# 设置 Django 设置（可被外部 DJANGO_SETTINGS_MODULE 覆盖）
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
 
 # 初始化 Django
 import django
