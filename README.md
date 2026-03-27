@@ -187,6 +187,42 @@ bash deploy/install-security-tools.sh --with-gitleaks
 
 ---
 
+## ⚡ 压力测试（k6）
+
+已内置 k6 压测脚本：
+
+- `tests/perf/k6_smoke.js`（轻量压测）
+- `tests/perf/k6_stress.js`（分阶段并发压测）
+- `deploy/perf-gate.bat` / `deploy/perf-gate.sh`（一键执行）
+
+### 安装 k6
+
+Windows:
+
+```powershell
+winget install k6.k6
+```
+
+macOS:
+
+```bash
+brew install k6
+```
+
+### 运行
+
+```bash
+# 默认 smoke
+BASE_URL=http://127.0.0.1:8000 bash deploy/perf-gate.sh
+# Windows
+set BASE_URL=http://127.0.0.1:8000 && deploy\perf-gate.bat
+
+# stress
+bash deploy/perf-gate.sh --stress
+# Windows
+set BASE_URL=http://127.0.0.1:8000 && deploy\perf-gate.bat --stress
+```
+
 ## 📄 License
 
 MIT
