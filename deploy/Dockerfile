@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # DjangoBlog production Dockerfile
 FROM python:3.13-slim AS builder
 
@@ -7,16 +8,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Build dependencies (mysqlclient / cryptography, etc.)
+# Build dependencies (for potential source builds)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    default-libmysqlclient-dev \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies from production locklist
+# Install Python dependencies from production locklist (cache-enabled)
 COPY requirements/ /app/requirements/
-RUN pip install --no-cache-dir -r /app/requirements/production.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r /app/requirements/production.txt
 
 FROM python:3.13-slim
 
@@ -30,13 +31,18 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy project
-COPY . /app
-
 # Non-root runtime user
 RUN useradd -ms /bin/bash djangouser \
-    && mkdir -p /app/logs \
-    && chown -R djangouser:djangouser /app
+    && mkdir -p /app/logs
+
+# Copy project with ownership to avoid expensive chown -R
+COPY --chown=djangouser:djangouser manage.py /app/manage.py
+COPY --chown=djangouser:djangouser apps/ /app/apps/
+COPY --chown=djangouser:djangouser config/ /app/config/
+COPY --chown=djangouser:djangouser moderation/ /app/moderation/
+COPY --chown=djangouser:djangouser templates/ /app/templates/
+COPY --chown=djangouser:djangouser static/ /app/static/
+
 USER djangouser
 
 # Prepare static assets

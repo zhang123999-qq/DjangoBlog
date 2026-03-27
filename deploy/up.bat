@@ -14,6 +14,10 @@ if not exist "%ENV_FILE%" (
 
 cd /d "%ROOT_DIR%"
 
+REM P1: enable BuildKit for faster/cached builds
+set DOCKER_BUILDKIT=1
+set COMPOSE_DOCKER_CLI_BUILD=1
+
 echo [1/4] 启动容器
 docker compose --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" up -d
 if errorlevel 1 exit /b 1

@@ -13,6 +13,10 @@ fi
 
 cd "$ROOT_DIR"
 
+# P1: enable BuildKit for faster/cached builds
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 echo "[1/4] 启动容器"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
 
