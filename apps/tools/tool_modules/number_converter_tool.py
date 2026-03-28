@@ -178,9 +178,9 @@ def process(form):
 
 
 class NumberConverterTool(BaseTool):
-    name = "进制转换"
+    name = "数字格式转换"
     slug = "number-converter"
-    description = "二进制/八进制/十进制/十六进制互转"
+    description = "自动识别并转换二/八/十/十六进制，支持浮点表示"
     icon = "number"
     category = ToolCategory.ENCODE
     form_class = NumberConverterForm
