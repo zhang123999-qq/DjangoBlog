@@ -6,21 +6,20 @@ from django.db.models import F
 from django.core.cache import cache
 from apps.core.utils import generate_slug
 
-
 # Redis key 前缀（与 tasks.py 保持一致）
-VIEWS_CACHE_PREFIX = 'post:views:'
+VIEWS_CACHE_PREFIX = "post:views:"
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name='分类名称')
+    name = models.CharField(max_length=100, unique=True, verbose_name="分类名称")
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = '分类'
-        verbose_name_plural = '分类'
-        ordering = ['name']
+        verbose_name = "分类"
+        verbose_name_plural = "分类"
+        ordering = ["name"]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -31,19 +30,19 @@ class Category(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('blog:category', args=[self.slug])
+        return reverse("blog:category", args=[self.slug])
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name='标签名称')
+    name = models.CharField(max_length=50, unique=True, verbose_name="标签名称")
     slug = models.SlugField(max_length=50, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = '标签'
-        verbose_name_plural = '标签'
-        ordering = ['name']
+        verbose_name = "标签"
+        verbose_name_plural = "标签"
+        ordering = ["name"]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -55,41 +54,45 @@ class Tag(models.Model):
 
     def get_absolute_url(self):
         if self.slug:
-            return reverse('blog:tag', args=[self.slug])
-        return '#'  # 返回空链接，避免报错
+            return reverse("blog:tag", args=[self.slug])
+        return "#"  # 返回空链接，避免报错
 
 
 class Post(models.Model):
     STATUS_CHOICES = (
-        ('draft', '草稿'),
-        ('published', '发布'),
-        ('archived', '归档'),
+        ("draft", "草稿"),
+        ("published", "发布"),
+        ("archived", "归档"),
     )
 
-    title = models.CharField(max_length=200, verbose_name='标题')
+    title = models.CharField(max_length=200, verbose_name="标题")
     slug = models.SlugField(max_length=200, unique=True, blank=True)
-    summary = models.TextField(max_length=500, blank=True, verbose_name='摘要')
-    content = models.TextField(verbose_name='内容')
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts', verbose_name='作者')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts', verbose_name='分类')
-    tags = models.ManyToManyField(Tag, blank=True, related_name='posts', verbose_name='标签')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name='状态')
-    allow_comments = models.BooleanField(default=True, verbose_name='允许评论')
-    views_count = models.PositiveIntegerField(default=0, verbose_name='浏览量')
-    published_at = models.DateTimeField(null=True, blank=True, verbose_name='发布时间')
+    summary = models.TextField(max_length=500, blank=True, verbose_name="摘要")
+    content = models.TextField(verbose_name="内容")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts", verbose_name="作者"
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts", verbose_name="分类"
+    )
+    tags = models.ManyToManyField(Tag, blank=True, related_name="posts", verbose_name="标签")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft", verbose_name="状态")
+    allow_comments = models.BooleanField(default=True, verbose_name="允许评论")
+    views_count = models.PositiveIntegerField(default=0, verbose_name="浏览量")
+    published_at = models.DateTimeField(null=True, blank=True, verbose_name="发布时间")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = '文章'
-        verbose_name_plural = '文章'
-        ordering = ['-published_at', '-created_at']
+        verbose_name = "文章"
+        verbose_name_plural = "文章"
+        ordering = ["-published_at", "-created_at"]
         indexes = [
-            models.Index(fields=['-published_at']),
-            models.Index(fields=['status']),
-            models.Index(fields=['category']),
-            models.Index(fields=['author']),  # 添加作者索引
-            models.Index(fields=['slug']),    # 添加slug索引
+            models.Index(fields=["-published_at"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["category"]),
+            models.Index(fields=["author"]),  # 添加作者索引
+            models.Index(fields=["slug"]),  # 添加slug索引
         ]
 
     def save(self, *args, **kwargs):
@@ -100,7 +103,8 @@ class Post(models.Model):
             else:
                 # 标题为空时，使用时间戳作为 slug
                 from django.utils import timezone
-                self.slug = f'post-{timezone.now().timestamp():.0f}'
+
+                self.slug = f"post-{timezone.now().timestamp():.0f}"
 
         # 确保 slug 唯一
         original_slug = self.slug
@@ -113,12 +117,13 @@ class Post(models.Model):
             if not queryset.exists():
                 break
             # slug 已存在，添加数字后缀
-            self.slug = f'{original_slug}-{counter}'
+            self.slug = f"{original_slug}-{counter}"
             counter += 1
 
         # 设置发布时间
-        if self.status == 'published' and not self.published_at:
+        if self.status == "published" and not self.published_at:
             from django.utils import timezone
+
             self.published_at = timezone.now()
 
         super().save(*args, **kwargs)
@@ -127,7 +132,7 @@ class Post(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('blog:post_detail', args=[self.slug])
+        return reverse("blog:post_detail", args=[self.slug])
 
     def increase_views(self):
         """
@@ -140,10 +145,10 @@ class Post(models.Model):
         """
         try:
             # 使用 Redis 计数
-            cache_key = f'{VIEWS_CACHE_PREFIX}{self.pk}'
+            cache_key = f"{VIEWS_CACHE_PREFIX}{self.pk}"
 
             # 原子递增
-            if hasattr(cache, 'incr'):
+            if hasattr(cache, "incr"):
                 # django-redis 支持 incr
                 try:
                     cache.incr(cache_key)
@@ -152,95 +157,98 @@ class Post(models.Model):
                     cache.set(cache_key, 1, 3600)  # 1 小时过期
             else:
                 # 降级处理：直接使用数据库
-                Post.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
-                self.refresh_from_db(fields=['views_count'])
+                Post.objects.filter(pk=self.pk).update(views_count=F("views_count") + 1)
+                self.refresh_from_db(fields=["views_count"])
                 return
 
             # 更新内存中的值（乐观估计）
-            self.views_count = F('views_count') + 1
+            self.views_count = F("views_count") + 1
 
         except Exception as e:
             # 异常时降级到数据库直接更新
             import logging
+
             logger = logging.getLogger(__name__)
-            logger.warning(f'Redis 浏览量计数失败，降级到数据库: {e}')
-            Post.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
-            self.refresh_from_db(fields=['views_count'])
+            logger.warning(f"Redis 浏览量计数失败，降级到数据库: {e}")
+            Post.objects.filter(pk=self.pk).update(views_count=F("views_count") + 1)
+            self.refresh_from_db(fields=["views_count"])
 
 
 class Comment(models.Model):
     REVIEW_STATUS_CHOICES = (
-        ('pending', '待审核'),
-        ('approved', '已通过'),
-        ('rejected', '已拒绝'),
+        ("pending", "待审核"),
+        ("approved", "已通过"),
+        ("rejected", "已拒绝"),
     )
 
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', verbose_name='文章')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments", verbose_name="文章")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='comments',
-        verbose_name='用户',
+        related_name="comments",
+        verbose_name="用户",
     )
-    name = models.CharField(max_length=50, blank=True, verbose_name='姓名')
-    email = models.EmailField(blank=True, verbose_name='邮箱')
-    content = models.TextField(verbose_name='评论内容')
+    name = models.CharField(max_length=50, blank=True, verbose_name="姓名")
+    email = models.EmailField(blank=True, verbose_name="邮箱")
+    content = models.TextField(verbose_name="评论内容")
     is_approved = models.BooleanField(default=False)  # 保持兼容
-    review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='pending', verbose_name='审核状态')
+    review_status = models.CharField(
+        max_length=20, choices=REVIEW_STATUS_CHOICES, default="pending", verbose_name="审核状态"
+    )
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='reviewed_comments',
-        verbose_name='审核人',
+        related_name="reviewed_comments",
+        verbose_name="审核人",
     )
-    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name='审核时间')
-    review_note = models.TextField(blank=True, verbose_name='审核备注')
-    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP地址')
-    user_agent = models.CharField(max_length=200, blank=True, verbose_name='用户代理')
-    like_count = models.PositiveIntegerField(default=0, verbose_name='点赞数')
+    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="审核时间")
+    review_note = models.TextField(blank=True, verbose_name="审核备注")
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP地址")
+    user_agent = models.CharField(max_length=200, blank=True, verbose_name="用户代理")
+    like_count = models.PositiveIntegerField(default=0, verbose_name="点赞数")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = '评论'
-        verbose_name_plural = '评论'
-        ordering = ['-created_at']
+        verbose_name = "评论"
+        verbose_name_plural = "评论"
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['post', '-created_at']),
-            models.Index(fields=['review_status']),
-            models.Index(fields=['user']),
-            models.Index(fields=['-created_at']),
+            models.Index(fields=["post", "-created_at"]),
+            models.Index(fields=["review_status"]),
+            models.Index(fields=["user"]),
+            models.Index(fields=["-created_at"]),
         ]
 
     def __str__(self):
         if self.user:
-            return f'{self.user.username} 评论了 {self.post.title}'
-        return f'{self.name} 评论了 {self.post.title}'
+            return f"{self.user.username} 评论了 {self.post.title}"
+        return f"{self.name} 评论了 {self.post.title}"
 
     @property
     def is_pending(self):
-        return self.review_status == 'pending'
+        return self.review_status == "pending"
 
     @property
     def is_approved_status(self):
-        return self.review_status == 'approved'
+        return self.review_status == "approved"
 
     @property
     def is_rejected(self):
-        return self.review_status == 'rejected'
+        return self.review_status == "rejected"
 
     def update_like_count(self):
         """更新点赞数"""
         self.like_count = self.likes.count()
-        self.save(update_fields=['like_count'])
+        self.save(update_fields=["like_count"])
 
     def save(self, *args, **kwargs):
         # 保持 is_approved 与 review_status 的兼容性
-        if self.review_status == 'approved':
+        if self.review_status == "approved":
             self.is_approved = True
         else:
             self.is_approved = False
@@ -248,14 +256,16 @@ class Comment(models.Model):
 
 
 class CommentLike(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comment_likes', verbose_name='用户')
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes', verbose_name='评论')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comment_likes", verbose_name="用户"
+    )
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="likes", verbose_name="评论")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = '评论点赞'
-        verbose_name_plural = '评论点赞'
-        unique_together = ['user', 'comment']
+        verbose_name = "评论点赞"
+        verbose_name_plural = "评论点赞"
+        unique_together = ["user", "comment"]
 
     def __str__(self):
-        return f'{self.user.username} 点赞了评论'
+        return f"{self.user.username} 点赞了评论"
