@@ -4,6 +4,7 @@ import os
 import socket
 import sys
 from pathlib import Path
+from typing import Any
 
 import environ
 
@@ -171,8 +172,8 @@ AXES_COOL_DOWN_TIME = 300
 AXES_RESET_ON_SUCCESS = True
 # AXES_USE_USER_AGENT 已弃用，使用 AXES_LOCKOUT_PARAMETERS 替代
 AXES_LOCKOUT_PARAMETERS = [["ip_address"]]  # 仅按 IP 地址锁定
-AXES_IP_WHITELIST = []
-AXES_IP_BLACKLIST = []
+AXES_IP_WHITELIST: list[str] = []
+AXES_IP_BLACKLIST: list[str] = []
 
 # Internationalization
 LANGUAGE_CODE = 'zh-hans'
@@ -228,7 +229,7 @@ BAIDU_SECRET_KEY = env('BAIDU_SECRET_KEY', default='')
 BAIDU_MODERATION_ENABLED = bool(BAIDU_APP_ID and BAIDU_API_KEY and BAIDU_SECRET_KEY)
 
 # Caches - 将在环境配置中定义
-CACHES = {}
+CACHES: dict[str, Any] = {}
 
 # Email settings
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')

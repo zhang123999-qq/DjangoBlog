@@ -97,7 +97,7 @@
                                             <td id="using-nat">-</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">NAT 类型</td>
+                                            <td class="text-muted">NAT 特征推测</td>
                                             <td id="nat-type-detail">-</td>
                                         </tr>
                                         <tr>
@@ -150,7 +150,7 @@
                         <li><strong>解决IP短缺</strong>：是IPv4向IPv6过渡的重要技术</li>
                     </ul>
 
-                    <h6 class="mt-4 mb-2">NAT 类型</h6>
+                    <h6 class="mt-4 mb-2">常见 NAT 类型（科普）</h6>
                     <table class="table table-sm table-bordered">
                         <thead class="table-light">
                             <tr>
@@ -209,7 +209,7 @@
                         <li class="mb-2"><i class="bi bi-1-circle me-2"></i>检测本地网络接口IP</li>
                         <li class="mb-2"><i class="bi bi-2-circle me-2"></i>获取公网IP地址</li>
                         <li class="mb-2"><i class="bi bi-3-circle me-2"></i>判断NAT使用状态</li>
-                        <li><i class="bi bi-4-circle me-2"></i>分析NAT类型特征</li>
+                        <li><i class="bi bi-4-circle me-2"></i>推测NAT特征（非标准 STUN 判型）</li>
                     </ul>
                 </div>
             </div>
@@ -222,7 +222,7 @@
                 <div class="card-body">
                     <p class="text-muted small mb-0">
                         <i class="bi bi-check-circle text-success me-1"></i>
-                        所有检测在您的浏览器本地完成，不会上传任何数据到服务器。
+                        本工具会调用公开 IP 查询服务（如 ipify/ip.sb）或本站回退接口，仅用于本次检测，不做持久化存储。
                     </p>
                 </div>
             </div>
@@ -518,7 +518,7 @@ async function getPublicIP() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const response = await fetch('/tools/my-ip/', { 
+        const response = await fetch('/tools/my-ip/json/', { 
             signal: controller.signal
         });
         clearTimeout(timeoutId);

@@ -116,6 +116,11 @@ docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=200
 
 ## 🧑‍💻 本地开发（非 Docker）
 
+先在 `.env` 设置：
+
+- `DEPLOY_MODE=host`（让 precheck 跳过 Docker 必选项）
+- 确保 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 可真实登录 MySQL
+
 ```bash
 uv venv
 uv pip install -r requirements/development.txt
@@ -222,6 +227,18 @@ bash deploy/perf-gate.sh --stress
 # Windows
 set BASE_URL=http://127.0.0.1:8000 && deploy\perf-gate.bat --stress
 ```
+
+## 🧹 最近维护（2026-03-28）
+
+- 清理项目根目录临时诊断脚本（`tmp_*.py`）与页脚备份临时文件
+- 统一并收敛 flake8/black 规范差异（`E203/W503`）
+- 完成一轮全量质量门禁复核：
+  - `uv run flake8 .`
+  - `uv run python manage.py check`
+  - `uv run pytest -q`（当前基线：79 passed / 80 skipped）
+- 新增页脚备案号一键脚本：`scripts/set_beian_footer.py`
+
+---
 
 ## 📄 License
 

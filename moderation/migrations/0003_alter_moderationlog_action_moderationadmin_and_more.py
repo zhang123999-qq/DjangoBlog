@@ -8,47 +8,83 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('moderation', '0002_sensitiveword'),
+        ("moderation", "0002_sensitiveword"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='moderationlog',
-            name='action',
-            field=models.CharField(choices=[('approved', '通过'), ('rejected', '拒绝'), ('reminded', '提醒')], max_length=20),
+            model_name="moderationlog",
+            name="action",
+            field=models.CharField(
+                choices=[("approved", "通过"), ("rejected", "拒绝"), ("reminded", "提醒")], max_length=20
+            ),
         ),
         migrations.CreateModel(
-            name='ModerationAdmin',
+            name="ModerationAdmin",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('target_type', models.CharField(choices=[('comment', '评论'), ('topic', '主题'), ('reply', '回复')], max_length=20, unique=True, verbose_name='内容类型')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('admin', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='moderation_roles', to=settings.AUTH_USER_MODEL, verbose_name='审核管理员')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "target_type",
+                    models.CharField(
+                        choices=[("comment", "评论"), ("topic", "主题"), ("reply", "回复")],
+                        max_length=20,
+                        unique=True,
+                        verbose_name="内容类型",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "admin",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="moderation_roles",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="审核管理员",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '审核管理员分配',
-                'verbose_name_plural': '审核管理员分配',
-                'ordering': ['target_type'],
+                "verbose_name": "审核管理员分配",
+                "verbose_name_plural": "审核管理员分配",
+                "ordering": ["target_type"],
             },
         ),
         migrations.CreateModel(
-            name='ModerationReminder',
+            name="ModerationReminder",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('target_type', models.CharField(choices=[('comment', '评论'), ('topic', '主题'), ('reply', '回复')], max_length=20, verbose_name='内容类型')),
-                ('target_id', models.PositiveIntegerField(verbose_name='内容ID')),
-                ('is_processed', models.BooleanField(default=False, verbose_name='是否已处理')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('processed_at', models.DateTimeField(blank=True, null=True, verbose_name='处理时间')),
-                ('assigned_admin', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='moderation_reminders', to=settings.AUTH_USER_MODEL, verbose_name='指派管理员')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "target_type",
+                    models.CharField(
+                        choices=[("comment", "评论"), ("topic", "主题"), ("reply", "回复")],
+                        max_length=20,
+                        verbose_name="内容类型",
+                    ),
+                ),
+                ("target_id", models.PositiveIntegerField(verbose_name="内容ID")),
+                ("is_processed", models.BooleanField(default=False, verbose_name="是否已处理")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("processed_at", models.DateTimeField(blank=True, null=True, verbose_name="处理时间")),
+                (
+                    "assigned_admin",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="moderation_reminders",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="指派管理员",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '审核提醒',
-                'verbose_name_plural': '审核提醒',
-                'ordering': ['-created_at'],
-                'unique_together': {('target_type', 'target_id')},
+                "verbose_name": "审核提醒",
+                "verbose_name_plural": "审核提醒",
+                "ordering": ["-created_at"],
+                "unique_together": {("target_type", "target_id")},
             },
         ),
     ]

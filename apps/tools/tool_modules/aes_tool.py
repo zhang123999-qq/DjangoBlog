@@ -8,14 +8,10 @@ from apps.tools.base_tool import BaseTool
 import base64
 
 try:
-    # pycryptodome
-    from Crypto.Cipher import AES  # nosec B413 - 使用 pycryptodome（非废弃 pycrypto）
-    from Crypto.Util.Padding import pad, unpad  # nosec B413 - 使用 pycryptodome
+    # 仅用于探测依赖是否安装
+    import Crypto  # type: ignore[import-untyped]  # noqa: F401
     HAS_CRYPTO = True
 except ImportError:
-    AES = None
-    pad = None
-    unpad = None
     HAS_CRYPTO = False
 
 
@@ -55,6 +51,10 @@ class AESTool(BaseTool):
     def handle(self, request, form):
         if not HAS_CRYPTO:
             return {'error': '请安装 pycryptodome: pip install pycryptodome'}
+
+        # 延迟导入，避免缺依赖时模块加载失败，并让类型检查更稳定
+        from Crypto.Cipher import AES  # nosec B413 - 使用 pycryptodome（非废弃 pycrypto）
+        from Crypto.Util.Padding import pad, unpad  # nosec B413 - 使用 pycryptodome
 
         mode = form.cleaned_data['mode']
         text = form.cleaned_data['text']

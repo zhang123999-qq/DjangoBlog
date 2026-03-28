@@ -73,24 +73,30 @@ limit_request_field_size = 8190
 # ============================================
 # 钩子函数
 # ============================================
+
+
 def on_starting(server):
     """服务器启动时调用"""
-    print(f"DjangoBlog Gunicorn 服务器启动中...")
+    print("DjangoBlog Gunicorn 服务器启动中...")
     print(f"工作进程数: {workers}")
     print(f"工作模式: {worker_class}")
     print(f"绑定地址: {bind}")
 
+
 def when_ready(server):
     """服务器就绪时调用"""
-    print(f"DjangoBlog Gunicorn 服务器就绪")
+    print("DjangoBlog Gunicorn 服务器就绪")
+
 
 def on_exit(server):
     """服务器退出时调用"""
-    print(f"DjangoBlog Gunicorn 服务器关闭")
+    print("DjangoBlog Gunicorn 服务器关闭")
+
 
 def pre_fork(server, worker):
     """fork 前调用"""
     pass
+
 
 def post_fork(server, worker):
     """fork 后调用"""
@@ -101,13 +107,16 @@ def post_fork(server, worker):
     except ImportError:
         pass
 
+
 def pre_exec(server):
     """exec 前调用"""
-    print(f"DjangoBlog Gunicorn pre_exec")
+    print("DjangoBlog Gunicorn pre_exec")
+
 
 def worker_int(worker):
     """worker 被中断时调用"""
     print(f"Worker {worker.pid} 被中断")
+
 
 def worker_abort(worker):
     """worker 被中止时调用"""

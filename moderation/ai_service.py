@@ -200,8 +200,10 @@ class BaiduModerationService:
         for item in data:
             if not isinstance(item, dict):
                 continue
+            raw_type = item.get('type')
+            violation_type = raw_type if isinstance(raw_type, int) else -1
             violation = {
-                'type': type_map.get(item.get('type'), '其他'),
+                'type': type_map.get(violation_type, '其他'),
                 'msg': item.get('msg', ''),
                 'probability': item.get('probability', 0),
                 'hits': item.get('hits', []),

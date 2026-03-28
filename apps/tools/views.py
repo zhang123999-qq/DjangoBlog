@@ -1,4 +1,5 @@
 import logging
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from .registry import registry
@@ -58,3 +59,13 @@ def tool_detail(request, tool_slug):
 
     context = tool.get_context(request, form, result)
     return render(request, tool.template_name, context)
+
+
+def my_ip_json(request):
+    """返回访问者 IP（供 NAT 工具前端回退获取公网 IP）。"""
+    tool = registry.get_tool('my-ip')
+    if not tool:
+        return JsonResponse({'ok': False, 'error': 'my-ip tool not found'}, status=404)
+
+    ip = tool._get_client_ip(request)
+    return JsonResponse({'ok': True, 'ip': ip})

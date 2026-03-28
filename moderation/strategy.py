@@ -8,7 +8,7 @@
 """
 
 import logging
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
@@ -169,7 +169,7 @@ class ModerationStrategy:
 
         return result
 
-    def moderate_image(self, user, image_path: str = None, image_url: str = None) -> Dict[str, Any]:
+    def moderate_image(self, user, image_path: Optional[str] = None, image_url: Optional[str] = None) -> Dict[str, Any]:
         """审核图片
 
         Args:

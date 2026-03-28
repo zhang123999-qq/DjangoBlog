@@ -9,46 +9,62 @@ set ENV_FILE=%ROOT_DIR%\.env
 set PASS=0
 set WARN=0
 set FAIL=0
+set HAS_COMPOSE=0
+set DEPLOY_MODE=docker
+for /f "tokens=1,* delims==" %%A in ('findstr /b /c:"DEPLOY_MODE=" "%ENV_FILE%" 2^>nul') do set DEPLOY_MODE=%%B
+if /I not "%DEPLOY_MODE%"=="docker" if /I not "%DEPLOY_MODE%"=="host" set DEPLOY_MODE=docker
 
 echo ============================================================
 echo  DjangoBlog Deployment Precheck
 echo ============================================================
+echo [INFO] deploy mode: %DEPLOY_MODE%
 
-REM 1) Docker
-where docker >nul 2>nul
-if errorlevel 1 (
-  echo [FAIL] Docker not found
-  set /a FAIL+=1
-) else (
-  echo [PASS] Docker found
-  set /a PASS+=1
-  docker info >nul 2>nul
+REM 1) Docker / Compose (docker mode only)
+if /I "%DEPLOY_MODE%"=="docker" (
+  where docker >nul 2>nul
   if errorlevel 1 (
-    echo [FAIL] Docker daemon is not running
+    echo [FAIL] Docker not found
     set /a FAIL+=1
   ) else (
-    echo [PASS] Docker daemon is running
+    echo [PASS] Docker found
+    set /a PASS+=1
+    docker info >nul 2>nul
+    if errorlevel 1 (
+      echo [FAIL] Docker daemon is not running
+      set /a FAIL+=1
+    ) else (
+      echo [PASS] Docker daemon is running
+      set /a PASS+=1
+    )
+  )
+
+  REM 2) Compose
+  docker compose version >nul 2>nul
+  if errorlevel 1 (
+    echo [FAIL] docker compose unavailable
+    set /a FAIL+=1
+  ) else (
+    echo [PASS] docker compose available
+    set HAS_COMPOSE=1
     set /a PASS+=1
   )
+) else (
+  echo [WARN] host mode - skip docker/docker compose checks
+  set /a WARN+=1
 )
 
-REM 2) Compose
-docker compose version >nul 2>nul
-if errorlevel 1 (
-  echo [FAIL] docker compose unavailable
-  set /a FAIL+=1
+REM 3) compose file (docker mode only)
+if /I "%DEPLOY_MODE%"=="docker" (
+  if exist "%COMPOSE_FILE%" (
+    echo [PASS] docker-compose.yml exists
+    set /a PASS+=1
+  ) else (
+    echo [FAIL] missing %COMPOSE_FILE%
+    set /a FAIL+=1
+  )
 ) else (
-  echo [PASS] docker compose available
-  set /a PASS+=1
-)
-
-REM 3) compose file
-if exist "%COMPOSE_FILE%" (
-  echo [PASS] docker-compose.yml exists
-  set /a PASS+=1
-) else (
-  echo [FAIL] missing %COMPOSE_FILE%
-  set /a FAIL+=1
+  echo [WARN] host mode - skip docker-compose.yml check
+  set /a WARN+=1
 )
 
 REM 4) env file
@@ -61,7 +77,7 @@ if exist "%ENV_FILE%" (
 )
 
 REM 5) required keys
-for %%K in (SECRET_KEY DB_NAME DB_USER DB_PASSWORD MYSQL_ROOT_PASSWORD ALLOWED_HOSTS CSRF_TRUSTED_ORIGINS DEBUG SECURE_SSL_REDIRECT SESSION_COOKIE_SECURE CSRF_COOKIE_SECURE SECURE_HSTS_SECONDS) do (
+for %%K in (SECRET_KEY DB_NAME DB_USER DB_PASSWORD ALLOWED_HOSTS CSRF_TRUSTED_ORIGINS DEBUG SECURE_SSL_REDIRECT SESSION_COOKIE_SECURE CSRF_COOKIE_SECURE SECURE_HSTS_SECONDS) do (
   call :check_env %%K
 )
 
@@ -70,21 +86,32 @@ call :check_expected_env SECURE_SSL_REDIRECT True
 call :check_expected_env SESSION_COOKIE_SECURE True
 call :check_expected_env CSRF_COOKIE_SECURE True
 call :check_hsts_positive
+call :check_db_tcp
 
 REM 6) ports
 call :check_port 80
 call :check_port 8000
 
 REM 7) compose config
-if exist "%ENV_FILE%" (
-  docker compose --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" config >nul 2>nul
-  if errorlevel 1 (
-    echo [FAIL] compose config check failed
-    set /a FAIL+=1
+if /I "%DEPLOY_MODE%"=="docker" (
+  if "%HAS_COMPOSE%"=="1" (
+    if exist "%ENV_FILE%" (
+      docker compose --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" config >nul 2>nul
+      if errorlevel 1 (
+        echo [FAIL] compose config check failed
+        set /a FAIL+=1
+      ) else (
+        echo [PASS] compose config check passed
+        set /a PASS+=1
+      )
+    )
   ) else (
-    echo [PASS] compose config check passed
-    set /a PASS+=1
+    echo [WARN] skip compose config check - docker compose unavailable
+    set /a WARN+=1
   )
+) else (
+  echo [WARN] host mode - skip compose config check
+  set /a WARN+=1
 )
 
 REM 8) rollback hint
@@ -165,6 +192,17 @@ if %HSTS_NUM% GTR 0 (
 )
 set HSTS=
 set HSTS_NUM=
+goto :eof
+
+:check_db_tcp
+uv run python "%ROOT_DIR%\deploy\check_db_conn.py" "%ENV_FILE%" >nul 2>nul
+if errorlevel 1 (
+  echo [FAIL] DB connection/login check failed
+  set /a FAIL+=1
+) else (
+  echo [PASS] DB connection/login check passed
+  set /a PASS+=1
+)
 goto :eof
 
 :check_port

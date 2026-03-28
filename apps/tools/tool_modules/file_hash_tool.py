@@ -5,7 +5,6 @@ from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
 import hashlib
-import os
 
 
 class FileHashForm(forms.Form):

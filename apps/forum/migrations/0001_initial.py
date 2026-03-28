@@ -15,76 +15,108 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Board',
+            name="Board",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
-                ('slug', models.SlugField(blank=True, max_length=100, unique=True)),
-                ('description', models.TextField(blank=True)),
-                ('topic_count', models.PositiveIntegerField(default=0)),
-                ('reply_count', models.PositiveIntegerField(default=0)),
-                ('last_post_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=100, unique=True)),
+                ("slug", models.SlugField(blank=True, max_length=100, unique=True)),
+                ("description", models.TextField(blank=True)),
+                ("topic_count", models.PositiveIntegerField(default=0)),
+                ("reply_count", models.PositiveIntegerField(default=0)),
+                ("last_post_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': '版块',
-                'verbose_name_plural': '版块',
-                'ordering': ['name'],
+                "verbose_name": "版块",
+                "verbose_name_plural": "版块",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Topic',
+            name="Topic",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=200)),
-                ('content', models.TextField()),
-                ('views_count', models.PositiveIntegerField(default=0)),
-                ('reply_count', models.PositiveIntegerField(default=0)),
-                ('is_pinned', models.BooleanField(default=False)),
-                ('is_locked', models.BooleanField(default=False)),
-                ('last_reply_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='topics', to=settings.AUTH_USER_MODEL)),
-                ('board', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='topics', to='forum.board')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=200)),
+                ("content", models.TextField()),
+                ("views_count", models.PositiveIntegerField(default=0)),
+                ("reply_count", models.PositiveIntegerField(default=0)),
+                ("is_pinned", models.BooleanField(default=False)),
+                ("is_locked", models.BooleanField(default=False)),
+                ("last_reply_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "author",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="topics", to=settings.AUTH_USER_MODEL
+                    ),
+                ),
+                (
+                    "board",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="topics", to="forum.board"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '主题',
-                'verbose_name_plural': '主题',
-                'ordering': ['-is_pinned', '-last_reply_at', '-created_at'],
+                "verbose_name": "主题",
+                "verbose_name_plural": "主题",
+                "ordering": ["-is_pinned", "-last_reply_at", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Reply',
+            name="Reply",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('content', models.TextField()),
-                ('like_count', models.PositiveIntegerField(default=0)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='replies', to=settings.AUTH_USER_MODEL)),
-                ('topic', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='replies', to='forum.topic')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("content", models.TextField()),
+                ("like_count", models.PositiveIntegerField(default=0)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "author",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="replies", to=settings.AUTH_USER_MODEL
+                    ),
+                ),
+                (
+                    "topic",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="replies", to="forum.topic"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '回复',
-                'verbose_name_plural': '回复',
-                'ordering': ['created_at'],
+                "verbose_name": "回复",
+                "verbose_name_plural": "回复",
+                "ordering": ["created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ReplyLike',
+            name="ReplyLike",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('reply', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='likes', to='forum.reply')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reply_likes', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "reply",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="likes", to="forum.reply"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reply_likes",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '回复点赞',
-                'verbose_name_plural': '回复点赞',
-                'unique_together': {('user', 'reply')},
+                "verbose_name": "回复点赞",
+                "verbose_name_plural": "回复点赞",
+                "unique_together": {("user", "reply")},
             },
         ),
     ]

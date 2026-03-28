@@ -8,28 +8,40 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('blog', '0002_comment_review_note_comment_review_status_and_more'),
+        ("blog", "0002_comment_review_note_comment_review_status_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='comment',
-            name='like_count',
+            model_name="comment",
+            name="like_count",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.CreateModel(
-            name='CommentLike',
+            name="CommentLike",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('comment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='likes', to='blog.comment')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comment_likes', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "comment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="likes", to="blog.comment"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comment_likes",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '评论点赞',
-                'verbose_name_plural': '评论点赞',
-                'unique_together': {('user', 'comment')},
+                "verbose_name": "评论点赞",
+                "verbose_name_plural": "评论点赞",
+                "unique_together": {("user", "comment")},
             },
         ),
     ]

@@ -8,49 +8,69 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('forum', '0001_initial'),
+        ("forum", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='reply',
-            name='review_note',
+            model_name="reply",
+            name="review_note",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='reply',
-            name='review_status',
-            field=models.CharField(choices=[('pending', '待审核'), ('approved', '已通过'), ('rejected', '已拒绝')], default='pending', max_length=20),
+            model_name="reply",
+            name="review_status",
+            field=models.CharField(
+                choices=[("pending", "待审核"), ("approved", "已通过"), ("rejected", "已拒绝")],
+                default="pending",
+                max_length=20,
+            ),
         ),
         migrations.AddField(
-            model_name='reply',
-            name='reviewed_at',
+            model_name="reply",
+            name="reviewed_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='reply',
-            name='reviewed_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviewed_replies', to=settings.AUTH_USER_MODEL),
+            model_name="reply",
+            name="reviewed_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="reviewed_replies",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='topic',
-            name='review_note',
+            model_name="topic",
+            name="review_note",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='topic',
-            name='review_status',
-            field=models.CharField(choices=[('pending', '待审核'), ('approved', '已通过'), ('rejected', '已拒绝')], default='pending', max_length=20),
+            model_name="topic",
+            name="review_status",
+            field=models.CharField(
+                choices=[("pending", "待审核"), ("approved", "已通过"), ("rejected", "已拒绝")],
+                default="pending",
+                max_length=20,
+            ),
         ),
         migrations.AddField(
-            model_name='topic',
-            name='reviewed_at',
+            model_name="topic",
+            name="reviewed_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='topic',
-            name='reviewed_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviewed_topics', to=settings.AUTH_USER_MODEL),
+            model_name="topic",
+            name="reviewed_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="reviewed_topics",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

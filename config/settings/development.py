@@ -2,6 +2,7 @@
 
 import logging
 import os
+from typing import cast
 
 from .base import *
 
@@ -135,8 +136,9 @@ MIDDLEWARE.insert(0, 'apps.core.performance_middleware.PerformanceMonitorMiddlew
 # 日志配置 - 开发环境更详细
 # =============================================================================
 
-LOGGING['handlers']['console']['level'] = 'DEBUG'
-LOGGING['root']['level'] = 'DEBUG'
+logging_config = cast(dict, LOGGING)
+logging_config['handlers']['console']['level'] = 'DEBUG'
+logging_config['root']['level'] = 'DEBUG'
 
 # 创建必要的目录
 os.makedirs(BASE_DIR / 'logs', exist_ok=True)

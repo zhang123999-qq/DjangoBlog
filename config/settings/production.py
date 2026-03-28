@@ -1,6 +1,7 @@
 """Production settings for project."""
 
 import logging
+from typing import cast
 
 from .base import *
 
@@ -41,31 +42,41 @@ if env.bool('USE_X_FORWARDED_PROTO', default=True):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # =============================================================================
-# 数据库配置 - MySQL（生产环境）
+# 数据库配置（生产环境）
 # =============================================================================
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('DB_NAME', default='djangoblog'),
-        'USER': env('DB_USER', default='root'),
-        'PASSWORD': env('DB_PASSWORD', default=''),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            # MySQL 连接池参数
-            'connect_timeout': 10,
-            'read_timeout': 30,
-            'write_timeout': 30,
-        },
-        # 连接池配置
-        'CONN_MAX_AGE': 600,  # 10 分钟连接池
-        'CONN_HEALTH_CHECKS': True,  # 连接健康检查
-        'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
+db_engine = env('DB_ENGINE', default='django.db.backends.mysql')
+if 'sqlite' in db_engine:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'apps.core.db_backends.sqlite3',
+            'NAME': BASE_DIR / env('DB_NAME', default='db.sqlite3'),
+            'ATOMIC_REQUESTS': True,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': env('DB_NAME', default='djangoblog'),
+            'USER': env('DB_USER', default='root'),
+            'PASSWORD': env('DB_PASSWORD', default=''),
+            'HOST': env('DB_HOST', default='localhost'),
+            'PORT': env('DB_PORT', default='3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                # MySQL 连接池参数
+                'connect_timeout': 10,
+                'read_timeout': 30,
+                'write_timeout': 30,
+            },
+            # 连接池配置
+            'CONN_MAX_AGE': 600,  # 10 分钟连接池
+            'CONN_HEALTH_CHECKS': True,  # 连接健康检查
+            'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
+        }
+    }
 
 # =============================================================================
 # 缓存配置 - Redis（生产环境）
@@ -152,8 +163,9 @@ WHITENOISE_COMPRESS = True
 # =============================================================================
 
 # 生产环境日志级别更高
-LOGGING['root']['level'] = 'WARNING'
-LOGGING['loggers']['django']['level'] = 'ERROR'
+logging_config = cast(dict, LOGGING)
+logging_config['root']['level'] = 'WARNING'
+logging_config['loggers']['django']['level'] = 'ERROR'
 
 # 添加错误邮件通知（可选）
 ADMINS = [
@@ -178,7 +190,8 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30分钟超时
 # =============================================================================
 
 # 数据库连接持久化
-DATABASES['default']['CONN_MAX_AGE'] = 600
+db_config = cast(dict, DATABASES)
+db_config['default']['CONN_MAX_AGE'] = 600
 
 # =============================================================================
 # 生产环境检查

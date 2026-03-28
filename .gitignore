@@ -81,3 +81,14 @@ screenshots/*
 # Allure reports
 allure-results/
 allure-report/
+
+# Local transient diagnostics
+/tmp_db_cache_diag.py
+/tmp_db_cache_stability.py
+/tmp_fetch_nat_page.py
+/tmp_fix_loggedin_replacement.py
+/tmp_patch_tests_optional.py
+/tmp_probe_db_ports.py
+/tmp_probe_mysql_login.py
+/tmp_scan_mysql_ports.py
+/templates/includes/footer.html.bak.*
