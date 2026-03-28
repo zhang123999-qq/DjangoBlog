@@ -18,7 +18,7 @@ if [[ "$MODE" == "--stress" ]]; then
   k6 run deploy/perf/k6_stress.js -e BASE_URL="$BASE_URL"
 else
   echo "[perf] running smoke profile..."
-  k6 run tests/perf/k6_smoke.js -e BASE_URL="$BASE_URL"
+  k6 run deploy/perf/k6_smoke.js -e BASE_URL="$BASE_URL"
 fi
 
 echo "[perf] PASS"

@@ -23,7 +23,7 @@ echo [perf] BASE_URL=%BASE_URL%
 
 if /I "%MODE%"=="--stress" (
   echo [perf] running stress profile...
-  k6 run tests\perf\k6_stress.js -e BASE_URL=%BASE_URL%
+  k6 run deploy\perf\k6_stress.js -e BASE_URL=%BASE_URL%
   if errorlevel 1 goto :fail
 ) else (
   echo [perf] running smoke profile...
