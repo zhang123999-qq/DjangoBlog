@@ -25,7 +25,8 @@
                 {% endif %}
                 
                 <div class="post-content mb-6">
-                    {{ post.content|linebreaks }}
+                    {% load sanitize %}
+                    {{ post.content|safe_html }}
                 </div>
                 
                 <!-- 评论区 -->
