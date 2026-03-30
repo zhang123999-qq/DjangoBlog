@@ -1,6 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 import bleach
+import html as _html
 
 register = template.Library()
 
@@ -27,14 +28,20 @@ def safe_html(value: str) -> str:
     if not value:
         return ''
 
+    # 如果内容中包含被转义的 HTML 实体（例如来自某些编辑器的保存格式），先反转义
+    try:
+        unescaped = _html.unescape(value)
+    except Exception:
+        unescaped = value
+
     cleaned = bleach.clean(
-        value,
+        unescaped,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
         strip=True,
     )
 
-    # Convert bare URLs into links
+    # 将裸链转换为可点击链接
     cleaned = bleach.linkify(cleaned)
 
     return mark_safe(cleaned)
