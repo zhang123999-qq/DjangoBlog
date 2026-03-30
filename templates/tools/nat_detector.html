@@ -280,6 +280,7 @@
 
 {% block extra_js %}
 <script>
+
 let localIPs = [];
 let publicIP = null;
 let detectionStartTime = null;
@@ -303,7 +304,11 @@ async function startDetection() {
     `;
 
     detectionStatusDiv.style.display = 'block';
-    if (resultDiv) resultDiv.style.display = 'none';
+    // 确保结果区域隐藏：移除内联样式并添加隐藏类
+    if (resultDiv) {
+        resultDiv.classList.add('u-hidden');
+        resultDiv.style.display = ''; // 清除内联样式，让类生效
+    }
     updateProgress('初始化 WebRTC...');
 
     try {
@@ -342,7 +347,6 @@ async function startDetection() {
             analyzeNAT();
         } catch (err) {
             console.error('analyzeNAT 执行出错:', err);
-            // 显示错误信息到页面
             const portInfo = document.getElementById('port-info');
             if (portInfo) {
                 portInfo.innerHTML = `
@@ -360,9 +364,12 @@ async function startDetection() {
         const timeEl = document.getElementById('detection-time');
         if (timeEl) timeEl.textContent = (elapsed / 1000).toFixed(2) + ' 秒';
 
-        // 显示结果区域
+        // 显示结果区域：移除隐藏类并设置内联样式
         detectionStatusDiv.style.display = 'none';
-        if (resultDiv) resultDiv.style.display = 'block';
+        if (resultDiv) {
+            resultDiv.classList.remove('u-hidden');   // 关键修复：移除隐藏类
+            resultDiv.style.display = 'block';        // 确保显示
+        }
 
     } catch (error) {
         console.error('NAT检测错误:', error);
@@ -386,7 +393,10 @@ async function startDetection() {
             </button>
         `;
         detectionStatusDiv.style.display = 'block';
-        if (resultDiv) resultDiv.style.display = 'none';
+        if (resultDiv) {
+            resultDiv.classList.add('u-hidden');
+            resultDiv.style.display = '';
+        }
     }
 }
 
@@ -719,6 +729,7 @@ function detectNATType() {
         };
     }
 }
+
 
 
 // 页面加载后自动检测
