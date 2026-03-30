@@ -124,16 +124,16 @@ docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=200
 ```bash
 uv venv
 uv pip install -r requirements/development.txt
-python manage.py migrate
-python manage.py runserver
+uv run python manage.py migrate
+uv run python manage.py runserver 0.0.0.0:8000
 ```
 
 常用检查：
 
 ```bash
-python manage.py check
-python manage.py makemigrations --check --dry-run
-pytest -q
+uv run python manage.py check
+uv run python manage.py makemigrations --check --dry-run
+uv run pytest -q
 ```
 
 ---
