@@ -281,20 +281,28 @@
 {% block extra_js %}
 <script>
 
-let localIPs = [];
-let publicIP = null;
+
+let localCandidates = [];    // 存储所有候选信息 { ip, type, addressType }
+let publicIPs = { v4: null, v6: null }; // 分别存储 IPv4 和 IPv6 公网 IP
 let detectionStartTime = null;
+
+// STUN 服务器列表，用于获取映射地址
+const stunServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' }
+];
 
 async function startDetection() {
     // 重置状态
-    localIPs = [];
-    publicIP = null;
+    localCandidates = [];
+    publicIPs = { v4: null, v6: null };
     detectionStartTime = Date.now();
 
     const detectionStatusDiv = document.getElementById('detection-status');
     const resultDiv = document.getElementById('detection-result');
 
-    // 重置检测状态区域的 HTML
+    // 重置检测状态区域
     detectionStatusDiv.innerHTML = `
         <div class="spinner-border text-primary mb-3" role="status">
             <span class="visually-hidden">检测中...</span>
@@ -302,12 +310,10 @@ async function startDetection() {
         <p class="text-muted mb-0">正在检测您的网络状态...</p>
         <p class="text-muted small mt-2" id="detection-progress">初始化 WebRTC...</p>
     `;
-
     detectionStatusDiv.style.display = 'block';
-    // 确保结果区域隐藏：移除内联样式并添加隐藏类
     if (resultDiv) {
         resultDiv.classList.add('u-hidden');
-        resultDiv.style.display = ''; // 清除内联样式，让类生效
+        resultDiv.style.display = '';
     }
     updateProgress('初始化 WebRTC...');
 
@@ -320,57 +326,30 @@ async function startDetection() {
                 ? '<span class="text-success">✓ 支持</span>'
                 : '<span class="text-danger">✗ 不支持</span>';
         }
-
         if (!webrtcSupport) {
             throw new Error('您的浏览器不支持 WebRTC，请使用现代浏览器（Chrome、Firefox、Edge）访问');
         }
 
-        updateProgress('检测本地 IP 地址...');
+        updateProgress('检测本地网络接口...');
+        await collectLocalCandidates();   // 收集 host 和 srflx 候选
 
-        // 并行获取本地 IP 和公网 IP
-        const results = await Promise.allSettled([
-            getLocalIPs(),
-            getPublicIP()
-        ]);
-
-        if (results[0].status === 'rejected') {
-            console.warn('本地IP检测失败:', results[0].reason);
-        }
-        if (results[1].status === 'rejected') {
-            console.warn('公网IP检测失败:', results[1].reason);
-        }
+        updateProgress('获取公网 IP...');
+        await fetchPublicIPs();           // 获取 IPv4/IPv6 公网 IP
 
         updateProgress('分析 NAT 状态...');
-
-        // 分析 NAT 状态（带错误捕获）
-        try {
-            analyzeNAT();
-        } catch (err) {
-            console.error('analyzeNAT 执行出错:', err);
-            const portInfo = document.getElementById('port-info');
-            if (portInfo) {
-                portInfo.innerHTML = `
-                    <div class="alert alert-danger mb-0">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <strong>分析出错</strong>：${err.message}
-                    </div>
-                `;
-            }
-            throw err; // 继续抛出，让外层 catch 处理
-        }
+        analyzeNAT();
 
         // 计算耗时
         const elapsed = Date.now() - detectionStartTime;
         const timeEl = document.getElementById('detection-time');
         if (timeEl) timeEl.textContent = (elapsed / 1000).toFixed(2) + ' 秒';
 
-        // 显示结果区域：移除隐藏类并设置内联样式
+        // 显示结果
         detectionStatusDiv.style.display = 'none';
         if (resultDiv) {
-            resultDiv.classList.remove('u-hidden');   // 关键修复：移除隐藏类
-            resultDiv.style.display = 'block';        // 确保显示
+            resultDiv.classList.remove('u-hidden');
+            resultDiv.style.display = 'block';
         }
-
     } catch (error) {
         console.error('NAT检测错误:', error);
         detectionStatusDiv.innerHTML = `
@@ -409,14 +388,13 @@ function checkWebRTCSupport() {
     return !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
 }
 
-async function getLocalIPs() {
-    return new Promise((resolve, reject) => {
+async function collectLocalCandidates() {
+    return new Promise((resolve) => {
         const RTCPeerConnection = window.RTCPeerConnection ||
-            window.webkitRTCPeerConnection ||
-            window.mozRTCPeerConnection;
-
+                                  window.webkitRTCPeerConnection ||
+                                  window.mozRTCPeerConnection;
         if (!RTCPeerConnection) {
-            reject(new Error('WebRTC 不可用'));
+            resolve();
             return;
         }
 
@@ -425,14 +403,7 @@ async function getLocalIPs() {
         let candidateCount = 0;
 
         try {
-            pc = new RTCPeerConnection({
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
-                ]
-            });
-
+            pc = new RTCPeerConnection({ iceServers: stunServers });
             pc.createDataChannel('detect');
 
             pc.onicecandidate = (e) => {
@@ -447,31 +418,44 @@ async function getLocalIPs() {
                 }
 
                 candidateCount++;
-                const candidate = e.candidate.candidate;
-                console.log('ICE 候选:', candidate);
+                const candidate = e.candidate;
+                const candStr = candidate.candidate;
+                console.log('ICE 候选:', candStr);
 
-                // 匹配 IPv4 地址
-                const ipv4Match = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
-                if (ipv4Match) {
-                    const ip = ipv4Match[1];
-                    if (!ip.startsWith('0.') && !localIPs.includes(ip)) {
-                        localIPs.push(ip);
-                        updateProgress(`发现本地 IP: ${ip}`);
+                // 解析候选类型和地址
+                const parts = candStr.split(' ');
+                // 格式: foundation component protocol priority ip port typ [raddr rport]
+                let ip = null;
+                let type = null;
+                for (let i = 0; i < parts.length; i++) {
+                    if (parts[i] === 'typ') {
+                        type = parts[i+1];
+                    }
+                    if (parts[i] === 'host' || parts[i] === 'srflx' || parts[i] === 'relay') {
+                        type = parts[i];
+                    }
+                    if (ip === null && /^([0-9]{1,3}\.){3}[0-9]{1,3}$/.test(parts[i])) {
+                        ip = parts[i];
                     }
                 }
+                // 如果没有匹配到 IPv4，尝试匹配 IPv6（简单匹配包含冒号的）
+                if (!ip && /[a-f0-9:]+:[a-f0-9:]+/i.test(candStr)) {
+                    const match = candStr.match(/([a-f0-9:]+:[a-f0-9:]+)/i);
+                    if (match) ip = match[1];
+                }
 
-                // 匹配 IPv6 地址
-                const ipv6Match = candidate.match(/([a-f0-9:]+:[a-f0-9:]+)/i);
-                if (ipv6Match) {
-                    const ip = ipv6Match[1];
-                    if (!localIPs.includes(ip)) {
-                        localIPs.push(ip + ' (IPv6)');
+                if (ip && type) {
+                    const addressType = ip.includes(':') ? 'IPv6' : 'IPv4';
+                    // 去重
+                    const exists = localCandidates.some(c => c.ip === ip && c.type === type);
+                    if (!exists) {
+                        localCandidates.push({ ip, type, addressType });
+                        updateProgress(`发现 ${type} 候选: ${ip}`);
                     }
                 }
             };
 
             pc.onicegatheringstatechange = () => {
-                console.log('ICE 状态:', pc.iceGatheringState);
                 if (pc.iceGatheringState === 'complete' && !resolved) {
                     resolved = true;
                     pc.close();
@@ -480,32 +464,27 @@ async function getLocalIPs() {
             };
 
             pc.createOffer()
-                .then(offer => {
-                    updateProgress('创建 WebRTC 连接...');
-                    return pc.setLocalDescription(offer);
-                })
+                .then(offer => pc.setLocalDescription(offer))
                 .catch(err => {
                     console.error('创建 offer 失败:', err);
                     if (!resolved) {
                         resolved = true;
                         if (pc) pc.close();
-                        resolve(); // 不 reject，允许继续检测
+                        resolve();
                     }
                 });
-
         } catch (err) {
             console.error('RTCPeerConnection 创建失败:', err);
             if (!resolved) {
                 resolved = true;
                 if (pc) pc.close();
-                resolve(); // 不 reject，允许继续
+                resolve();
             }
         }
 
-        // 设置超时 10 秒
         setTimeout(() => {
             if (!resolved) {
-                console.log('本地IP检测超时，已收集到', localIPs.length, '个IP');
+                console.log('本地候选收集超时');
                 resolved = true;
                 if (pc) pc.close();
                 resolve();
@@ -514,114 +493,109 @@ async function getLocalIPs() {
     });
 }
 
-async function getPublicIP() {
-    const services = [
-        { url: 'https://api.ipify.org?format=json', name: 'ipify' },
-        { url: 'https://api.ip.sb/jsonip', name: 'ip.sb' },
-        { url: 'https://api4.my-ip.io/ip.json', name: 'my-ip.io' }
+async function fetchPublicIPs() {
+    // 获取 IPv4 公网 IP
+    const ipv4Services = [
+        'https://api.ipify.org?format=json',
+        'https://api.ip.sb/jsonip',
+        'https://api4.my-ip.io/ip.json'
     ];
-
-    for (const service of services) {
+    for (const url of ipv4Services) {
         try {
-            updateProgress(`获取公网 IP (${service.name})...`);
-
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-            const response = await fetch(service.url, {
-                signal: controller.signal,
-                mode: 'cors',
-                credentials: 'omit'
-            });
-
+            const response = await fetch(url, { signal: controller.signal });
             clearTimeout(timeoutId);
-
             if (response.ok) {
                 const data = await response.json();
-                if (data.ip) {
-                    publicIP = data.ip;
-                    console.log('公网IP获取成功:', publicIP, '来源:', service.name);
-                    updateProgress(`公网 IP: ${publicIP}`);
-                    return;
+                if (data.ip && !data.ip.includes(':')) {
+                    publicIPs.v4 = data.ip;
+                    console.log('IPv4 公网 IP:', publicIPs.v4);
+                    break;
                 }
             }
         } catch (e) {
-            console.warn('获取公网IP失败:', service.name, e.message);
-            continue;
+            console.warn('IPv4 公网 IP 获取失败:', e.message);
         }
     }
 
-    // 尝试后端接口
-    try {
-        updateProgress('通过服务器获取公网 IP...');
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch('/tools/my-ip/json/', { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.ip) {
-                publicIP = data.ip;
-                console.log('公网IP获取成功(后端):', publicIP);
+    // 获取 IPv6 公网 IP（可选）
+    const ipv6Services = [
+        'https://api6.ipify.org?format=json',
+        'https://api.ip.sb/jsonip'
+    ];
+    for (const url of ipv6Services) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.ip && data.ip.includes(':')) {
+                    publicIPs.v6 = data.ip;
+                    console.log('IPv6 公网 IP:', publicIPs.v6);
+                    break;
+                }
             }
+        } catch (e) {
+            console.warn('IPv6 公网 IP 获取失败:', e.message);
         }
-    } catch (e) {
-        console.warn('后端获取公网IP失败:', e.message);
     }
 }
 
 function analyzeNAT() {
-    console.log('开始 analyzeNAT, localIPs:', localIPs, 'publicIP:', publicIP);
+    console.log('开始 analyzeNAT, localCandidates:', localCandidates, 'publicIPs:', publicIPs);
 
-    // 更新本地 IP 显示
+    // 分离 IPv4 和 IPv6 的 host 和 srflx 候选
+    const v4Host = localCandidates.filter(c => c.addressType === 'IPv4' && c.type === 'host');
+    const v4Srflx = localCandidates.filter(c => c.addressType === 'IPv4' && c.type === 'srflx');
+    const v6Host = localCandidates.filter(c => c.addressType === 'IPv6' && c.type === 'host');
+    const v6Srflx = localCandidates.filter(c => c.addressType === 'IPv6' && c.type === 'srflx');
+
+    // 判断是否存在 NAT（IPv4）
+    const hasIPv4NAT = v4Srflx.length > 0 && (v4Host.length === 0 || v4Srflx.some(srflx => !v4Host.some(host => host.ip === srflx.ip)));
+    // 判断是否存在 NAT（IPv6，通常没有）
+    const hasIPv6NAT = v6Srflx.length > 0 && (v6Host.length === 0 || v6Srflx.some(srflx => !v6Host.some(host => host.ip === srflx.ip)));
+
+    // 更新 UI 显示本地 IP
     const localIPsDiv = document.getElementById('local-ips');
     const localIPCount = document.getElementById('local-ip-count');
-    const displayIPs = localIPs.filter(ip => !ip.includes('IPv6'));
+    const allIPv4 = [...v4Host, ...v4Srflx].map(c => c.ip);
+    const displayIPs = [...new Set(allIPv4)]; // 去重
 
     if (displayIPs.length > 0) {
         localIPsDiv.innerHTML = displayIPs.map(ip => {
-            const type = isPrivateIP(ip)
-                ? '<span class="badge bg-secondary ms-2">内网</span>'
-                : '<span class="badge bg-info ms-2">公网</span>';
-            return `<div class="mb-1"><code>${ip}</code>${type}</div>`;
+            const isPrivate = isPrivateIP(ip);
+            const typeLabel = isPrivate ? '内网' : (hasIPv4NAT ? '映射公网' : '公网');
+            const badgeClass = isPrivate ? 'bg-secondary' : (hasIPv4NAT ? 'bg-info' : 'bg-success');
+            return `<div class="mb-1"><code>${ip}</code> <span class="badge ${badgeClass} ms-2">${typeLabel}</span></div>`;
         }).join('');
         localIPCount.textContent = displayIPs.length;
     } else {
-        localIPsDiv.innerHTML = `
-            <p class="text-warning mb-1">无法获取本地 IP</p>
-            <small class="text-muted">可能被浏览器安全策略阻止</small>
-        `;
+        localIPsDiv.innerHTML = '<p class="text-warning mb-1">无法获取本地 IPv4 地址</p>';
         localIPCount.textContent = '0';
     }
 
-    // 更新公网 IP 显示
+    // 更新公网 IP 显示（优先显示 IPv4，其次 IPv6）
     const publicIPDiv = document.getElementById('public-ip');
     const publicIPValue = document.getElementById('public-ip-value');
-    if (publicIP) {
-        publicIPDiv.innerHTML = `<code class="fs-5">${publicIP}</code>`;
-        publicIPValue.innerHTML = `<code>${publicIP}</code>`;
-    } else {
-        publicIPDiv.innerHTML = `
-            <p class="text-warning mb-1">无法获取</p>
-            <small class="text-muted">API 可能被阻止</small>
-        `;
-        publicIPValue.innerHTML = '<span class="text-warning">无法获取</span>';
-    }
+    let displayPublic = publicIPs.v4 || publicIPs.v6 || '无法获取';
+    publicIPDiv.innerHTML = `<code class="fs-5">${displayPublic}</code>`;
+    publicIPValue.innerHTML = `<code>${displayPublic}</code>`;
 
-    // 分析 NAT 状态
-    const hasPrivateIP = displayIPs.some(ip => isPrivateIP(ip));
-    const hasPublicLocalIP = displayIPs.some(ip => !isPrivateIP(ip));
-
+    // 更新 NAT 状态
     const usingNAT = document.getElementById('using-nat');
     const natStatus = document.getElementById('nat-status');
     const natType = document.getElementById('nat-type');
     const natTypeDetail = document.getElementById('nat-type-detail');
     const portInfo = document.getElementById('port-info');
 
-    if (hasPrivateIP && publicIP) {
-        usingNAT.innerHTML = '<span class="text-success">是</span>';
-        natStatus.innerHTML = '<span class="text-success">正在使用 NAT</span>';
-        const natTypeInfo = detectNATType();
+    if (hasIPv4NAT) {
+        usingNAT.innerHTML = '<span class="text-success">是（IPv4 经过 NAT）</span>';
+        natStatus.innerHTML = '<span class="text-success">IPv4 正在使用 NAT</span>';
+        // 尝试推测 NAT 类型（基于 srflx 候选数量与 host 对比）
+        const natTypeInfo = detectNATTypeFromCandidates(v4Host, v4Srflx);
         natType.textContent = natTypeInfo.type;
         natType.className = `badge ${natTypeInfo.class} fs-6`;
         natTypeDetail.innerHTML = `<span class="badge ${natTypeInfo.class}">${natTypeInfo.type}</span>`;
@@ -629,60 +603,47 @@ function analyzeNAT() {
             <div class="alert alert-${natTypeInfo.class === 'bg-success' ? 'success' : natTypeInfo.class === 'bg-warning' ? 'warning' : 'info'} mb-0">
                 <i class="bi bi-info-circle me-2"></i>
                 <strong>${natTypeInfo.type}</strong>：${natTypeInfo.description}
+                <hr class="my-2">
+                <small>IPv6 通常无 NAT，可直接访问公网。</small>
             </div>
         `;
-    } else if (hasPublicLocalIP && !hasPrivateIP) {
-        usingNAT.innerHTML = '<span class="text-warning">否（或未知）</span>';
-        natStatus.innerHTML = '<span class="text-warning">可能未使用 NAT</span>';
-        natType.textContent = '未知';
-        natType.className = 'badge bg-secondary fs-6';
-        natTypeDetail.textContent = '无法确定';
+    } else if (publicIPs.v4 && !hasIPv4NAT) {
+        // 没有 NAT 且 IPv4 公网可见
+        usingNAT.innerHTML = '<span class="text-success">否（IPv4 直连公网）</span>';
+        natStatus.innerHTML = '<span class="text-success">IPv4 未使用 NAT</span>';
+        natType.textContent = '无 NAT';
+        natType.className = 'badge bg-success fs-6';
+        natTypeDetail.textContent = '直连公网';
         portInfo.innerHTML = `
             <div class="alert alert-success mb-0">
                 <i class="bi bi-check-circle me-2"></i>
-                您的设备可能直接连接到公网，未使用NAT。
+                您的设备 IPv4 直接连接到公网，未经过 NAT。
+                <br><small>IPv6 通常无 NAT。</small>
             </div>
         `;
-    } else if (hasPrivateIP && !publicIP) {
-        usingNAT.innerHTML = '<span class="text-success">是</span>';
-        natStatus.innerHTML = '<span class="text-success">正在使用 NAT</span>';
-        natType.textContent = '检测受限';
-        natType.className = 'badge bg-warning fs-6';
-        natTypeDetail.innerHTML = '<span class="text-warning">公网IP获取失败</span>';
+    } else if (!publicIPs.v4 && publicIPs.v6) {
+        // 只有 IPv6 公网
+        usingNAT.innerHTML = '<span class="text-info">IPv6 无 NAT，IPv4 无法检测</span>';
+        natStatus.innerHTML = '<span class="text-info">IPv6 直连公网，IPv4 可能经过 NAT</span>';
+        natType.textContent = 'IPv6 无 NAT';
+        natType.className = 'badge bg-info fs-6';
+        natTypeDetail.textContent = 'IPv6 公网可达';
         portInfo.innerHTML = `
-            <div class="alert alert-warning mb-0">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                <strong>检测受限</strong>：无法获取公网IP，可能是网络限制或浏览器安全策略阻止了请求。您的设备正在使用NAT。
-            </div>
-        `;
-    } else if (!hasPrivateIP && !publicIP) {
-        usingNAT.innerHTML = '<span class="text-muted">未知</span>';
-        natStatus.innerHTML = '<span class="text-muted">检测受限</span>';
-        natType.textContent = '检测失败';
-        natType.className = 'badge bg-danger fs-6';
-        natTypeDetail.innerHTML = '<span class="text-danger">无法完成检测</span>';
-        portInfo.innerHTML = `
-            <div class="alert alert-danger mb-0">
-                <i class="bi bi-x-circle me-2"></i>
-                <strong>检测失败</strong>：无法获取本地IP和公网IP。可能原因：
-                <ul class="mb-0 mt-2">
-                    <li>浏览器不支持 WebRTC 或被禁用</li>
-                    <li>隐私保护插件阻止了检测</li>
-                    <li>使用 HTTP 访问（WebRTC 需要 HTTPS）</li>
-                    <li>浏览器安全策略限制</li>
-                </ul>
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-globe me-2"></i>
+                您的设备 IPv6 可直接访问公网，但 IPv4 无法获取公网 IP，可能位于运营商级 NAT 后方。
             </div>
         `;
     } else {
         usingNAT.innerHTML = '<span class="text-muted">未知</span>';
         natStatus.innerHTML = '<span class="text-muted">检测受限</span>';
-        natType.textContent = '未知';
-        natType.className = 'badge bg-secondary fs-6';
-        natTypeDetail.textContent = '无法确定';
+        natType.textContent = '检测失败';
+        natType.className = 'badge bg-danger fs-6';
+        natTypeDetail.textContent = '无法完成检测';
         portInfo.innerHTML = `
-            <div class="alert alert-secondary mb-0">
-                <i class="bi bi-info-circle me-2"></i>
-                无法完成完整检测。请检查浏览器是否支持WebRTC，或是否有隐私保护插件阻止了检测。
+            <div class="alert alert-danger mb-0">
+                <i class="bi bi-x-circle me-2"></i>
+                无法获取足够的网络信息，请检查网络连接或浏览器设置。
             </div>
         `;
     }
@@ -702,38 +663,39 @@ function isPrivateIP(ip) {
     return false;
 }
 
-function detectNATType() {
-    const realIPs = localIPs.filter(ip =>
-        !ip.startsWith('169.254.') &&
-        !ip.startsWith('127.') &&
-        !ip.includes('IPv6')
-    );
-
-    if (realIPs.length > 2) {
+function detectNATTypeFromCandidates(hosts, srflxs) {
+    // 简化检测：根据 srflx 候选的数量和与 host 的匹配情况推测
+    if (srflxs.length === 0) {
         return {
-            type: '可能为锥形NAT',
-            class: 'bg-success',
-            description: '检测到多个网络接口，可能使用较宽松的NAT配置，P2P应用兼容性较好。'
+            type: '无 NAT 或检测失败',
+            class: 'bg-secondary',
+            description: '未检测到 STUN 映射地址，可能未使用 NAT 或检测失败。'
         };
-    } else if (realIPs.length === 2) {
+    }
+    // 如果只有一个 srflx 候选，并且没有 host 候选与之相同，可能是锥形 NAT
+    if (srflxs.length === 1) {
         return {
-            type: '可能为受限NAT',
-            class: 'bg-info',
-            description: 'NAT配置适中，大部分应用可正常使用，部分P2P应用可能需要端口映射。'
+            type: '可能为锥形 NAT',
+            class: 'bg-success',
+            description: '检测到一个稳定的映射地址，P2P 连接性较好。'
         };
     } else {
+        // 多个 srflx 候选，可能为对称 NAT
         return {
-            type: '可能为对称NAT',
+            type: '可能为对称 NAT',
             class: 'bg-warning',
-            description: 'NAT配置较严格，P2P应用可能受限，建议使用UPnP或手动端口映射。'
+            description: '检测到多个不同映射地址，NAT 较严格，P2P 可能受限。'
         };
     }
 }
 
+// 启动检测
+document.addEventListener('DOMContentLoaded', startDetection);
+
 
 
 // 页面加载后自动检测
-document.addEventListener('DOMContentLoaded', startDetection);
+
 </script>
 {% endblock %}
 
