@@ -664,7 +664,6 @@ function isPrivateIP(ip) {
 }
 
 function detectNATTypeFromCandidates(hosts, srflxs) {
-    // 简化检测：根据 srflx 候选的数量和与 host 的匹配情况推测
     if (srflxs.length === 0) {
         return {
             type: '无 NAT 或检测失败',
@@ -672,19 +671,19 @@ function detectNATTypeFromCandidates(hosts, srflxs) {
             description: '未检测到 STUN 映射地址，可能未使用 NAT 或检测失败。'
         };
     }
-    // 如果只有一个 srflx 候选，并且没有 host 候选与之相同，可能是锥形 NAT
+    // 如果只有一个 srflx 候选，可能是锥形 NAT 或端口受限 NAT
     if (srflxs.length === 1) {
         return {
-            type: '可能为锥形 NAT',
-            class: 'bg-success',
-            description: '检测到一个稳定的映射地址，P2P 连接性较好。'
+            type: '可能为锥形 NAT 或端口受限 NAT',
+            class: 'bg-info',
+            description: '检测到一个稳定的映射地址。锥形 NAT 允许任意外部主机连接；端口受限 NAT 则仅允许内网主机已通信过的 IP 和端口连接。实际类型需结合其他工具进一步确认。'
         };
     } else {
-        // 多个 srflx 候选，可能为对称 NAT
+        // 多个 srflx 候选，通常为对称 NAT
         return {
             type: '可能为对称 NAT',
             class: 'bg-warning',
-            description: '检测到多个不同映射地址，NAT 较严格，P2P 可能受限。'
+            description: '检测到多个不同映射地址，NAT 为对称型，每个目标服务器分配不同端口，P2P 连接可能受限。'
         };
     }
 }
