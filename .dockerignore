@@ -31,9 +31,8 @@ tmp/
 *.sqlite3
 *.sqlite3-journal
 
-# Secrets
+# Secrets (real .env excluded)
 .env
-.env.*
 
 # Editors / OS
 .vscode/

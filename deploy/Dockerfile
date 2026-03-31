@@ -33,7 +33,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Non-root runtime user
 RUN useradd -ms /bin/bash djangouser \
-    && mkdir -p /app/logs
+    && mkdir -p /app/logs \
+    && mkdir -p /app/staticfiles
 
 # Copy project with ownership to avoid expensive chown -R
 COPY --chown=djangouser:djangouser manage.py /app/manage.py
@@ -42,6 +43,7 @@ COPY --chown=djangouser:djangouser config/ /app/config/
 COPY --chown=djangouser:djangouser moderation/ /app/moderation/
 COPY --chown=djangouser:djangouser templates/ /app/templates/
 COPY --chown=djangouser:djangouser static/ /app/static/
+COPY --chown=djangouser:djangouser requirements/ /app/requirements/
 
 USER djangouser
 

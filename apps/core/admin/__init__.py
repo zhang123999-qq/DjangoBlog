@@ -7,6 +7,7 @@ DjangoBlog Admin 包
 
 from .admin_site import admin_site
 from .blog_admin import *  # noqa: F401, F403
+from .category_tag_admin import *  # noqa: F401, F403
 from .comment_admin import *  # noqa: F401, F403
 from .forum_admin import *  # noqa: F401, F403
 from .moderation_admin import *  # noqa: F401, F403

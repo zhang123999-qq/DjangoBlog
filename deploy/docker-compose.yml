@@ -205,13 +205,7 @@ services:
       - media_volume:/app/media
     networks:
       - djangoblog
-    command: >
-      celery -A config worker
-        --loglevel=info
-        --concurrency=4
-        --pool=prefork
-        --max-tasks-per-child=1000
-        --queues=celery,low_priority
+    command: ["celery", "-A", "config", "worker", "--loglevel=info", "--concurrency=4", "--pool=prefork", "--max-tasks-per-child=1000", "--queues=celery,low_priority"]
     healthcheck:
       test: ["CMD", "celery", "-A", "config", "inspect", "ping", "--timeout=5"]
       interval: 60s
@@ -250,13 +244,7 @@ services:
       - logs_volume:/app/logs
     networks:
       - djangoblog
-    command: >
-      celery -A config beat
-        --loglevel=info
-        --scheduler=django_celery_beat.schedulers:DatabaseScheduler
-    # 注意: 需要安装 django-celery-beat 才能使用 DatabaseScheduler
-    # 如需使用 simple scheduler，可改为:
-    # command: celery -A config beat --loglevel=info
+    command: ["celery", "-A", "config", "beat", "--loglevel=info"]
 
   # ----------------------------------------
   # Nginx 反向代理
