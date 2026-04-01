@@ -76,40 +76,62 @@ DjangoBlog/
 
 ## 🚀 快速开始（Docker，推荐）
 
-> 适合生产/准生产环境验证。
+> 适合生产/准生产环境。部署前确保已安装 Docker 和 Docker Compose。
 
-### 1) 准备环境变量
-
-复制并编辑 `.env`（确保是生产配置）：
-
-- `DEBUG=False`
-- `ALLOWED_HOSTS` 填真实域名
-- `CSRF_TRUSTED_ORIGINS` 填 `https://你的域名`
-- 设置强随机 `SECRET_KEY` / DB 密码
-
-### 2) 启动服务
+### 方式一：一键自动部署（推荐）
 
 ```bash
-cd C:\Users\Administrator\.openclaw\workspace\DjangoBlog
+cd /www/wwwroot/DjangoBlog-main
+bash deploy/auto-deploy.sh
+```
 
-docker compose --env-file .env -f deploy/docker-compose.yml config
-docker compose --env-file .env -f deploy/docker-compose.yml build --no-cache
+脚本会自动：生成 `.env` 配置文件 → 构建镜像 → 启动所有服务 → 数据库迁移。
+
+### 方式二：手动分步部署
+
+#### 1) 准备环境变量
+
+复制并编辑 `.env`：
+
+```bash
+# 参考项目根目录 .env.example
+cp .env.example .env
+```
+
+必填项：
+- `SECRET_KEY`：强随机字符串
+- `ALLOWED_HOSTS`：服务器 IP 或域名
+- `DEBUG=False`
+
+#### 2) 构建镜像并启动
+
+```bash
+docker compose --env-file .env -f deploy/docker-compose.yml build
 docker compose --env-file .env -f deploy/docker-compose.yml up -d
 ```
 
-### 3) 初始化项目
+> ⚠️ 不推荐 `--no-cache`，除非修改了 Python 依赖或基础镜像变更。
+
+#### 3) 数据库迁移
+
+> `collectstatic` 已在 Dockerfile 构建时完成，无需手动执行。
 
 ```bash
-docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py migrate
-docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py collectstatic --noinput
-docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py check --deploy
+# 运行一次性迁移容器
+docker compose --env-file .env -f deploy/docker-compose.yml up migrate
 ```
 
-### 4) 运行状态检查
+#### 4) 创建管理员账户
+
+```bash
+docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py createsuperuser
+```
+
+#### 5) 检查运行状态
 
 ```bash
 docker compose --env-file .env -f deploy/docker-compose.yml ps
-docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=200
+docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=50
 ```
 
 ---
@@ -118,8 +140,8 @@ docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=200
 
 先在 `.env` 设置：
 
-- `DEPLOY_MODE=host`（让 precheck 跳过 Docker 必选项）
-- 确保 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 可真实登录 MySQL
+- `DEPLOY_MODE=host`（让检查跳过 Docker 必选项）
+- 确保 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 可真实访问 MySQL
 
 ```bash
 uv venv
@@ -138,38 +160,60 @@ uv run pytest -q
 
 ---
 
-## 🔐 安全扫描工具安装
+## 🔐 生产安全配置
 
-为了让 `deploy/test-gate.(bat|sh)` 的可选安全扫描不再 skip，可先安装工具：
+### 纯 HTTP 部署（无 SSL 证书）
 
-### Windows
+保持以下配置为 `False`（`.env` 中的默认值）：
 
-```powershell
-powershell -ExecutionPolicy Bypass -File deploy\install-security-tools.ps1
-# 如需尝试自动安装 gitleaks：
-powershell -ExecutionPolicy Bypass -File deploy\install-security-tools.ps1 -WithGitleaks
+```env
+SECURE_SSL_REDIRECT=False
+SESSION_COOKIE_SECURE=False
+CSRF_COOKIE_SECURE=False
 ```
 
-### Linux/macOS
+### HTTPS 部署（有 SSL 证书）
 
-```bash
-bash deploy/install-security-tools.sh
-# 如需尝试安装 gitleaks：
-bash deploy/install-security-tools.sh --with-gitleaks
+在 Nginx 配置 443 端口并指向证书文件后，在 `.env` 中切换：
+
+```env
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
 ```
 
-安装后门禁会自动执行：`bandit`、`pip-audit`、`gitleaks`（存在即执行）。
-
-## 🔐 生产部署建议
+### 通用建议
 
 - 使用 HTTPS 反代（Nginx / Ingress）
-- 保持以下安全项开启：
-  - `SECURE_SSL_REDIRECT=True`
-  - `SESSION_COOKIE_SECURE=True`
-  - `CSRF_COOKIE_SECURE=True`
-  - `SECURE_HSTS_SECONDS > 0`
+- 保持 `SECURE_HSTS_SECONDS > 0`
 - 数据库与 Redis 使用内网访问，限制暴露面
-- 发布前固定执行：`python manage.py check --deploy`
+- 发布前执行：`docker compose -f deploy/docker-compose.yml exec web python manage.py check --deploy`
+
+---
+
+## 🛑 运维命令速查
+
+```bash
+# 启动所有服务
+bash deploy/up.sh           # Linux
+deploy\up.bat               # Windows（本地开发）
+
+# 停止服务（保留数据卷）
+bash deploy/down.sh        # Linux
+deploy\down.bat            # Windows（本地开发）
+
+# 彻底清理（包括数据卷）
+bash deploy/down.sh --purge
+
+# 查看日志
+docker compose -f deploy/docker-compose.yml logs -f --tail=50
+
+# 重启某个服务
+docker compose -f deploy/docker-compose.yml restart web
+
+# 进入容器调试
+docker compose -f deploy/docker-compose.yml exec web bash
+```
 
 ---
 
@@ -192,50 +236,15 @@ bash deploy/install-security-tools.sh --with-gitleaks
 
 ---
 
-## ⚡ 压力测试（k6）
+## 🧹 最近维护（2026-04-01）
 
-已内置 k6 压测脚本：
-
-- `deploy/perf/k6_smoke.js`（轻量压测）
-- `deploy/perf/k6_stress.js`（分阶段并发压测）
-- `deploy/perf-gate.bat` / `deploy/perf-gate.sh`（一键执行）
-
-### 安装 k6
-
-Windows:
-
-```powershell
-winget install k6.k6
-```
-
-macOS:
-
-```bash
-brew install k6
-```
-
-### 运行
-
-```bash
-# 默认 smoke
-BASE_URL=http://127.0.0.1:8000 bash deploy/perf-gate.sh
-# Windows
-set BASE_URL=http://127.0.0.1:8000 && deploy\perf-gate.bat
-
-# stress
-bash deploy/perf-gate.sh --stress
-# Windows
-set BASE_URL=http://127.0.0.1:8000 && deploy\perf-gate.bat --stress
-```
-
-## 🧹 最近维护（2026-03-28）
-
-- 清理项目根目录临时诊断脚本（`tmp_*.py`）与页脚备份临时文件
-- 统一并收敛 flake8/black 规范差异（`E203/W503`）
-- 完成一轮全量质量门禁复核：
-  - `uv run flake8 .`
-  - `uv run python manage.py check`
-  - `uv run pytest -q`（当前基线：79 passed / 80 skipped）
+- 新增一键自动部署脚本 `deploy/auto-deploy.sh`（自动生成 .env + 拉起服务）
+- 清理部署目录：移除 19 个与 Docker 无关的测试/性能/本地工具脚本
+- 修复 Docker 部署高危问题：
+  - `SECURE_SSL_REDIRECT` / `SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` 默认改为 False
+  - 重命名 `SecurityMiddleware` → `SecurityMonitorMiddleware` 解决中间件重名
+  - 修复 Dockerfile 中 collectstatic 目录权限问题
+- 测试基线：`uv run pytest -q`（79 passed / 80 skipped）
 - 新增页脚备案号一键脚本：`scripts/set_beian_footer.py`
 
 ---
