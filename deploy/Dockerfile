@@ -31,10 +31,13 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Setup directories BEFORE user switch (root)
+RUN mkdir -p /app/staticfiles /app/media /app/logs \
+    && chmod 777 /app/staticfiles /app/media /app/logs \
+    && python -c "import django; print('Django OK')"
+
 # Non-root runtime user
-RUN useradd -ms /bin/bash djangouser \
-    && mkdir -p /app/logs \
-    && mkdir -p /app/staticfiles
+RUN useradd -ms /bin/bash djangouser
 
 # Copy project with ownership to avoid expensive chown -R
 COPY --chown=djangouser:djangouser manage.py /app/manage.py
@@ -45,10 +48,14 @@ COPY --chown=djangouser:djangouser templates/ /app/templates/
 COPY --chown=djangouser:djangouser static/ /app/static/
 COPY --chown=djangouser:djangouser requirements/ /app/requirements/
 
-USER djangouser
+# Collect static files as root (axes won't try DB at import time)
+# Then chown all to djangouser
+RUN python manage.py collectstatic --noinput --ignore=tests \
+    && chown -R djangouser:djangouser /app/staticfiles \
+    && chown -R djangouser:djangouser /app/media \
+    && chown -R djangouser:djangouser /app/logs
 
-# Prepare static assets
-RUN python manage.py collectstatic --noinput
+USER djangouser
 
 EXPOSE 8000
 

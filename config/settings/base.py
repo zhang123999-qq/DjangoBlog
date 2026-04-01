@@ -107,7 +107,7 @@ MIDDLEWARE = [
     # 安全头中间件（新增）
     'apps.core.security_headers.CSPMiddleware',
     'apps.core.security_headers.SecurityHeadersMiddleware',
-    'apps.core.security_middleware.SecurityMiddleware',
+    'apps.core.security_middleware.SecurityMonitorMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

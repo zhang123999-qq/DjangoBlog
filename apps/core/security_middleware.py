@@ -8,8 +8,8 @@ from django.http import HttpResponseNotFound
 logger = logging.getLogger('security')
 
 
-class SecurityMiddleware:
-    """安全中间件"""
+class SecurityMonitorMiddleware:
+    """安全监控中间件（监测可疑请求，不与 Django 内置 SecurityMiddleware 重名）"""
 
     # 可疑路径模式
     SUSPICIOUS_PATTERNS = [
