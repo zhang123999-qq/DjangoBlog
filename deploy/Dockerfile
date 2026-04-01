@@ -15,9 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies from production locklist (cache-enabled)
+# 使用阿里云镜像加速
 COPY requirements/ /app/requirements/
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r /app/requirements/production.txt
+    pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ \
+    -r /app/requirements/production.txt
 
 FROM python:3.13-slim
 
