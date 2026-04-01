@@ -74,20 +74,42 @@ DjangoBlog/
 
 ---
 
-## 🚀 快速开始（Docker，推荐）
+## 🚀 快速开始
 
-> 适合生产/准生产环境。部署前确保已安装 Docker 和 Docker Compose。
+### 一键自动部署（推荐）
 
-### 方式一：一键自动部署（推荐）
+> 支持：阿里云、腾讯云、华为云、飞牛 NAS 等主流环境  
+> 前置条件：已安装 Docker 和 Docker Compose
 
 ```bash
-cd /www/wwwroot/DjangoBlog-main
+# 1. 克隆项目
+git clone https://github.com/zhang123999-qq/DjangoBlog.git
+cd DjangoBlog
+
+# 2. 一键部署
 bash deploy/auto-deploy.sh
 ```
 
-脚本会自动：生成 `.env` 配置文件 → 构建镜像 → 启动所有服务 → 数据库迁移。
+**脚本自动完成：**
 
-### 方式二：手动分步部署
+| 步骤 | 功能 |
+|------|------|
+| 1️⃣ | 自动生成 `.env` 配置文件（含随机 SECRET_KEY） |
+| 2️⃣ | 配置 Docker 镜像加速（国内环境自动启用） |
+| 3️⃣ | 预拉取基础镜像（python、mysql、redis、nginx） |
+| 4️⃣ | 构建应用镜像 |
+| 5️⃣ | 启动所有服务（Web、MySQL、Redis、Celery、Nginx） |
+| 6️⃣ | 自动执行数据库迁移 |
+| 7️⃣ | 交互式创建管理员账户 |
+
+**部署完成后：**
+
+- 🌐 网站首页：`http://你的服务器IP`
+- 🛠 管理后台：`http://你的服务器IP/admin/`
+
+---
+
+### 手动分步部署
 
 #### 1) 准备环境变量
 
