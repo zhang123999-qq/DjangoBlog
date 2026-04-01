@@ -2,7 +2,7 @@
 # =============================================
 # DjangoBlog 一键自动部署脚本
 # 使用方法: bash deploy/auto-deploy.sh
-# 功能: 自动生成 .env、构建镜像、拉起全部服务
+# 功能: 自动生成 .env、配置镜像加速、构建镜像、拉起全部服务
 # =============================================
 
 set -e
@@ -18,7 +18,58 @@ echo " 项目路径: $PROJECT_DIR"
 echo "============================================================"
 
 # ----------------------------------------
-# 1. 自动生成 .env（如果不存在或强制重新生成）
+# 1. 配置 Docker 镜像加速（中国大陆服务器）
+# ----------------------------------------
+configure_docker_mirror() {
+    echo ""
+    echo "🚀 配置 Docker 镜像加速..."
+    
+    # 检测是否在中国大陆（简单判断）
+    local IS_CHINA=false
+    if curl -s --connect-timeout 3 "https://www.baidu.com" > /dev/null 2>&1; then
+        IS_CHINA=true
+    fi
+    
+    if [ "$IS_CHINA" = true ]; then
+        echo "   检测到中国大陆网络环境，配置镜像加速..."
+        
+        # Docker daemon 配置文件
+        DAEMON_JSON="/etc/docker/daemon.json"
+        
+        # 国内镜像源列表（2024年可用）
+        MIRRORS='["https://docker.1ms.run","https://docker.xuanyuan.me"]'
+        
+        if [ -f "$DAEMON_JSON" ]; then
+            # 检查是否已配置镜像
+            if grep -q "registry-mirrors" "$DAEMON_JSON"; then
+                echo "   ✅ 镜像加速已配置"
+            else
+                echo "   更新现有 Docker 配置..."
+                # 备份原配置
+                cp "$DAEMON_JSON" "${DAEMON_JSON}.bak"
+                # 添加镜像配置（简单方式）
+                echo "{\"registry-mirrors\": $MIRRORS}" > "$DAEMON_JSON"
+                echo "   ✅ 镜像加速配置完成"
+                echo "   🔄 重启 Docker 服务..."
+                systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+                sleep 3
+            fi
+        else
+            echo "   创建 Docker 配置文件..."
+            mkdir -p /etc/docker
+            echo "{\"registry-mirrors\": $MIRRORS}" > "$DAEMON_JSON"
+            echo "   ✅ 镜像加速配置完成"
+            echo "   🔄 重启 Docker 服务..."
+            systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+            sleep 3
+        fi
+    else
+        echo "   跳过镜像加速配置（非中国大陆网络）"
+    fi
+}
+
+# ----------------------------------------
+# 2. 自动生成 .env（如果不存在或强制重新生成）
 # ----------------------------------------
 ENV_FILE="$PROJECT_DIR/.env"
 
@@ -102,7 +153,7 @@ fi
 echo "✅ SECRET_KEY 检查通过"
 
 # ----------------------------------------
-# 2. 创建日志和数据目录
+# 3. 创建日志和数据目录
 # ----------------------------------------
 echo ""
 echo "📁 创建数据目录..."
@@ -110,7 +161,7 @@ mkdir -p "$PROJECT_DIR/deploy/logs" "$PROJECT_DIR/deploy/nginx" "$PROJECT_DIR/de
 echo "✅ 数据目录就绪"
 
 # ----------------------------------------
-# 3. 检查 Docker 环境
+# 4. 检查 Docker 环境
 # ----------------------------------------
 echo ""
 echo "🐳 检查 Docker 环境..."
@@ -125,15 +176,53 @@ fi
 echo "✅ Docker 环境就绪 ($(docker compose version 2>/dev/null || echo 'unknown'))"
 
 # ----------------------------------------
-# 4. 构建镜像
+# 5. 配置镜像加速
+# ----------------------------------------
+configure_docker_mirror
+
+# ----------------------------------------
+# 6. 拉取基础镜像（使用国内镜像源加速）
 # ----------------------------------------
 echo ""
-echo "🔨 构建镜像..."
+echo "📦 预拉取基础镜像..."
+echo "   这将使用国内镜像源加速下载..."
+
+# 基础镜像列表（使用国内镜像源）
+BASE_IMAGES=(
+    "python:3.13-slim"
+    "mysql:8.0"
+    "redis:7-alpine"
+    "nginx:1.25-alpine"
+)
+
+for image in "${BASE_IMAGES[@]}"; do
+    echo "   拉取 $image ..."
+    docker pull "$image" 2>/dev/null || {
+        echo "   ⚠️  直接拉取失败，尝试镜像源..."
+        # 尝试通过镜像源拉取
+        for mirror in "docker.1ms.run" "docker.xuanyuan.me"; do
+            echo "   尝试镜像源: $mirror"
+            docker pull "$mirror/$image" 2>/dev/null && {
+                docker tag "$mirror/$image" "$image"
+                docker rmi "$mirror/$image" 2>/dev/null || true
+                echo "   ✅ $image 拉取成功"
+                break
+            } || true
+        done
+    }
+done
+echo "✅ 基础镜像准备完成"
+
+# ----------------------------------------
+# 7. 构建镜像
+# ----------------------------------------
+echo ""
+echo "🔨 构建应用镜像..."
 docker compose --env-file "$ENV_FILE" -f deploy/docker-compose.yml build
 echo "✅ 镜像构建完成"
 
 # ----------------------------------------
-# 5. 启动所有服务
+# 8. 启动所有服务
 # ----------------------------------------
 echo ""
 echo "🚀 启动所有服务..."
@@ -141,7 +230,9 @@ docker compose --env-file "$ENV_FILE" -f deploy/docker-compose.yml up -d
 echo "✅ 服务启动中，等待 10 秒..."
 sleep 10
 
-# 6. 数据库迁移（处理旧容器）
+# ----------------------------------------
+# 9. 数据库迁移（处理旧容器）
+# ----------------------------------------
 echo ""
 echo "📊 执行数据库迁移..."
 
@@ -156,7 +247,7 @@ docker compose --env-file "$ENV_FILE" -f deploy/docker-compose.yml up migrate --
 echo "✅ 数据库迁移完成"
 
 # ----------------------------------------
-# 7. 显示容器状态
+# 10. 显示容器状态
 # ----------------------------------------
 echo ""
 echo "------------------------------------------------------------"
@@ -165,18 +256,21 @@ echo "------------------------------------------------------------"
 docker compose --env-file "$ENV_FILE" -f deploy/docker-compose.yml ps
 
 # 获取访问地址
-SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+SERVER_IP=$(curl -s --connect-timeout 5 ifconfig.me 2>/dev/null || curl -s --connect-timeout 5 ip.sb 2>/dev/null || echo "your-server-ip")
 echo ""
 echo "============================================================"
 echo " ✨ 部署完成！"
 echo "============================================================"
 echo ""
-echo "  🌐 网站首页:  http://${SERVER_IP}:80"
+echo "  🌐 网站首页:  http://${SERVER_IP}"
 echo "  🛠 管理后台:  http://${SERVER_IP}/admin/"
 echo "  📊 Web 应用:  http://${SERVER_IP}:8000"
 echo ""
-echo "  查看日志:     docker compose -f deploy/docker-compose.yml logs -f"
-echo "  停止服务:     docker compose -f deploy/docker-compose.yml down"
-echo "  重启服务:     docker compose -f deploy/docker-compose.yml restart"
+echo "  常用命令:"
+echo "    查看日志:   docker compose -f deploy/docker-compose.yml logs -f"
+echo "    停止服务:   docker compose -f deploy/docker-compose.yml down"
+echo "    重启服务:   docker compose -f deploy/docker-compose.yml restart"
+echo "    进入容器:   docker exec -it djangoblog-web bash"
 echo ""
+echo "============================================================"
 cd "$CD_DIR"

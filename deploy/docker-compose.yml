@@ -90,7 +90,7 @@ services:
         condition: service_healthy
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-fnOS2026-change-me-web}
       - DB_ENGINE=${DB_ENGINE:-mysql}
       - DB_HOST=${DB_HOST:-db}
       - DB_PORT=${DB_PORT:-3306}
@@ -147,7 +147,7 @@ services:
         condition: service_healthy
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-fnOS2026-change-me-migrate}
       - DB_ENGINE=${DB_ENGINE:-mysql}
       - DB_HOST=${DB_HOST:-db}
       - DB_PORT=${DB_PORT:-3306}
@@ -186,7 +186,7 @@ services:
         condition: service_healthy
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-fnOS2026-change-me-celery}
       - DB_ENGINE=${DB_ENGINE:-mysql}
       - DB_HOST=${DB_HOST:-db}
       - DB_PORT=${DB_PORT:-3306}
@@ -229,7 +229,7 @@ services:
         condition: service_healthy
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-fnOS2026-change-me-beat}
       - DB_ENGINE=${DB_ENGINE:-mysql}
       - DB_HOST=${DB_HOST:-db}
       - DB_PORT=${DB_PORT:-3306}
