@@ -405,3 +405,30 @@ DjangoBlog 是一个**生产级**的 Django 综合站点项目，整体代码质
 ---
 
 *报告生成于 2026-03-31 | DjangoBlog v2.3.2*
+
+---
+
+## 📝 后续修复记录（2026-04-01）
+
+针对报告中指出的高优先级问题，已完成以下修复：
+
+### ✅ 已修复
+
+| # | 问题 | 修复内容 |
+|---|------|---------|
+| P0-2 | Docker Compose 服务不完整 | 补全 MySQL、Redis、Celery Worker、Celery Beat、Nginx 容器 |
+| P0-3 | admin.py 单文件过大 | 已拆分为 11 个模块文件（`apps/core/admin/`） |
+| P0-1 | 速率限制竞态条件 | 使用 Redis Lua 脚本实现原子操作 |
+| P0-4 | 依赖管理双轨制 | requirements/base.txt 补充缺失依赖 |
+| 安全 | SECURE_SSL_REDIRECT 默认值 | 改为 False，适配纯 HTTP 部署 |
+| 安全 | SecurityMiddleware 重名 | 重命名为 SecurityMonitorMiddleware |
+| 部署 | 一键部署脚本 | 新增 `auto-deploy.sh` 自动生成 .env |
+| 文档 | README.md | 重写部署指南，移除过期引用 |
+
+### 🟡 进行中
+
+| # | 问题 | 状态 |
+|---|------|------|
+| P1-6 | 测试覆盖率低 | 待加强 |
+| P1-7 | django-mptt 替换 | 待评估 |
+| P1-8 | CSP 强化 | 待优化 |
