@@ -2,7 +2,7 @@
 # =============================================
 # DjangoBlog 一键自动部署脚本
 # 使用方法: bash deploy/auto-deploy.sh
-# 功能: 自动生成 .env、配置镜像加速、构建镜像、拉起全部服务
+# 功能: 自动生成 .env、配置镜像加速、构建镜像、拉起全部服务、数据库迁移、创建管理员
 # =============================================
 
 set -e
@@ -28,7 +28,6 @@ configure_docker_mirror() {
     echo ""
     echo "🚀 配置 Docker 镜像加速..."
     
-    # 检测是否在中国大陆（简单判断）
     local IS_CHINA=false
     if curl -s --connect-timeout 3 "https://www.baidu.com" > /dev/null 2>&1; then
         IS_CHINA=true
@@ -37,31 +36,23 @@ configure_docker_mirror() {
     if [ "$IS_CHINA" = true ]; then
         echo "   检测到中国大陆网络环境，配置镜像加速..."
         
-        # Docker daemon 配置文件
         DAEMON_JSON="/etc/docker/daemon.json"
-        
-        # 国内镜像源列表（2024年可用）
         MIRRORS='["https://docker.1ms.run","https://docker.xuanyuan.me"]'
         
         if [ -f "$DAEMON_JSON" ]; then
-            # 检查是否已配置镜像
             if grep -q "registry-mirrors" "$DAEMON_JSON"; then
                 echo "   ✅ 镜像加速已配置"
             else
-                echo "   更新现有 Docker 配置..."
                 cp "$DAEMON_JSON" "${DAEMON_JSON}.bak"
                 echo "{\"registry-mirrors\": $MIRRORS}" > "$DAEMON_JSON"
                 echo "   ✅ 镜像加速配置完成"
-                echo "   🔄 重启 Docker 服务..."
                 systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
                 sleep 3
             fi
         else
-            echo "   创建 Docker 配置文件..."
             mkdir -p /etc/docker
             echo "{\"registry-mirrors\": $MIRRORS}" > "$DAEMON_JSON"
             echo "   ✅ 镜像加速配置完成"
-            echo "   🔄 重启 Docker 服务..."
             systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
             sleep 3
         fi
@@ -71,7 +62,7 @@ configure_docker_mirror() {
 }
 
 # ----------------------------------------
-# 2. 自动生成 .env（如果不存在或强制重新生成）
+# 2. 自动生成 .env
 # ----------------------------------------
 if [ -f "$ENV_FILE" ]; then
     echo ""
@@ -120,7 +111,7 @@ NGINX_HTTPS_PORT_EXPOSED=443
 # --- CSRF ---
 CSRF_TRUSTED_ORIGINS=http://localhost,http://127.0.0.1
 
-# --- 安全配置（纯 HTTP 模式，有 SSL 后再改为 True）---
+# --- 安全配置 ---
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False
@@ -132,7 +123,7 @@ API_USER_RATE=1000/hour
 API_UPLOAD_RATE=30/hour
 API_READ_RATE=1200/hour
 
-# --- 百度内容审核（可选，有key再填）---
+# --- 百度内容审核 ---
 BAIDU_APP_ID=
 BAIDU_API_KEY=
 BAIDU_SECRET_KEY=
@@ -153,7 +144,7 @@ fi
 echo "✅ SECRET_KEY 检查通过"
 
 # ----------------------------------------
-# 3. 创建日志和数据目录
+# 3. 创建数据目录
 # ----------------------------------------
 echo ""
 echo "📁 创建数据目录..."
@@ -181,11 +172,10 @@ echo "✅ Docker 环境就绪 ($(docker compose version 2>/dev/null || echo 'unk
 configure_docker_mirror
 
 # ----------------------------------------
-# 6. 拉取基础镜像（使用国内镜像源加速）
+# 6. 拉取基础镜像
 # ----------------------------------------
 echo ""
 echo "📦 预拉取基础镜像..."
-echo "   这将使用国内镜像源加速下载..."
 
 BASE_IMAGES=(
     "python:3.13-slim"
@@ -201,7 +191,6 @@ for image in "${BASE_IMAGES[@]}"; do
     else
         echo "   ⚠️  直接拉取失败，尝试镜像源..."
         for mirror in "docker.1ms.run" "docker.xuanyuan.me"; do
-            echo "   尝试镜像源: $mirror"
             if docker pull "$mirror/$image" 2>/dev/null; then
                 docker tag "$mirror/$image" "$image"
                 docker rmi "$mirror/$image" 2>/dev/null || true
@@ -231,30 +220,99 @@ echo "✅ 服务启动中，等待数据库就绪..."
 sleep 15
 
 # ----------------------------------------
-# 9. 数据库迁移
+# 9. 自动执行数据库迁移
 # ----------------------------------------
 echo ""
 echo "📊 执行数据库迁移..."
 
 # 清理旧的 migrate 容器
 if docker ps -a --format '{{.Names}}' | grep -q 'djangoblog-migrate'; then
-    echo "   清理旧的迁移容器..."
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" rm -f migrate 2>/dev/null || true
 fi
 
-# 执行迁移
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up migrate --renew-anon-volumes 2>/dev/null || {
-    echo "   ⚠️ migrate 服务失败，尝试手动迁移..."
-    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T web python manage.py migrate 2>/dev/null || {
-        echo "   等待数据库就绪后重试..."
-        sleep 10
-        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T web python manage.py migrate
-    }
-}
-echo "✅ 数据库迁移完成"
+# 执行迁移（带重试）
+MIGRATE_SUCCESS=false
+for i in 1 2 3; do
+    echo "   尝试迁移 (第 $i 次)..."
+    if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T web python manage.py migrate 2>/dev/null; then
+        MIGRATE_SUCCESS=true
+        break
+    fi
+    echo "   等待数据库就绪..."
+    sleep 5
+done
+
+if [ "$MIGRATE_SUCCESS" = true ]; then
+    echo "✅ 数据库迁移完成"
+else
+    echo "❌ 数据库迁移失败，请手动执行:"
+    echo "   docker compose --env-file deploy/.env -f deploy/docker-compose.yml exec web python manage.py migrate"
+fi
 
 # ----------------------------------------
-# 10. 显示容器状态
+# 10. 交互式创建管理员账户
+# ----------------------------------------
+echo ""
+echo "👤 创建管理员账户"
+echo "------------------------------------------------------------"
+
+# 检查是否已有管理员
+HAS_ADMIN=$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T web python -c "
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.production'
+import django
+django.setup()
+from django.contrib.auth import get_user_model
+User = get_user_model()
+print('yes' if User.objects.filter(is_superuser=True).exists() else 'no')
+" 2>/dev/null || echo "unknown")
+
+if [ "$HAS_ADMIN" = "yes" ]; then
+    echo "✅ 检测到已有管理员账户，跳过创建"
+elif [ "$HAS_ADMIN" = "no" ]; then
+    echo "请输入管理员账户信息:"
+    echo ""
+    
+    # 交互式输入
+    read -p "用户名 [admin]: " ADMIN_USER
+    ADMIN_USER=${ADMIN_USER:-admin}
+    
+    read -p "邮箱 [admin@example.com]: " ADMIN_EMAIL
+    ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+    
+    while true; do
+        read -s -p "密码: " ADMIN_PASS
+        echo ""
+        read -s -p "确认密码: " ADMIN_PASS_CONFIRM
+        echo ""
+        
+        if [ "$ADMIN_PASS" = "$ADMIN_PASS_CONFIRM" ] && [ -n "$ADMIN_PASS" ]; then
+            break
+        fi
+        echo "❌ 密码不匹配或为空，请重新输入"
+    done
+    
+    echo ""
+    echo "正在创建管理员账户..."
+    
+    # 创建管理员
+    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T web python -c "
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.production'
+import django
+django.setup()
+from django.contrib.auth import get_user_model
+User = get_user_model()
+User.objects.create_superuser('$ADMIN_USER', '$ADMIN_EMAIL', '$ADMIN_PASS')
+print('管理员账户创建成功!')
+" 2>/dev/null && echo "✅ 管理员账户创建成功" || echo "❌ 创建失败，请手动创建"
+else
+    echo "⚠️  无法检测管理员状态，请手动创建:"
+    echo "   docker compose --env-file deploy/.env -f deploy/docker-compose.yml exec web python manage.py createsuperuser"
+fi
+
+# ----------------------------------------
+# 11. 显示容器状态和访问信息
 # ----------------------------------------
 echo ""
 echo "------------------------------------------------------------"
@@ -273,9 +331,6 @@ echo ""
 echo "  🌐 网站首页:  http://${SERVER_IP}"
 echo "  🛠 管理后台:  http://${SERVER_IP}/admin/"
 echo "  📊 Web 应用:  http://${SERVER_IP}:8000"
-echo ""
-echo "  📝 创建管理员账户:"
-echo "     docker compose --env-file deploy/.env -f deploy/docker-compose.yml exec web python manage.py createsuperuser"
 echo ""
 echo "  常用命令:"
 echo "    查看日志:   docker compose -f deploy/docker-compose.yml logs -f"
