@@ -17,6 +17,8 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ["content", "user__username", "post__title"]
     actions = ["approve_comments", "reject_comments"]
     list_editable = ["review_status"]
+    list_select_related = ["post", "user"]
+    raw_id_fields = ["post", "user"]
 
     def content_short(self, obj):
         return obj.content[:50] + "..." if len(obj.content) > 50 else obj.content

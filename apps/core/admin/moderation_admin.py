@@ -44,6 +44,7 @@ class ModerationAdminAdmin(admin.ModelAdmin):
 
     list_display = ["target_type", "admin", "created_at"]
     list_filter = ["target_type", "admin"]
+    list_select_related = ["admin"]
 
 
 @admin.register(ModerationReminder, site=admin_site)
@@ -54,6 +55,7 @@ class ModerationReminderAdmin(admin.ModelAdmin):
     list_filter = ["target_type", "assigned_admin", "is_processed"]
     search_fields = ["target_id"]
     readonly_fields = ["target_type", "target_id", "assigned_admin", "created_at"]
+    list_select_related = ["assigned_admin"]
     actions = ["mark_as_processed"]
 
     def mark_as_processed(self, request, queryset):
@@ -72,6 +74,7 @@ class ModerationLogAdmin(admin.ModelAdmin):
     list_filter = ["target_type", "action", "operator"]
     search_fields = ["target_id", "note"]
     readonly_fields = ["target_type", "target_id", "action", "operator", "note", "created_at"]
+    list_select_related = ["operator"]
     date_hierarchy = "created_at"
 
 
@@ -84,6 +87,8 @@ class UserReputationAdmin(admin.ModelAdmin):
     search_fields = ["user__username", "user__email"]
     readonly_fields = ["created_at", "updated_at"]
     actions = ["add_bonus", "add_penalty", "reset_score"]
+    list_select_related = ["user"]
+    raw_id_fields = ["user"]
 
     def level_display(self, obj):
         return obj.get_level_display()
@@ -120,4 +125,5 @@ class ReputationLogAdmin(admin.ModelAdmin):
     list_filter = ["action"]
     search_fields = ["user_reputation__user__username", "reason"]
     readonly_fields = ["user_reputation", "action", "old_score", "new_score", "delta", "reason", "created_at"]
+    list_select_related = ["user_reputation"]
     date_hierarchy = "created_at"

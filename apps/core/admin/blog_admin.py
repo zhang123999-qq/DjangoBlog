@@ -19,6 +19,8 @@ class PostAdmin(admin.ModelAdmin):
     filter_horizontal = ["tags"]
     date_hierarchy = "published_at"
     actions = ["publish_posts", "unpublish_posts"]
+    list_select_related = ["author", "category"]
+    raw_id_fields = ["author"]
 
     # 为 content 字段添加更多行
     def get_form(self, request, obj=None, **kwargs):

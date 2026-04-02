@@ -39,6 +39,8 @@ class TopicAdmin(admin.ModelAdmin):
     search_fields = ["title", "content", "author__username"]
     date_hierarchy = "created_at"
     actions = ["approve_topics", "reject_topics", "pin_topics", "lock_topics"]
+    list_select_related = ["board", "author"]
+    raw_id_fields = ["author"]
 
     def approve_topics(self, request, queryset):
         from moderation.services import approve_instance
@@ -77,6 +79,8 @@ class ReplyAdmin(admin.ModelAdmin):
     list_filter = ["review_status", "created_at"]
     search_fields = ["content", "author__username", "topic__title"]
     actions = ["approve_replies", "reject_replies"]
+    list_select_related = ["topic", "author"]
+    raw_id_fields = ["topic", "author"]
 
     def content_short(self, obj):
         return obj.content[:50] + "..." if len(obj.content) > 50 else obj.content
