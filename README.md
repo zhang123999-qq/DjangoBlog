@@ -8,47 +8,102 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D)
 ![License](https://img.shields.io/badge/License-MIT-black)
+![GitHub stars](https://img.shields.io/github/stars/zhang123999-qq/DjangoBlog?style=social)
 
 一个面向生产部署的 Django 综合站点：**博客 + 论坛 + 工具箱 + API**。  
 强调「可用性、可维护性、可部署性」，适合个人站点、中小团队内容平台与教学演示。
+
+[在线演示](#) · [快速开始](#-快速开始) · [API 文档](./docs/API.md) · [贡献指南](./CONTRIBUTING.md)
 
 </div>
 
 ---
 
+## 目录
+
+- [项目亮点](#-项目亮点)
+- [项目截图](#-项目截图)
+- [技术栈](#-技术栈)
+- [项目结构](#-项目结构)
+- [快速开始](#-快速开始)
+  - [一键自动部署（推荐）](#一键自动部署推荐)
+  - [手动分步部署](#手动分步部署)
+- [本地开发](#-本地开发非-docker)
+- [生产安全配置](#-生产安全配置)
+- [运维命令速查](#-运维命令速查)
+- [API 文档](#-api-文档)
+- [路线图](#-路线图roadmap)
+- [贡献指南](#-贡献指南)
+- [文档目录](#-文档目录)
+- [许可证](#-许可证)
+
+---
+
 ## ✨ 项目亮点
 
-- 📰 **内容系统**：博客文章、分类、评论、点赞、Slug 路由
-- 💬 **社区模块**：论坛主题、回复、互动链路
-- 🧰 **工具箱模块**：72 个实用工具（编码转换、文本处理、加解密、图像类等）
-- 🔌 **API 能力**：Django REST Framework + OpenAPI 文档支持
-- 🛡️ **安全增强**：安全响应头、限流、登录防护（Axes）、基础内容审核机制
-- 🚀 **生产部署友好**：Docker Compose / Nginx / Gunicorn / MySQL / Redis
-- 🧪 **质量保障**：Django checks、迁移检查、回归测试基线
+| 功能 | 说明 |
+|------|------|
+| 📰 **内容系统** | 博客文章、分类、评论、点赞、Slug 路由 |
+| 💬 **社区模块** | 论坛主题、回复、互动链路 |
+| 🧰 **工具箱模块** | 72 个实用工具（编码转换、文本处理、加解密、图像类等） |
+| 🔌 **API 能力** | Django REST Framework + OpenAPI 文档支持 |
+| 🛡️ **安全增强** | 安全响应头、限流、登录防护（Axes）、内容审核机制 |
+| 🚀 **生产部署友好** | Docker Compose / Nginx / Gunicorn / MySQL / Redis |
+| 🧪 **质量保障** | Django checks、迁移检查、回归测试基线 |
+
+---
+
+## 📸 项目截图
+
+### 网站首页
+
+![首页截图](./docs/screenshots/homepage.png)
+
+### 管理后台
+
+![后台截图](./docs/screenshots/admin.png)
+
+### API 文档
+
+![API文档截图](./docs/screenshots/api-docs.png)
+
+> 💡 如果图片无法显示，欢迎访问 [在线演示](#) 查看实际效果。
 
 ---
 
 ## 🧱 技术栈
 
 ### Backend
-- Python 3.13
-- Django 4.2 LTS
-- Django REST Framework
-- Celery（异步任务）
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| Python | 3.13 | 编程语言 |
+| Django | 4.2 LTS | Web 框架 |
+| Django REST Framework | 3.14+ | API 框架 |
+| Celery | 5+ | 异步任务队列 |
 
 ### Data & Middleware
-- MySQL 8
-- Redis 7
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| MySQL | 8.0+ | 主数据库 |
+| Redis | 7+ | 缓存 & 消息队列 |
 
 ### Deploy
-- Docker & Docker Compose
-- Nginx
-- Gunicorn
+
+| 技术 | 说明 |
+|------|------|
+| Docker & Docker Compose | 容器化部署 |
+| Nginx | 反向代理 |
+| Gunicorn | WSGI 服务器 |
 
 ### Engineering
-- pytest
-- mypy
-- flake8
+
+| 工具 | 说明 |
+|------|------|
+| pytest | 测试框架 |
+| mypy | 类型检查 |
+| flake8 | 代码规范 |
 
 ---
 
@@ -56,20 +111,24 @@
 
 ```text
 DjangoBlog/
-├─ apps/                    # 业务应用
-│  ├─ accounts/             # 用户与认证
-│  ├─ blog/                 # 博客
-│  ├─ forum/                # 论坛
-│  ├─ tools/                # 工具箱
-│  ├─ api/                  # API 层
-│  └─ core/                 # 公共能力（安全、中间件、工具函数等）
-├─ config/                  # Django 配置（settings/urls/wsgi/asgi/celery）
-├─ deploy/                  # Dockerfile、compose、nginx、部署脚本
-├─ requirements/            # base / development / production 依赖分层
-├─ templates/               # 模板
-├─ static/                  # 静态资源（源）
-├─ docs/                    # 项目文档
-└─ tests/                   # 测试用例
+├── apps/                    # 业务应用
+│   ├── accounts/            # 用户与认证
+│   ├── blog/                # 博客
+│   ├── forum/               # 论坛
+│   ├── tools/               # 工具箱（72+ 工具）
+│   ├── api/                 # REST API 层
+│   └── core/                # 公共能力（安全、中间件、Admin）
+├── config/                  # Django 配置
+│   └── settings/            # base / development / production / test
+├── deploy/                  # 部署相关
+│   ├── Dockerfile           # Docker 镜像构建
+│   ├── docker-compose.yml   # 服务编排
+│   └── auto-deploy.sh       # 一键部署脚本
+├── docs/                    # 项目文档
+├── requirements/            # 依赖分层管理
+├── templates/               # 模板文件
+├── static/                  # 静态资源
+└── tests/                   # 测试用例
 ```
 
 ---
@@ -78,8 +137,8 @@ DjangoBlog/
 
 ### 一键自动部署（推荐）
 
-> 支持：阿里云、腾讯云、华为云、飞牛 NAS 等主流环境  
-> 前置条件：已安装 Docker 和 Docker Compose
+> **支持环境**：阿里云、腾讯云、华为云、飞牛 NAS 等  
+> **前置条件**：已安装 Docker 和 Docker Compose
 
 ```bash
 # 1. 克隆项目
@@ -93,19 +152,20 @@ bash deploy/auto-deploy.sh
 **脚本自动完成：**
 
 | 步骤 | 功能 |
-|------|------|
-| 1️⃣ | 自动生成 `.env` 配置文件（含随机 SECRET_KEY） |
-| 2️⃣ | 配置 Docker 镜像加速（国内环境自动启用） |
-| 3️⃣ | 预拉取基础镜像（python、mysql、redis、nginx） |
-| 4️⃣ | 构建应用镜像 |
-| 5️⃣ | 启动所有服务（Web、MySQL、Redis、Celery、Nginx） |
-| 6️⃣ | 自动执行数据库迁移 |
-| 7️⃣ | 交互式创建管理员账户 |
+|:----:|------|
+| 1 | 自动生成 `.env` 配置文件（含随机 SECRET_KEY） |
+| 2 | 配置 Docker 镜像加速（国内环境自动启用） |
+| 3 | 预拉取基础镜像（python、mysql、redis、nginx） |
+| 4 | 构建应用镜像 |
+| 5 | 启动所有服务（Web、MySQL、Redis、Celery、Nginx） |
+| 6 | 自动执行数据库迁移 |
+| 7 | 交互式创建管理员账户 |
 
 **部署完成后：**
 
 - 🌐 网站首页：`http://你的服务器IP`
 - 🛠 管理后台：`http://你的服务器IP/admin/`
+- 📖 API 文档：`http://你的服务器IP/api/docs/`
 
 ---
 
@@ -113,17 +173,15 @@ bash deploy/auto-deploy.sh
 
 #### 1) 准备环境变量
 
-复制并编辑 `.env`：
-
 ```bash
-# 参考项目根目录 .env.example
+# 复制示例配置
 cp .env.example .env
-```
 
-必填项：
-- `SECRET_KEY`：强随机字符串
-- `ALLOWED_HOSTS`：服务器 IP 或域名
-- `DEBUG=False`
+# 编辑配置（必填项）
+# - SECRET_KEY: 强随机字符串
+# - ALLOWED_HOSTS: 服务器 IP 或域名
+# - DEBUG=False
+```
 
 #### 2) 构建镜像并启动
 
@@ -132,14 +190,9 @@ docker compose --env-file .env -f deploy/docker-compose.yml build
 docker compose --env-file .env -f deploy/docker-compose.yml up -d
 ```
 
-> ⚠️ 不推荐 `--no-cache`，除非修改了 Python 依赖或基础镜像变更。
-
 #### 3) 数据库迁移
 
-> `collectstatic` 已在 Dockerfile 构建时完成，无需手动执行。
-
 ```bash
-# 运行一次性迁移容器
 docker compose --env-file .env -f deploy/docker-compose.yml up migrate
 ```
 
@@ -160,23 +213,52 @@ docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=50
 
 ## 🧑‍💻 本地开发（非 Docker）
 
-先在 `.env` 设置：
+### 1) 配置环境变量
 
-- `DEPLOY_MODE=host`（让检查跳过 Docker 必选项）
-- 确保 `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME` 可真实访问 MySQL
+```bash
+# .env 中设置
+DEPLOY_MODE=host
+DEBUG=True
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=djangoblog
+```
+
+### 2) 创建虚拟环境
 
 ```bash
 uv venv
+source .venv/bin/activate  # Linux/macOS
+# 或 .venv\Scripts\activate  # Windows
+
 uv pip install -r requirements/development.txt
+```
+
+### 3) 初始化数据库
+
+```bash
 uv run python manage.py migrate
+uv run python manage.py createsuperuser
+```
+
+### 4) 启动开发服务器
+
+```bash
 uv run python manage.py runserver 0.0.0.0:8000
 ```
 
-常用检查：
+### 5) 常用检查命令
 
 ```bash
+# 系统检查
 uv run python manage.py check
+
+# 迁移检查
 uv run python manage.py makemigrations --check --dry-run
+
+# 运行测试
 uv run pytest -q
 ```
 
@@ -186,8 +268,6 @@ uv run pytest -q
 
 ### 纯 HTTP 部署（无 SSL 证书）
 
-保持以下配置为 `False`（`.env` 中的默认值）：
-
 ```env
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
@@ -196,20 +276,22 @@ CSRF_COOKIE_SECURE=False
 
 ### HTTPS 部署（有 SSL 证书）
 
-在 Nginx 配置 443 端口并指向证书文件后，在 `.env` 中切换：
-
 ```env
 SECURE_SSL_REDIRECT=True
 SESSION_COOKIE_SECURE=True
 CSRF_COOKIE_SECURE=True
 ```
 
-### 通用建议
+### 安全检查清单
 
-- 使用 HTTPS 反代（Nginx / Ingress）
-- 保持 `SECURE_HSTS_SECONDS > 0`
-- 数据库与 Redis 使用内网访问，限制暴露面
-- 发布前执行：`docker compose -f deploy/docker-compose.yml exec web python manage.py check --deploy`
+- [ ] `DEBUG=False` 已设置
+- [ ] `SECRET_KEY` 已更改为强随机值
+- [ ] `ALLOWED_HOSTS` 已正确配置
+- [ ] 数据库不使用 root 用户
+- [ ] Redis 不暴露到公网
+- [ ] HTTPS 已启用（推荐）
+
+详细安全策略请参阅 [SECURITY.md](./SECURITY.md)
 
 ---
 
@@ -218,11 +300,11 @@ CSRF_COOKIE_SECURE=True
 ```bash
 # 启动所有服务
 bash deploy/up.sh           # Linux
-deploy\up.bat               # Windows（本地开发）
+deploy\up.bat               # Windows
 
 # 停止服务（保留数据卷）
-bash deploy/down.sh        # Linux
-deploy\down.bat            # Windows（本地开发）
+bash deploy/down.sh         # Linux
+deploy\down.bat             # Windows
 
 # 彻底清理（包括数据卷）
 bash deploy/down.sh --purge
@@ -230,12 +312,34 @@ bash deploy/down.sh --purge
 # 查看日志
 docker compose -f deploy/docker-compose.yml logs -f --tail=50
 
-# 重启某个服务
+# 重启服务
 docker compose -f deploy/docker-compose.yml restart web
 
 # 进入容器调试
 docker compose -f deploy/docker-compose.yml exec web bash
+
+# 执行 Django 命令
+docker compose -f deploy/docker-compose.yml exec web python manage.py check --deploy
 ```
+
+---
+
+## 📖 API 文档
+
+项目提供完整的 REST API，包含 **21 个接口**：
+
+| 模块 | 接口 | 说明 |
+|------|------|------|
+| 博客 | 分类、标签、文章、评论 | 内容管理 |
+| 论坛 | 版块、主题、回复 | 社区互动 |
+| 上传 | 图片、文件上传 | 富媒体支持 |
+| 审核 | 审核操作、指标统计 | 内容管理 |
+
+**在线文档**（开发环境）：
+- Swagger UI：`/api/docs/`
+- ReDoc：`/api/redoc/`
+
+**完整文档**：[docs/API.md](./docs/API.md)
 
 ---
 
@@ -246,31 +350,62 @@ docker compose -f deploy/docker-compose.yml exec web bash
 - [ ] 前端页面体验与主题体系持续优化
 - [ ] 监控告警（Prometheus / Sentry）进一步完善
 
+更新日志：[CHANGELOG.md](./CHANGELOG.md)
+
 ---
 
 ## 🤝 贡献指南
 
-欢迎 Issue / PR：
+我们欢迎所有形式的贡献！
+
+### 贡献方式
+
+- 🐛 报告 Bug：提交 [Issue](https://github.com/zhang123999-qq/DjangoBlog/issues)
+- 💡 建议功能：提交 [Issue](https://github.com/zhang123999-qq/DjangoBlog/issues)
+- 📝 改进文档：提交 Pull Request
+- 🔧 提交代码：提交 Pull Request
+
+### 快速开始贡献
 
 1. Fork 仓库并创建功能分支
-2. 提交前执行测试与检查
-3. 提交 PR 并说明改动动机与验证结果
+2. 提交前执行测试与代码检查
+3. 提交 PR 并说明改动内容
+
+详细贡献指南：[CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ---
 
-## 🧹 最近维护（2026-04-01）
+## 📚 文档目录
 
-- 新增一键自动部署脚本 `deploy/auto-deploy.sh`（自动生成 .env + 拉起服务）
-- 清理部署目录：移除 19 个与 Docker 无关的测试/性能/本地工具脚本
-- 修复 Docker 部署高危问题：
-  - `SECURE_SSL_REDIRECT` / `SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` 默认改为 False
-  - 重命名 `SecurityMiddleware` → `SecurityMonitorMiddleware` 解决中间件重名
-  - 修复 Dockerfile 中 collectstatic 目录权限问题
-- 测试基线：`uv run pytest -q`（79 passed / 80 skipped）
-- 新增页脚备案号一键脚本：`scripts/set_beian_footer.py`
+| 文档 | 说明 |
+|------|------|
+| [README.md](./README.md) | 项目主文档（本文档） |
+| [CHANGELOG.md](./CHANGELOG.md) | 版本更新日志 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南 |
+| [SECURITY.md](./SECURITY.md) | 安全策略与漏洞报告 |
+| [docs/API.md](./docs/API.md) | API 接口文档（21 个接口） |
+| [docs/deployment-manual.md](./docs/deployment-manual.md) | 手动部署教程 |
+| [TECHNICAL_AUDIT_REPORT.md](./TECHNICAL_AUDIT_REPORT.md) | 技术评估报告 |
 
 ---
 
-## 📄 License
+## 📄 许可证
 
-MIT
+本项目采用 [MIT](./LICENSE) 许可证。
+
+---
+
+## 💬 联系方式
+
+- **Issues**: https://github.com/zhang123999-qq/DjangoBlog/issues
+- **Discussions**: https://github.com/zhang123999-qq/DjangoBlog/discussions
+
+---
+
+<div align="center">
+
+如果这个项目对你有帮助，欢迎 ⭐ Star 支持！
+
+**Made with ❤️ by DjangoBlog Team**
+
+</div>
