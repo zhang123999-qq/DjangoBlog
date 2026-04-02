@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from django.conf import settings
 
 from apps.core.error_codes import ErrorCodes, error_message
+from .constants import parse_baidu_violation_data_simple
 
 logger = logging.getLogger(__name__)
 
@@ -176,41 +177,8 @@ class BaiduModerationService:
             return 'error', self._service_unavailable_payload()
 
     def _parse_violation_data(self, data: List[Dict]) -> List[Dict]:
-        """解析违规数据
-
-        Args:
-            data: 百度 API 返回的 data 列表
-
-        Returns:
-            list: 简化的违规详情列表
-        """
-        if not data or not isinstance(data, list):
-            return []
-
-        violations = []
-        type_map = {
-            1: '色情',
-            2: '暴恐',
-            3: '政治敏感',
-            4: '恶意推广',
-            5: '低俗辱骂',
-            6: '低质灌水',
-        }
-
-        for item in data:
-            if not isinstance(item, dict):
-                continue
-            raw_type = item.get('type')
-            violation_type = raw_type if isinstance(raw_type, int) else -1
-            violation = {
-                'type': type_map.get(violation_type, '其他'),
-                'msg': item.get('msg', ''),
-                'probability': item.get('probability', 0),
-                'hits': item.get('hits', []),
-            }
-            violations.append(violation)
-
-        return violations
+        """解析违规数据 — 委托到共享常量模块"""
+        return parse_baidu_violation_data_simple(data)
 
 
 class MockModerationService:

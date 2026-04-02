@@ -3,8 +3,89 @@ HTTP请求模拟器工具 - 优化版
 """
 from ..categories import ToolCategory
 from django import forms
+from django.core.cache import cache
 from apps.tools.base_tool import BaseTool
 import json
+import socket
+import struct
+import time
+from urllib.parse import urlparse
+
+
+def _ip_to_int(ip_str):
+    """将 IP 转为整数，便于范围比较"""
+    try:
+        return struct.unpack('!I', socket.inet_aton(ip_str))[0]
+    except (socket.error, OSError):
+        return None
+
+
+def _is_private_or_internal(ip_str):
+    """检查 IP 是否为内网/私有地址"""
+    ip_int = _ip_to_int(ip_str)
+    if ip_int is None:
+        return True  # 无法解析则拒绝
+    
+    # 内网/私有地址范围
+    private_ranges = [
+        (0x00000000, 0x00FFFFFF),     # 0.0.0.0/8
+        (0x0A000000, 0x0AFFFFFF),     # 10.0.0.0/8
+        (0x64400000, 0x647FFFFF),     # 100.64.0.0/10 (CGNAT)
+        (0x7F000000, 0x7FFFFFFF),     # 127.0.0.0/8 (localhost)
+        (0xAC100000, 0xAC1FFFFF),     # 172.16.0.0/12
+        (0xC0A80000, 0xC0AFFFFF),     # 192.168.0.0/16
+        (0xC00000A8, 0xC00000A8),     # 192.0.0.8/32 (DS-Lite)
+        (0xC0000200, 0xC00002FF),     # 192.0.2.0/24 (TEST-NET-1)
+        (0xC6120000, 0xC613FFFF),     # 198.18.0.0/15 (基准测试)
+        (0xC6336400, 0xC63364FF),     # 198.51.100.0/24 (TEST-NET-2)
+        (0xCB007100, 0xCB0071FF),     # 203.0.113.0/24 (TEST-NET-3)
+        (0xA9FE0000, 0xA9FEFFFF),     # 169.254.0.0/16 (链路本地/元数据)
+        (0xF0000000, 0xFFFFFFFF),     # 240.0.0.0/4 (保留/组播)
+    ]
+    
+    for start, end in private_ranges:
+        if start <= ip_int <= end:
+            return True
+    return False
+
+
+def _validate_url_for_ssrf(url_str):
+    """验证 URL 目标地址，防止 SSRF"""
+    parsed = urlparse(url_str)
+    hostname = parsed.hostname
+    
+    if not hostname:
+        return False, '无法解析 URL 主机名'
+    
+    # 先检查是否是 IP 直连
+    ip_int = _ip_to_int(hostname)
+    if ip_int is not None:
+        if _is_private_or_internal(hostname):
+            return False, '禁止访问内网地址'
+    else:
+        # 域名解析并检查
+        try:
+            resolved_ip = socket.gethostbyname(hostname)
+            if _is_private_or_internal(resolved_ip):
+                return False, f'域名 {hostname} 解析到内网地址 {resolved_ip}，禁止访问'
+        except socket.gaierror:
+            return False, f'无法解析域名: {hostname}'
+    
+    return True, None
+
+
+# 用户级请求频率限制
+def _check_http_request_rate_limit(request):
+    """每用户每分钟最多 20 次 HTTP 请求"""
+    user_id = getattr(request.user, 'id', None) or 'anon'
+    bucket = str(int(time.time()) // 60)
+    key = f'tools:http_req:{user_id}:{bucket}'
+    
+    count = cache.get(key, 0)
+    if count >= 20:
+        return False
+    cache.set(key, count + 1, 120)
+    return True
 
 
 class HTTPRequestForm(forms.Form):
@@ -96,6 +177,15 @@ class HTTPRequestTool(BaseTool):
         timeout = form.cleaned_data['timeout']
         follow_redirects = form.cleaned_data['follow_redirects']
 
+        # SSRF 保护：验证目标地址不是内网
+        is_valid, error_msg = _validate_url_for_ssrf(url)
+        if not is_valid:
+            return {'error': f'安全限制: {error_msg}'}
+
+        # 速率限制
+        if not _check_http_request_rate_limit(request):
+            return {'error': '请求过于频繁，请稍后再试（每分钟最多 20 次）'}
+
         try:
             import requests
         except ImportError:
@@ -186,8 +276,7 @@ class HTTPRequestTool(BaseTool):
                 )
 
             # 解析响应
-            result = {
-                'url': response.url,
+            result = {                'url': response.url,
                 'method': method,
                 'status_code': response.status_code,
                 'status_text': response.reason,

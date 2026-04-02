@@ -86,40 +86,83 @@ def _get_content_model(content_type):
 
 
 def _check_rate_limit(request):
-    """每用户每分钟限流。"""
+    """每用户每分钟限流。（使用 cache.incr 保证原子性）"""
     limit = getattr(settings, "MODERATION_API_RATE_LIMIT_PER_MIN", 120)
     user_id = getattr(request.user, "id", None) or "anon"
-    from django.utils import timezone
 
     bucket = timezone.now().strftime("%Y%m%d%H%M")
     key = f"moderation:rate:{user_id}:{bucket}"
 
-    count = cache.get(key, 0)
-    if count >= limit:
+    try:
+        count = cache.incr(key)
+    except ValueError:
+        # 键不存在（首次请求），原子创建并设初始值
+        try:
+            cache.add(key, 1, 60)
+            count = 1
+        except ValueError:
+            # 并发竞争下 add 可能失败，此时已被其他线程创建
+            count = cache.get(key, 1)
+    except Exception:
+        # 降级方案：非原子 get+set（兼容 LocMemCache）
+        count = cache.get(key, 0)
+        if count >= limit:
+            _metric_incr("rate_limited")
+            logger.warning("moderation_api_rate_limited user=%s count=%s limit=%s", user_id, count, limit)
+            return False
+        cache.set(key, count + 1, 60)
+        _metric_incr("requests_total")
+        _record_user_hotspot(user_id)
+        return True
+
+    if count > limit:
         _metric_incr("rate_limited")
         logger.warning("moderation_api_rate_limited user=%s count=%s limit=%s", user_id, count, limit)
         return False
 
-    cache.set(key, count + 1, 60)
     _metric_incr("requests_total")
     _record_user_hotspot(user_id)
     return True
 
 
 def _enter_concurrency_guard(request):
-    """每用户并发上限保护。"""
+    """每用户并发上限保护。（使用 cache.incr 保证原子性）"""
     max_conc = getattr(settings, "MODERATION_API_MAX_CONCURRENCY", 20)
     user_id = getattr(request.user, "id", None) or "anon"
     key = f"moderation:conc:{user_id}"
 
-    current = cache.get(key, 0)
-    if current >= max_conc:
+    try:
+        new_current = cache.incr(key)
+    except ValueError:
+        # 键不存在，尝试创建
+        try:
+            cache.add(key, 1, 120)
+            new_current = 1
+        except ValueError:
+            # 并发竞争，已被创建
+            new_current = cache.get(key, 1)
+    except Exception:
+        # 降级：非原子 get+set（兼容 LocMemCache）
+        current = cache.get(key, 0)
+        if current >= max_conc:
+            _metric_incr("concurrency_limited")
+            logger.warning("moderation_api_concurrency_limited user=%s current=%s limit=%s", user_id, current, max_conc)
+            return None
+        new_current = current + 1
+        cache.set(key, new_current, 120)
+        _record_peak_concurrency(user_id, new_current)
+        return key
+
+    if new_current > max_conc:
+        # 超过上限，回退计数器
+        try:
+            cache.incr(key, -1)
+        except Exception:
+            pass
         _metric_incr("concurrency_limited")
-        logger.warning("moderation_api_concurrency_limited user=%s current=%s limit=%s", user_id, current, max_conc)
+        logger.warning("moderation_api_concurrency_limited user=%s current=%s limit=%s", user_id, new_current, max_conc)
         return None
 
-    new_current = current + 1
-    cache.set(key, new_current, 120)
     _record_peak_concurrency(user_id, new_current)
     return key
 

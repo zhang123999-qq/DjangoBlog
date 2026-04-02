@@ -92,3 +92,9 @@ allure-report/
 /tmp_probe_mysql_login.py
 /tmp_scan_mysql_ports.py
 /templates/includes/footer.html.bak.*
+
+# AI project-local memory (not Django)
+memory/
+
+# uv/lock
+*.lock

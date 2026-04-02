@@ -29,7 +29,7 @@ class Profile(models.Model):
         return f'{self.user.username} 的个人资料'
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=User, dispatch_uid='create_user_profile')
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     """在用户创建或更新时自动创建/更新 Profile"""
     if created:

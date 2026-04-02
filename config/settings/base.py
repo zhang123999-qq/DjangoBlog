@@ -42,11 +42,9 @@ def get_allowed_hosts():
     if local_ip and local_ip not in hosts:
         hosts.append(local_ip)
 
-    # 开发模式添加通配符（仅在 DEBUG=True 时）
-    if os.environ.get('DEBUG', 'False').lower() == 'true':
-        if '*' not in hosts:
-            hosts.append('*')
-
+    # ⚠️ 安全考虑：不再自动添加通配符 '*'
+    # 通配符会接受任意 Host 头请求，增加 DNS 重绑定攻击风险
+    # 开发环境如需测试多个主机名，请在 .env 中显式设置 ALLOWED_HOSTS
     return hosts
 
 

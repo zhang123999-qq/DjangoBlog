@@ -67,3 +67,4 @@ python-slugify>=8.0.0
 
 # 内容审核
 django-mptt>=0.16.0
+baidu-aip>=4.16

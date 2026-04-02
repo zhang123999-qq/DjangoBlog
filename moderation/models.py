@@ -28,7 +28,11 @@ class SensitiveWord(models.Model):
 
 
 class ModerationAdmin(models.Model):
-    """审核管理员分配模型"""
+    """审核管理员分配模型
+
+    已移除 unique 约束，允许同一内容类型分配多个管理员。
+    get_assigned_admin() 默认取该类型第一个管理员作为负责人。
+    """
 
     TARGET_TYPE_CHOICES = (
         ("comment", "评论"),
@@ -36,7 +40,7 @@ class ModerationAdmin(models.Model):
         ("reply", "回复"),
     )
 
-    target_type = models.CharField(max_length=20, choices=TARGET_TYPE_CHOICES, unique=True, verbose_name="内容类型")
+    target_type = models.CharField(max_length=20, choices=TARGET_TYPE_CHOICES, verbose_name="内容类型")
     admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -45,13 +49,14 @@ class ModerationAdmin(models.Model):
         related_name="moderation_roles",
         verbose_name="审核管理员",
     )
+    is_primary = models.BooleanField(default=True, verbose_name="是否主要负责人")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "审核管理员分配"
         verbose_name_plural = "审核管理员分配"
-        ordering = ["target_type"]
+        ordering = ["target_type", "-is_primary"]
 
     def __str__(self):
         return f'{self.get_target_type_display()} 审核管理员: {self.admin.username if self.admin else "未设置"}'

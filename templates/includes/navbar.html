@@ -15,17 +15,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/blog/">
+                    <a class="nav-link" href="{% url 'blog:post_list' %}">
                         <i class="bi bi-file-text me-1"></i> 博客
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/forum/">
+                    <a class="nav-link" href="{% url 'forum:board_list' %}">
                         <i class="bi bi-chat-dots me-1"></i> 论坛
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/tools/">
+                    <a class="nav-link" href="{% url 'tools:tool_list' %}">
                         <i class="bi bi-tools me-1"></i> 工具栏
                     </a>
                 </li>
@@ -51,7 +51,7 @@
                             <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> 个人中心</a></li>
                             <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile_edit' %}"><i class="bi bi-pencil"></i> 编辑资料</a></li>
                             {% if user.is_staff or user.is_superuser %}
-                                <li><a class="dropdown-item d-flex align-items-center gap-2" href="/admin/"><i class="bi bi-gear"></i> 后台管理</a></li>
+                                <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> 后台管理</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li>

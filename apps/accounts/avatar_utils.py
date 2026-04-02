@@ -48,9 +48,12 @@ def get_random_avatar():
     unique_name = f'{uuid.uuid4().hex[:8]}{ext}'
     dst_path = os.path.join(media_avatar_dir, unique_name)
 
-    shutil.copy2(src_path, dst_path)
-
-    return f'avatars/{unique_name}'
+    try:
+        shutil.copy2(src_path, dst_path)
+        return f'avatars/{unique_name}'
+    except Exception:
+        # 复制失败时降级到默认头像
+        return 'avatars/default-avatar.png'
 
 
 def get_avatar_list():

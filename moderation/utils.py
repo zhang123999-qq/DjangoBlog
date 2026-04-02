@@ -52,6 +52,9 @@ def check_sensitive_content(content):
 def auto_moderate(obj, content_field='content'):
     """自动审核内容
 
+    无敏感词 → 自动通过（approved）
+    有敏感词 → 进入人工审核（pending）
+
     Args:
         obj: 要审核的对象
         content_field: 内容字段名
@@ -66,6 +69,7 @@ def auto_moderate(obj, content_field='content'):
         obj.review_status = 'pending'
         obj.review_note = f'命中敏感词: {", ".join(hit_words)}'
     else:
-        obj.review_status = 'pending'  # 默认待审核
+        obj.review_status = 'approved'
+        obj.review_note = '自动审核通过（无敏感词）'
 
     return has_sensitive

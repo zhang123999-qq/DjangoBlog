@@ -9,15 +9,36 @@
 
 ## [Unreleased]
 
-### 计划中
-- 完整 CI 工作流（lint + tests + deploy checks）
-- 统一 API 权限策略与审计日志
-- 前端页面体验与主题体系持续优化
-- 监控告警（Prometheus / Sentry）进一步完善
+### 新增
+- **公安联网备案号功能**：
+  - `SiteConfig` 新增 `site_gongan_beian` 字段 + 自动补全格式
+  - Admin 添加"一键生成"按钮 + 公安备案链接自动生成
+  - 页脚（footer.html）同步展示公安联网备案信息
+- **模板 URL 规范化**：所有硬编码链接改为 `{% url %}` 模板标签
+  - navbar.html、home.html、footer.html、admin/index.html
+- **HTTP 请求工具 SSRF 防护**：新增内网 IP 检测，覆盖全部私有地址段
+- **端口扫描工具安全加固**：限制扫描范围，防止滥用
+
+### 修复
+- **moderation 数据库迁移缺失**：`is_primary` 字段未生成迁移文件，已修复
+- **navbar.html 语法错误**：`</a>` 标签未正确闭合，导致 HTML 渲染异常
+- **论坛浏览量递增方式优化**：从 `F()` 表达式 + `refresh_from_db` 改为纯整数递增
+
+### 安全改进
+- **生产环境 Cookie 安全**：`SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` 默认改为 True
+- **ALLOWED_HOSTS 不再自动添加通配符**：即使 DEBUG=True 也不再允许 `*`
+- **CDN 脚本跨域防护**：Monaco Editor 和 TinyMCE 添加 `crossOrigin="anonymous"`
+- **Clipboard API 升级**：优先使用 `navigator.clipboard.writeText`，回退方案完善
+- **Robots.txt 优化**：sitemap 从绝对 URL 改为相对路径
+
+### 优化
+- **脚本清理工具增强**：排除 `.venv`、`.git` 等目录，支持 allure/htmlcov 报告清理
+- **migrate_to_mysql.py 适配**：使用 ORM 动态获取真实表名，适配自定义 User 模型
+- **start.py 增强**：支持 uv 管理的 Python 环境检测
 
 ---
 
-## [2.3.2] - 2026-04-02
+## [2.3.3] - 2026-04-02
 
 ### 新增
 - **API 文档**：新增 `docs/API.md`，涵盖 21 个接口完整文档

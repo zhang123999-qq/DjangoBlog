@@ -127,6 +127,8 @@ class Post(models.Model):
             self.published_at = timezone.now()
 
         super().save(*args, **kwargs)
+        # 清除分类/标签缓存（文章发布/编辑/删除后侧边栏数量需要刷新）
+        cache.delete('blog_categories_tags')
 
     def __str__(self):
         return self.title
@@ -161,8 +163,14 @@ class Post(models.Model):
                 self.refresh_from_db(fields=["views_count"])
                 return
 
-            # 更新内存中的值（乐观估计）
-            self.views_count = F("views_count") + 1
+            # 更新内存中的值（仅用于当前请求的乐观显示，纯整数递增）
+            try:
+                current = cache.get(cache_key, 0)
+                self.views_count = (self.views_count or 0) + current
+            except (TypeError, ValueError):
+                # 兼容处理：直接 +1
+                if isinstance(self.views_count, int):
+                    self.views_count += 1
 
         except Exception as e:
             # 异常时降级到数据库直接更新
@@ -242,9 +250,11 @@ class Comment(models.Model):
         return self.review_status == "rejected"
 
     def update_like_count(self):
-        """更新点赞数"""
+        """更新点赞"""
+        self.__class__.objects.filter(pk=self.pk).update(
+            like_count=self.likes.count()
+        )
         self.like_count = self.likes.count()
-        self.save(update_fields=["like_count"])
 
     def save(self, *args, **kwargs):
         # 保持 is_approved 与 review_status 的兼容性

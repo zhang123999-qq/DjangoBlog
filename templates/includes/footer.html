@@ -28,17 +28,17 @@
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="/blog/" class="text-gray-400 hover:text-white transition-all">
+                        <a href="{% url 'blog:post_list' %}" class="text-gray-400 hover:text-white transition-all">
                             <i class="bi bi-file-text me-2"></i> 博客
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="/forum/" class="text-gray-400 hover:text-white transition-all">
+                        <a href="{% url 'forum:board_list' %}" class="text-gray-400 hover:text-white transition-all">
                             <i class="bi bi-chat-dots me-2"></i> 论坛
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="/tools/" class="text-gray-400 hover:text-white transition-all">
+                        <a href="{% url 'tools:tool_list' %}" class="text-gray-400 hover:text-white transition-all">
                             <i class="bi bi-tools me-2"></i> 工具栏
                         </a>
                     </li>
@@ -71,11 +71,17 @@
         <div class="row">
             <div class="col-12">
                 <p class="text-gray-400 mb-1">
-                    &copy; {% now "Y" %} {% if site_config %}{{ site_config.site_name }}{% else %}Django 综合网站{% endif %}
+                    {% if site_config and site_config.site_author %}{{ site_config.site_author }} | {% endif %}&copy; {% now "Y" %} {% if site_config %}{{ site_config.site_name }}{% else %}Django 综合网站{% endif %}
                 </p>
                 <!-- BEIAN_BLOCK:BEGIN -->
                 <p class="text-gray-400 mb-0">
-                    备案号：<a href="https://beian.miit.gov.cn/" class="text-gray-400 hover:text-white transition-all" target="_blank" rel="noopener noreferrer">粤ICP备12345678号</a>
+                    {% if site_config and site_config.site_icp %}
+                    ICP 备案：<a href="https://beian.miit.gov.cn/" class="text-gray-400 hover:text-white transition-all" target="_blank" rel="noopener noreferrer">{{ site_config.site_icp }}</a>
+                    {% endif %}
+                    {% if site_config and site_config.site_icp and site_config.site_gongan_beian %}&nbsp;&nbsp;|&nbsp;&nbsp;{% endif %}
+                    {% if site_config and site_config.site_gongan_beian %}
+                    🛡️ 公安联网备案：<a href="{{ site_config.gongan_beian_link }}" class="text-gray-400 hover:text-white transition-all" target="_blank" rel="noopener noreferrer">{{ site_config.site_gongan_beian }}</a>
+                    {% endif %}
                 </p>
                 <!-- BEIAN_BLOCK:END -->
             </div>

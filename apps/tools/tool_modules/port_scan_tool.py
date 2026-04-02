@@ -3,8 +3,52 @@
 """
 from ..categories import ToolCategory
 from django import forms
+from django.core.cache import cache
 from apps.tools.base_tool import BaseTool
 import socket
+import struct
+import time
+
+
+# 复用 IP 检查逻辑
+def _ip_to_int(ip_str):
+    try:
+        return struct.unpack('!I', socket.inet_aton(ip_str))[0]
+    except (socket.error, OSError):
+        return None
+
+
+def _is_private_or_internal(ip_str):
+    ip_int = _ip_to_int(ip_str)
+    if ip_int is None:
+        return True
+    private_ranges = [
+        (0x00000000, 0x00FFFFFF),     # 0.0.0.0/8
+        (0x0A000000, 0x0AFFFFFF),     # 10.0.0.0/8
+        (0x64400000, 0x647FFFFF),     # 100.64.0.0/10
+        (0x7F000000, 0x7FFFFFFF),     # 127.0.0.0/8
+        (0xAC100000, 0xAC1FFFFF),     # 172.16.0.0/12
+        (0xC0A80000, 0xC0AFFFFF),     # 192.168.0.0/16
+        (0xA9FE0000, 0xA9FEFFFF),     # 169.254.0.0/16
+        (0xF0000000, 0xFFFFFFFF),     # 240.0.0.0/4
+    ]
+    for start, end in private_ranges:
+        if start <= ip_int <= end:
+            return True
+    return False
+
+
+def _check_port_scan_rate_limit(request):
+    """每用户每 5 分钟最多 3 次端口扫描"""
+    user_id = getattr(request.user, 'id', None) or 'anon'
+    bucket = str(int(time.time()) // 300)
+    key = f'tools:port_scan:{user_id}:{bucket}'
+    
+    count = cache.get(key, 0)
+    if count >= 3:
+        return False
+    cache.set(key, count + 1, 600)
+    return True
 
 
 # 常用端口列表
@@ -89,6 +133,24 @@ class PortScanTool(BaseTool):
         scan_type = form.cleaned_data['scan_type']
         timeout = form.cleaned_data['timeout']
 
+        # 安全校验：禁止扫描内网地址
+        ip_int = _ip_to_int(host)
+        if ip_int is not None:
+            if _is_private_or_internal(host):
+                return {'error': '安全限制：禁止扫描内网地址'}
+        else:
+            # 域名解析后检查
+            try:
+                resolved_ip = socket.gethostbyname(host)
+                if _is_private_or_internal(resolved_ip):
+                    return {'error': f'安全限制：域名 {host} 解析到内网地址，禁止扫描'}
+            except socket.gaierror:
+                return {'error': f'无法解析域名: {host}'}
+
+        # 速率限制
+        if not _check_port_scan_rate_limit(request):
+            return {'error': '扫描过于频繁，请稍后再试（每 5 分钟最多 3 次）'}
+
         # 解析端口
         ports = []
         if scan_type == 'single':
@@ -115,9 +177,9 @@ class PortScanTool(BaseTool):
         if not ports:
             return {'error': '没有要扫描的端口'}
 
-        # 限制端口数量，防止滥用
-        if len(ports) > 1000:
-            return {'error': f'端口数量过多 ({len(ports)})，最多支持1000个端口'}
+        # 限制端口数量，防止滥用（降为 100，降低被滥用风险）
+        if len(ports) > 100:
+            return {'error': f'端口数量过多 ({len(ports)})，最多支持 100 个端口'}
 
         # 开始扫描
         results = []

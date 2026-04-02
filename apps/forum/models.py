@@ -100,10 +100,9 @@ class Topic(models.Model):
     def increase_views(self):
         """增加浏览量"""
         Topic.objects.filter(pk=self.pk).update(views_count=F('views_count') + 1)
-        # 更新当前实例的值
-        self.views_count = F('views_count') + 1
-        # 重新从数据库获取最新值
-        self.refresh_from_db(fields=['views_count'])
+        # 更新当前实例的值（纯整数递增，用于当前请求中的显示）
+        if isinstance(self.views_count, int):
+            self.views_count += 1
 
     def update_reply_count(self):
         """更新回复数和最后回复时间"""
@@ -172,9 +171,12 @@ class Reply(models.Model):
         return f'{self.author.username} 回复了 {self.topic.title}'
 
     def update_like_count(self):
-        """更新点赞数"""
-        self.like_count = self.likes.count()
-        self.save()
+        """更新点赞数（避免 save 覆盖其他字段）"""
+        actual_count = self.likes.count()
+        self.__class__.objects.filter(pk=self.pk).update(
+            like_count=actual_count
+        )
+        self.like_count = actual_count
 
     @property
     def is_pending(self):

@@ -2,28 +2,36 @@
 
 // 文档加载完成后执行
 document.addEventListener('DOMContentLoaded', function() {
-    // 复制到剪贴板功能
-    window.copyToClipboard = function(elementId) {
+    // 复制到剪贴板功能（优先使用 Clipboard API，回退到 execCommand）
+    window.copyToClipboard = async function(elementId) {
         const element = document.getElementById(elementId);
-        if (element) {
-            if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
-                element.select();
+        if (!element) return;
+
+        let text;
+        if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
+            text = element.value;
+        } else {
+            text = element.textContent || element.innerText;
+        }
+
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
             } else {
-                // 创建临时文本区域
+                // 回退方案
                 const tempElement = document.createElement('textarea');
-                tempElement.value = element.textContent || element.innerText;
+                tempElement.value = text;
+                tempElement.style.position = 'fixed';
+                tempElement.style.left = '-9999px';
                 document.body.appendChild(tempElement);
                 tempElement.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempElement);
             }
-            try {
-                document.execCommand('copy');
-                showToast('已复制到剪贴板');
-            } catch (err) {
-                console.error('复制失败:', err);
-                showToast('复制失败，请手动复制');
-            }
+            showToast('已复制到剪贴板');
+        } catch (err) {
+            console.error('复制失败:', err);
+            showToast('复制失败，请手动复制');
         }
     };
 

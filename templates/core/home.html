@@ -8,9 +8,9 @@
         <p class="lead">{{ site_config.site_description }}</p>
         <hr class="my-4">
         <p>欢迎访问 Django 综合网站！</p>
-        <a class="btn btn-primary btn-lg" href="/blog/" role="button">浏览博客</a>
-        <a class="btn btn-secondary btn-lg ms-2" href="/forum/" role="button">访问论坛</a>
-        <a class="btn btn-success btn-lg ms-2" href="/tools/" role="button">使用工具栏</a>
+        <a class="btn btn-primary btn-lg" href="{% url 'blog:post_list' %}" role="button">浏览博客</a>
+        <a class="btn btn-secondary btn-lg ms-2" href="{% url 'forum:board_list' %}" role="button">访问论坛</a>
+        <a class="btn btn-success btn-lg ms-2" href="{% url 'tools:tool_list' %}" role="button">使用工具栏</a>
     </div>
 
     <div class="row">
@@ -33,7 +33,7 @@
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="/blog/" class="text-decoration-none">查看全部</a>
+                    <a href="{% url 'blog:post_list' %}" class="text-decoration-none">查看全部</a>
                 </div>
             </div>
         </div>
@@ -57,7 +57,7 @@
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="/forum/" class="text-decoration-none">查看全部</a>
+                    <a href="{% url 'forum:board_list' %}" class="text-decoration-none">查看全部</a>
                 </div>
             </div>
         </div>
@@ -72,7 +72,7 @@
                     <ul class="list-unstyled">
                         {% for tool in tools %}
                             <li class="mb-2">
-                                <a href="/tools/{{ tool.slug }}/" class="text-decoration-none">
+                                <a href="{% url 'tools:tool_detail' tool.slug %}" class="text-decoration-none">
                                     <i class="bi bi-{{ tool.icon }} me-1"></i>
                                     {{ tool.name }}
                                 </a>
@@ -83,7 +83,7 @@
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <a href="/tools/" class="text-decoration-none">查看全部</a>
+                    <a href="{% url 'tools:tool_list' %}" class="text-decoration-none">查看全部</a>
                 </div>
             </div>
         </div>

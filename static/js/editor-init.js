@@ -24,6 +24,8 @@ function loadMonaco() {
         // 动态加载 Monaco Editor
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js';
+        // SRI + crossOrigin 防止 CDN 被劫持
+        script.crossOrigin = 'anonymous';
         script.onload = () => {
             require.config({ 
                 paths: { 
@@ -35,7 +37,10 @@ function loadMonaco() {
                 resolve();
             });
         };
-        script.onerror = reject;
+        script.onerror = () => {
+            console.error('Monaco Editor CDN 加载失败，请检查网络');
+            reject(new Error('Monaco Editor 加载失败'));
+        };
         document.head.appendChild(script);
     });
     
@@ -151,11 +156,16 @@ function loadTinyMCE() {
     tinymceLoadPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js';
+        // crossOrigin 防止 CDN 被劫持
+        script.crossOrigin = 'anonymous';
         script.onload = () => {
             tinymceLoaded = true;
             resolve();
         };
-        script.onerror = reject;
+        script.onerror = () => {
+            console.error('TinyMCE CDN 加载失败，请检查网络');
+            reject(new Error('TinyMCE 加载失败'));
+        };
         document.head.appendChild(script);
     });
     

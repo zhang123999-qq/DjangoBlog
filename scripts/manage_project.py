@@ -59,16 +59,23 @@ def clean():
 
     count = 0
 
-    # 清理 __pycache__
+    # 排除目录（不清理虚拟环境和版本控制目录）
+    EXCLUDE_DIRS = {".venv", ".git", "node_modules"}
+
+    # 清理 __pycache__（排除 .venv）
     for pycache in BASE_DIR.rglob("__pycache__"):
+        if any(excluded in pycache.parts for excluded in EXCLUDE_DIRS):
+            continue
         try:
             shutil.rmtree(pycache, ignore_errors=True)
             count += 1
         except Exception:
             pass
 
-    # 清理 .pyc 文件
+    # 清理 .pyc 文件（排除 .venv）
     for pyc in BASE_DIR.rglob("*.pyc"):
+        if any(excluded in pyc.parts for excluded in EXCLUDE_DIRS):
+            continue
         try:
             pyc.unlink(missing_ok=True)
             count += 1
@@ -81,14 +88,23 @@ def clean():
         shutil.rmtree(pytest_cache, ignore_errors=True)
         count += 1
 
+    # 清理 htmlcov（测试覆盖率报告）
+    htmlcov_dir = BASE_DIR / "htmlcov"
+    if htmlcov_dir.exists():
+        shutil.rmtree(htmlcov_dir, ignore_errors=True)
+        count += 1
+
     # 清理 tmp 目录
     tmp_dir = BASE_DIR / "tmp"
     if tmp_dir.exists():
         shutil.rmtree(tmp_dir, ignore_errors=True)
         count += 1
 
-    # 清理 .venv 中的缓存（排除）
-    # 不清理 .venv 目录
+    # 清理 allure 报告
+    allure_dir = BASE_DIR / "allure-results"
+    if allure_dir.exists():
+        shutil.rmtree(allure_dir, ignore_errors=True)
+        count += 1
 
     safe_print(f"[完成] 已清理 {count} 项")
     return 0
@@ -96,8 +112,8 @@ def clean():
 
 def test():
     """运行测试"""
-    safe_print("[测试] 运行测试套件...")
-    return run_command("uv run python manage.py test")
+    safe_print("[测试] 运行测试套件 (pytest)...")
+    return run_command("uv run pytest")
 
 
 def test_security():

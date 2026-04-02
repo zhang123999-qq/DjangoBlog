@@ -77,7 +77,13 @@ def print_warning(text: str):
 # ============================================
 
 def get_venv_python() -> str:
-    """获取虚拟环境中的 Python 路径"""
+    """获取虚拟环境中的 Python 路径
+
+    优先级：
+    1. uv 管理的 Python（uv venv --python 3.x）
+    2. .venv 虚拟环境
+    3. 当前运行的 Python（回退）
+    """
     project_root = Path(__file__).parent.resolve()
     is_windows = platform.system() == 'Windows'
 
@@ -86,10 +92,25 @@ def get_venv_python() -> str:
     else:
         venv_python = project_root / '.venv' / 'bin' / 'python'
 
-    if not venv_python.exists():
-        return sys.executable
+    if venv_python.exists():
+        return str(venv_python)
 
-    return str(venv_python)
+    # uv 管理的 Python：检查 .python-version 或 uv.lock
+    python_version_file = project_root / '.python-version'
+    if python_version_file.exists():
+        try:
+            version_str = python_version_file.read_text().strip()
+            if is_windows:
+                uv_python = Path.home() / '.local' / 'share' / 'uv' / 'python' / f'python-{version_str}' / 'python.exe'
+            else:
+                uv_python = Path.home() / '.local' / 'share' / 'uv' / 'python' / f'python-{version_str}' / 'bin' / 'python'
+            if uv_python.exists():
+                return str(uv_python)
+        except Exception:
+            pass
+
+    # 回退到当前运行的 Python
+    return sys.executable
 
 
 def get_local_ip() -> str:

@@ -8,38 +8,9 @@ API 文档: https://cloud.baidu.com/doc/ANTIPORN/s/Nk3h6xb2j
 import logging
 from django.conf import settings
 
+from .constants import CONCLUSION_TYPE, VIOLATION_TYPES
+
 logger = logging.getLogger(__name__)
-
-# 百度审核结论类型
-CONCLUSION_TYPE = {
-    1: '合规',
-    2: '疑似',
-    3: '不合规',
-}
-
-# 违规类型
-VIOLATION_TYPES = {
-    1: '色情',
-    2: '性感',
-    3: '暴恐',
-    4: '违禁',
-    5: '涉政',
-    6: '辱骂',
-    7: '广告',
-    8: '灌水',
-    9: '涉黄',
-    10: '低俗',
-    11: '涉价值观',
-    12: '涉疆',
-    13: '涉港',
-    14: '涉台',
-    15: '涉藏',
-    16: '宗教',
-    17: '迷信',
-    18: '违法',
-    19: '欺诈',
-    20: '交易',
-}
 
 
 def get_baidu_client():
@@ -109,18 +80,7 @@ def moderate_text(content):
         elif conclusion_type == 3:
             # 不合规
             data = result.get('data', [])
-            violations = []
-
-            for item in data:
-                violation_type = item.get('type', 0)
-                msg = item.get('msg', '')
-                confidence = item.get('probability', 0) * 100
-
-                violations.append({
-                    'type': VIOLATION_TYPES.get(violation_type, f'类型{violation_type}'),
-                    'message': msg,
-                    'confidence': f'{confidence:.1f}%',
-                })
+            violations = parse_baidu_violation_data(data)
 
             return 'rejected', {
                 'message': 'AI识别违规内容',
@@ -131,18 +91,7 @@ def moderate_text(content):
         elif conclusion_type == 2:
             # 疑似，需要人工审核
             data = result.get('data', [])
-            suspicions = []
-
-            for item in data:
-                suspicion_type = item.get('type', 0)
-                msg = item.get('msg', '')
-                confidence = item.get('probability', 0) * 100
-
-                suspicions.append({
-                    'type': VIOLATION_TYPES.get(suspicion_type, f'类型{suspicion_type}'),
-                    'message': msg,
-                    'confidence': f'{confidence:.1f}%',
-                })
+            suspicions = parse_baidu_violation_data(data)
 
             return 'pending', {
                 'message': 'AI识别疑似违规，需人工审核',
@@ -203,18 +152,7 @@ def moderate_image(image_data):
 
         elif conclusion_type == 3:
             data = result.get('data', [])
-            violations = []
-
-            for item in data:
-                violation_type = item.get('type', 0)
-                msg = item.get('msg', '')
-                confidence = item.get('probability', 0) * 100
-
-                violations.append({
-                    'type': VIOLATION_TYPES.get(violation_type, f'类型{violation_type}'),
-                    'message': msg,
-                    'confidence': f'{confidence:.1f}%',
-                })
+            violations = parse_baidu_violation_data(data)
 
             return 'rejected', {
                 'message': '图片AI识别违规',

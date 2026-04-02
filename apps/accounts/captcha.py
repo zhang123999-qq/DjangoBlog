@@ -64,4 +64,9 @@ def validate_captcha(request, code):
     stored_code = str(stored_code)
     code = str(code)
 
-    return stored_code == code
+    if stored_code != code:
+        return False
+
+    # 验证成功后销毁验证码，防止重复使用
+    del request.session['captcha_code']
+    return True

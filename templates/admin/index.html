@@ -78,11 +78,11 @@
                 <i class="fas fa-shield-alt"></i>
                 <span>敏感词管理</span>
             </a>
-            <a href="/admin/auth/user/" class="quick-action-btn">
+            <a href="{% url 'admin:accounts_user_changelist' %}" class="quick-action-btn">
                 <i class="fas fa-users-cog"></i>
                 <span>用户管理</span>
             </a>
-            <a href="/tools/" class="quick-action-btn" target="_blank">
+            <a href="{% url 'tools:tool_list' %}" class="quick-action-btn" target="_blank">
                 <i class="fas fa-wrench"></i>
                 <span>在线工具</span>
             </a>
@@ -103,7 +103,7 @@
             {% endfor %}
         </div>
         <div class="text-center mt-3">
-            <a href="/tools/" class="button" target="_blank">
+            <a href="{% url 'tools:tool_list' %}" class="button" target="_blank">
                 <i class="fas fa-external-link-alt"></i> 查看全部 {{ tools_count }} 个工具
             </a>
         </div>

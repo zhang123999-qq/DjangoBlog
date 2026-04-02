@@ -67,8 +67,17 @@ class ModerationStrategy:
             # 匿名用户，默认普通等级
             details['user_level'] = 'normal'
 
-        # 2. 高信誉用户：自动发布
+        # 2. 高信誉用户：快速敏感词检查 + 自动发布
         if details['user_level'] == 'trusted':
+            has_sensitive, sensitive_words = check_sensitive_content(content)
+            details['has_sensitive'] = has_sensitive
+            details['sensitive_words'] = sensitive_words
+
+            if has_sensitive:
+                # 高信誉用户命中敏感词，仍然需要审核
+                details['final_decision'] = self.SENSITIVE
+                return 'sensitive_review', details
+
             details['final_decision'] = self.APPROVED
             return 'auto_publish', details
 
