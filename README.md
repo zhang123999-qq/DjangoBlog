@@ -61,11 +61,11 @@
 
 ### 管理后台
 
-![后台截图](./docs/screenshots/admin.png)
+![工具栏截图](./docs/screenshots/admin.png)
 
 ### API 文档
 
-![API文档截图](./docs/screenshots/api-docs.png)
+![管理员后台截图](./docs/screenshots/api-docs.png)
 
 > 💡 如果图片无法显示，欢迎访问 [在线演示](#) 查看实际效果。
 
