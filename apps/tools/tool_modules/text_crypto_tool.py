@@ -32,9 +32,9 @@ class TextCryptoForm(forms.Form):
 
 class TextCryptoTool(BaseTool):
     """文本加密/解密工具"""
-    name = "文本加密/解密"
+    name = "文本混淆/还原"
     slug = "text-crypto"
-    description = "使用简单的加密算法对文本进行加密和解密"
+    description = "使用简单的替换算法对文本进行混淆和还原（仅供学习娱乐，不具备加密安全性）"
     icon = "fa fa-lock"
     category = ToolCategory.ENCRYPT
     form_class = TextCryptoForm

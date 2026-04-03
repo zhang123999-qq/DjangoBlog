@@ -1,6 +1,6 @@
 from ..categories import ToolCategory
 from django import forms
-import random
+import secrets
 import string
 from ..base_tool import BaseTool
 
@@ -15,10 +15,10 @@ class PasswordGenForm(forms.Form):
 
 
 class PasswordGenTool(BaseTool):
-    """密码生成工具"""
+    """密码生成工具（使用 secrets 模块生成密码学安全的随机密码）"""
     name = "密码生成"
     slug = "password-gen"
-    description = "生成安全的随机密码"
+    description = "生成密码学安全的随机密码（使用 secrets 模块）"
     icon = "key"
     category = ToolCategory.GENERATE
     form_class = PasswordGenForm
@@ -46,7 +46,7 @@ class PasswordGenTool(BaseTool):
         if not char_set:
             return {"error": "至少需要选择一种字符类型"}
 
-        # 生成密码
-        password = ''.join(random.choice(char_set) for _ in range(length))
+        # 使用 secrets 生成密码学安全的密码
+        password = ''.join(secrets.choice(char_set) for _ in range(length))
 
-        return {"password": password}
+        return {"password": password, "secure": True}
