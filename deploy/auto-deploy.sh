@@ -139,11 +139,16 @@ else
 fi
 
 # 检查 SECRET_KEY
-if ! grep -q "SECRET_KEY=.\{40,\}" "$ENV_FILE" 2>/dev/null; then
-    warn "SECRET_KEY 无效，重新生成..."
+# 检查 SECRET_KEY 是否存在且长度≥40
+# 检查 SECRET_KEY 是否存在且长度≥40
+# 检查 SECRET_KEY 有效性（长度≥40 且不是 django-insecure 前缀）
+_sk_val=$(grep '^SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d= -f2)
+_sk_len=${#_sk_val}
+if [ "$_sk_len" -lt 40 ] 2>/dev/null || echo "$_sk_val" | grep -q '^django-insecure'; then
+    warn "SECRET_KEY 无效（长度=$_sk_len），重新生成..."
     new_key=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))" 2>/dev/null || openssl rand -base64 40)
     sed -i "s|^SECRET_KEY=.*|SECRET_KEY=${new_key}|g" "$ENV_FILE" 2>/dev/null || \
-        sed -i "" "s|^SECRET_KEY=.*|SECRET_KEY=${new_key}|g" "$ENV_FILE" 2>/dev/null || true
+        sed -i "" "s/^SECRET_KEY=.*/SECRET_KEY=${new_key}/g" "$ENV_FILE" 2>/dev/null || true
     log "✅ SECRET_KEY 已重新生成"
 fi
 
