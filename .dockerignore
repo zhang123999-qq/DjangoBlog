@@ -1,47 +1,60 @@
-# VCS
-.git
-.gitignore
-.github/
-
-# Python cache / virtual env
+# Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 *.so
+.Python
+*.egg-info/
+.eggs/
+
+# Virtual environments
 .venv/
 venv/
 ENV/
 
-# Build/test/tool caches
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-coverage/
-htmlcov/
-.coverage
-
-# Local runtime data
-logs/
-media/
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 staticfiles/
-tmp/
+media/
+logs/
 
-# Local DB / lock artifacts
-*.sqlite3
-*.sqlite3-journal
-
-# Secrets (real .env excluded)
+# Environment files (secrets should not be in image)
 .env
+.env.local
+.env.production
 
-# Editors / OS
-.vscode/
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.github/
+
+# Docker
+.docker/
+Dockerfile
+docker-compose*.yml
+
+# OS
 .DS_Store
 Thumbs.db
 
-# Packaging artifacts
-*.egg-info/
-.eggs/
-dist/
-build/
+# Tests
+.coverage
+htmlcov/
+.pytest_cache/
+test_*.py
+tests/
+
+# Docs (not needed in production)
+docs/
+
+# Dev tools
+tmp/
+memory/

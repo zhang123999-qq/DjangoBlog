@@ -1,33 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# DjangoBlog 一键启动 (优化版)
+# 兼容新架构: migrate 作为独立容器，web 依赖它
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/deploy/docker-compose.yml"
 ENV_FILE="$ROOT_DIR/.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "[ERROR] 缺少 $ENV_FILE"
-  echo "请先执行: cp deploy/.env.docker.example .env 并填写真实配置"
+  echo "请先执行: cp .env.example .env 并填写配置"
   exit 1
 fi
 
 cd "$ROOT_DIR"
 
-# P1: enable BuildKit for faster/cached builds
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
+echo "[1/4] 启动 MySQL + Redis"
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d db redis
 
-echo "[1/4] 启动容器"
+echo "[2/4] 等待 MySQL 就绪..."
+timeout 60 bash -c '
+  until docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T db mysqladmin ping -h localhost 2>/dev/null; do
+    sleep 2
+  done
+'
+
+echo "[3/4] 运行迁移 (独立容器)"
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm migrate
+
+echo "[4/4] 启动全部服务 (web/celery/nginx)"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
 
-echo "[2/4] 等待 Web 容器就绪"
-sleep 5
-
-echo "[3/4] 执行数据库迁移"
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec web python manage.py migrate
-
-echo "[4/4] 跳过 collectstatic（已在镜像构建阶段完成）"
-
+echo ""
 echo "完成 ✅"
-echo "访问: http://localhost:8000/"
-echo "如需创建管理员: docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py createsuperuser"
+echo "Web:   http://localhost:8000"
+echo "Nginx: http://localhost"
+echo ""
+echo "创建管理员:"
+echo "  docker compose exec web python manage.py createsuperuser"
+echo ""
+echo "健康检查:"
+echo "  bash deploy/health.sh check"
