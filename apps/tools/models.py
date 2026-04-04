@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db import models
 from django.utils.text import slugify
 
@@ -17,6 +18,10 @@ class ToolConfig(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+        # 清除相关缓存
+        cache.delete(f'tool_config_{self.slug}')
+        cache.delete('tool_list')
+        cache.delete('tool_categories')
 
     def __str__(self):
         return self.name

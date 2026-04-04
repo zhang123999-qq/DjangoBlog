@@ -1,4 +1,5 @@
 import logging
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
@@ -9,7 +10,7 @@ from .categories import TOOL_CATEGORIES
 logger = logging.getLogger(__name__)
 
 
-@cache_page(60)  # 缓存 1 分钟
+@cache_page(300)  # 缓存 5 分钟
 def tool_list(request):
     """工具列表视图"""
     # 获取分类后的工具（使用 registry 内部缓存）
@@ -41,8 +42,13 @@ def tool_detail(request, tool_slug):
             'tools': registry.get_all_tools(),
         })
 
-    # 检查工具是否启用
-    tool_config = ToolConfig.objects.filter(slug=tool_slug).first()
+    # 使用缓存检查工具是否启用（避免重复数据库查询）
+    cache_key = f'tool_config_{tool_slug}'
+    tool_config = cache.get(cache_key)
+    if tool_config is None:
+        tool_config = ToolConfig.objects.filter(slug=tool_slug).first()
+        cache.set(cache_key, tool_config, 300)  # 缓存 5 分钟
+    
     if tool_config and not tool_config.is_enabled:
         return render(request, 'tools/tool_list.html', {
             'error': f"工具 '{tool.name}' 已被禁用",
