@@ -28,6 +28,13 @@ cleanup() {
 trap cleanup INT TERM
 
 # ====================================
+# 权限检查
+# ====================================
+if [ "$(id -u)" -ne 0 ]; then
+    fail "此脚本需要 root 权限运行: sudo bash $0"
+fi
+
+# ====================================
 # 快捷命令（统一参数）
 # ====================================
 dc() { docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"; }
@@ -74,9 +81,9 @@ if [ "$MODE" = "update" ]; then
         (cd "$PROJECT_DIR" && git pull) || warn "git pull 失败，跳过"
     fi
     log "构建镜像（只构建一次）..."
-    dc build web
+    dc build web || fail "镜像构建失败"
     log "运行迁移..."
-    docker rm -f djangoblog-migrate 2>/dev/null || true
+    dc rm -f migrate 2>/dev/null || true
     dc run --rm migrate || warn "迁移有跳过项"
     log "重启 web/celery..."
     dc up -d --force-recreate web celery_worker celery_beat
@@ -138,10 +145,7 @@ else
     log "✅ .env 已存在，使用现有配置"
 fi
 
-# 检查 SECRET_KEY
-# 检查 SECRET_KEY 是否存在且长度≥40
-# 检查 SECRET_KEY 是否存在且长度≥40
-# 检查 SECRET_KEY 有效性（长度≥40 且不是 django-insecure 前缀）
+# 检查 SECRET_KEY 有效性（长度≥40 且不是默认的 django-insecure）
 _sk_val=$(grep '^SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d= -f2)
 _sk_len=${#_sk_val}
 if [ "$_sk_len" -lt 40 ] 2>/dev/null || echo "$_sk_val" | grep -q '^django-insecure'; then
@@ -178,16 +182,18 @@ if curl -s --connect-timeout 3 "https://www.baidu.com" > /dev/null 2>&1; then
     if [ ! -f "$DAEMON_JSON" ]; then
         mkdir -p /etc/docker
         printf '{\n  "registry-mirrors": %s\n}\n' "$MIRRORS" > "$DAEMON_JSON"
+        systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+        sleep 2
+        log "✅ 镜像加速完成"
     elif ! grep -q "registry-mirrors" "$DAEMON_JSON"; then
         cp "$DAEMON_JSON" "${DAEMON_JSON}.bak"
         printf '{\n  "registry-mirrors": %s\n}\n' "$MIRRORS" > "$DAEMON_JSON"
+        systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+        sleep 2
+        log "✅ 镜像加速完成"
     else
-        log "✅ 镜像加速已配置"
-        DAEMON_JSON=""
+        log "✅ 镜像加速已配置，跳过"
     fi
-    systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
-    sleep 2
-    log "✅ 镜像加速完成"
 else
     log "✅ 跳过镜像加速（非中国大陆网络）"
 fi

@@ -196,6 +196,39 @@ db_config = cast(dict, DATABASES)
 db_config['default']['CONN_MAX_AGE'] = 600
 
 # =============================================================================
+# 监控配置 (Prometheus + Sentry)
+# =============================================================================
+
+# Prometheus 监控
+PROMETHEUS_ENABLED = env.bool('PROMETHEUS_ENABLED', default=False)
+if PROMETHEUS_ENABLED:
+    INSTALLED_APPS += ['django_prometheus']
+    MIDDLEWARE = [
+        'django_prometheus.middleware.PrometheusBeforeMiddleware',
+        *MIDDLEWARE,
+        'django_prometheus.middleware.PrometheusAfterMiddleware',
+    ]
+
+# Sentry 错误追踪
+SENTRY_DSN = env('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(transaction_style='url'),
+            CeleryIntegration(),
+        ],
+        traces_sample_rate=0.1,  # 10% 请求追踪
+        profiles_sample_rate=0.1,  # 10% 性能分析
+        environment=ENVIRONMENT,
+        send_default_pii=False,  # 不发送用户隐私信息
+    )
+
+# =============================================================================
 # 生产环境检查
 # =============================================================================
 

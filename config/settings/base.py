@@ -125,6 +125,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'apps.core.context_processors.site_config',
+                'apps.core.csp_nonce.csp_nonce_context',  # CSP nonce 支持
             ],
         },
     },

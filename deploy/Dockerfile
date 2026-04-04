@@ -1,7 +1,6 @@
 # DjangoBlog production Dockerfile
-# 优化版本：单阶段构建 + 国内镜像加速 + 缓存优化
+# 优化版本：单阶段构建 + 清华 apt 源 + pip 清华源
 
-# 使用国内镜像源拉取基础镜像（国内服务器部署时更快）
 FROM docker.1ms.run/library/python:3.13-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -10,24 +9,33 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# 预装编译依赖 + pip 配置为清华镜像
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    pkg-config \
-    libffi-dev \
-    libjpeg-dev \
-    libpng-dev \
-    zlib1g-dev \
-    libssl-dev \
+# 替换 apt 源：删除 deb822 格式，改清华源（传统 sources.list 格式最稳定）
+# 注意：suites 和 components 用空格分隔，不能用斜杠
+RUN rm -f /etc/apt/sources.list.d/debian.sources \
+    && rm -f /etc/apt/sources.list.d/debian-security.sources \
+    && { \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security trixie-security main"; \
+    } > /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        pkg-config \
+        libffi-dev \
+        libjpeg-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libssl-dev \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /root/.config/pip \
-    && echo '[global]' > /root/.config/pip/pip.conf \
-    && echo 'index-url = https://pypi.tuna.tsinghua.edu.cn/simple' >> /root/.config/pip/pip.conf \
-    && echo 'trusted-host = pypi.tuna.tsinghua.edu.cn' >> /root/.config/pip/pip.conf
+    && printf '[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\ntrusted-host = pypi.tuna.tsinghua.edu.cn\n' > /root/.config/pip/pip.conf
 
 # Install Python dependencies
 COPY requirements/ /app/requirements/
 RUN pip install --no-cache-dir \
+    --timeout 120 \
+    --retries 5 \
     -r /app/requirements/production.txt
 
 # ---- Final stage ----
@@ -39,10 +47,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# 运行时依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libjpeg62-turbo \
-    libpng16-16 \
+# 运行时依赖（同清华源）
+RUN rm -f /etc/apt/sources.list.d/debian.sources \
+    && rm -f /etc/apt/sources.list.d/debian-security.sources \
+    && { \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security trixie-security main"; \
+    } > /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libjpeg62-turbo \
+        libpng16-16 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder
