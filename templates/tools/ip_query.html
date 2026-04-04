@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tool.name }} - {{ site_config.site_title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 面包屑 -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none">首页</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tools:tool_list' %}" class="text-decoration-none">工具箱</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ tool.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- 主内容 -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-globe fs-4 me-3"></i>
+                        <div>
+                            <h4 class="mb-0">IP 查询</h4>
+                            <small>查询当前或指定的 IP 地址信息，包括地理位置、运营商、AS 号等</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-medium">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i>查询
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary ms-2">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>重置
+                        </button>
+                    </form>
+
+                    {% if result %}
+                    <!-- 查询结果 -->
+                    {% if result.error %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ result.error }}
+                    </div>
+                    {% else %}
+                    <hr>
+                    <h5 class="mb-3">
+                        <i class="bi bi-check-circle text-success me-2"></i>查询结果
+                    </h5>
+
+                    <!-- 查询信息 -->
+                    <div class="alert alert-info d-flex align-items-center mb-3">
+                        <i class="bi bi-search me-2"></i>
+                        <div>
+                            <strong>查询目标：</strong>
+                            {% if result.is_detected %}
+                                <span class="font-monospace">{{ result.query_ip }}</span>
+                                <span class="badge bg-success ms-2">自动检测</span>
+                            {% else %}
+                                <span class="font-monospace">{{ result.input }}</span> → <span class="font-monospace">{{ result.query_ip }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- ipinfo.io 结果 -->
+                        {% if result.ipinfo %}
+                        <div class="col-md-6">
+                            <div class="card h-100 border">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>ipinfo.io</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            {% if result.ipinfo.country %}
+                                            <tr>
+                                                <td class="text-muted">国家</td>
+                                                <td>{{ result.ipinfo.country }} {% if result.ipinfo.region %}{{ result.ipinfo.region }}{% endif %}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipinfo.city %}
+                                            <tr>
+                                                <td class="text-muted">城市</td>
+                                                <td>{{ result.ipinfo.city }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipinfo.org %}
+                                            <tr>
+                                                <td class="text-muted">运营商</td>
+                                                <td><span class="font-monospace small">{{ result.ipinfo.org }}</span></td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipinfo.asn and result.ipinfo.asn != result.ipinfo.org %}
+                                            <tr>
+                                                <td class="text-muted">AS</td>
+                                                <td><span class="font-monospace small">{{ result.ipinfo.asn }}</span></td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipinfo.loc %}
+                                            <tr>
+                                                <td class="text-muted">坐标</td>
+                                                <td><span class="font-monospace small">{{ result.ipinfo.loc }}</span></td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipinfo.timezone %}
+                                            <tr>
+                                                <td class="text-muted">时区</td>
+                                                <td>{{ result.ipinfo.timezone }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipinfo.postal %}
+                                            <tr>
+                                                <td class="text-muted">邮编</td>
+                                                <td>{{ result.ipinfo.postal }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- ip-api.com 结果 -->
+                        {% if result.ipapi %}
+                        <div class="col-md-6">
+                            <div class="card h-100 border">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-translate me-2"></i>ip-api.com（中文）</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm mb-0">
+                                        <tbody>
+                                            {% if result.ipapi.country %}
+                                            <tr>
+                                                <td class="text-muted">国家</td>
+                                                <td>{{ result.ipapi.country }} ({{ result.ipapi.countryCode }})</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.regionName %}
+                                            <tr>
+                                                <td class="text-muted">地区</td>
+                                                <td>{{ result.ipapi.regionName }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.city %}
+                                            <tr>
+                                                <td class="text-muted">城市</td>
+                                                <td>{{ result.ipapi.city }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.isp %}
+                                            <tr>
+                                                <td class="text-muted">ISP</td>
+                                                <td>{{ result.ipapi.isp }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.org %}
+                                            <tr>
+                                                <td class="text-muted">机构</td>
+                                                <td><span class="font-monospace small">{{ result.ipapi.org }}</span></td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.as %}
+                                            <tr>
+                                                <td class="text-muted">AS 号</td>
+                                                <td><span class="font-monospace small">{{ result.ipapi.as }}</span></td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.lat and result.ipapi.lon %}
+                                            <tr>
+                                                <td class="text-muted">坐标</td>
+                                                <td>
+                                                    <span class="font-monospace small">{{ result.ipapi.lat }}, {{ result.ipapi.lon }}</span>
+                                                    <a href="https://www.google.com/maps?q={{ result.ipapi.lat }},{{ result.ipapi.lon }}" target="_blank" class="ms-1" title="在地图中查看">
+                                                        <i class="bi bi-box-arrow-up-right"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if result.ipapi.timezone %}
+                                            <tr>
+                                                <td class="text-muted">时区</td>
+                                                <td>{{ result.ipapi.timezone }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- IP 介绍 -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-book me-2"></i>什么是 IP 地址？</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>IP 地址（Internet Protocol Address）</strong>是互联网协议为每个网络设备分配的唯一标识符。</p>
+
+                    <h6 class="mt-4 mb-2">IP 地址的分类</h6>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>类型</th>
+                                <th>格式</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-primary">IPv4</span></td>
+                                <td><code>192.168.1.1</code></td>
+                                <td>4 段数字，约 43 亿个地址，目前最常用</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">IPv6</span></td>
+                                <td><code>2001:0db8:85a3::1</code></td>
+                                <td>8 组十六进制数，地址空间近乎无限</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h6 class="mt-4 mb-2">公网 IP vs 内网 IP</h6>
+                    <ul class="mb-3">
+                        <li><strong>公网 IP</strong>：全球唯一，互联网通信必备</li>
+                        <li><strong>内网 IP</strong>：局域网内使用，常见的有 192.168.x.x、10.x.x.x 等</li>
+                        <li><strong>NAT</strong>：多台设备通过一个公网 IP 上网的技术</li>
+                    </ul>
+
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>提示</strong>：本工具整合了 ipinfo.io 和 ip-api.com 两个权威数据源，提供全面的 IP 地址信息。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 工具说明 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>工具说明</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0 text-muted small">
+                        <li class="mb-2"><i class="bi bi-check text-success me-2"></i>留空输入框可自动检测当前 IP</li>
+                        <li class="mb-2"><i class="bi bi-check text-success me-2"></i>支持输入 IP 地址或域名查询</li>
+                        <li class="mb-2"><i class="bi bi-check text-success me-2"></i>整合双数据源，信息更全面</li>
+                        <li><i class="bi bi-check text-success me-2"></i>支持中文地理信息显示</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 常见问题 -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-question-circle me-2"></i>常见问题</h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion accordion-flush" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    <small>为什么两个 API 结果不一样？</small>
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-muted py-2">
+                                    不同数据源的 IP 数据库更新频率和精度不同，结果可能存在细微差异，一般以 ip-api.com 中文数据为准。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    <small>为什么查到的 IP 和我的位置不一样？</small>
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-muted py-2">
+                                    IP 地理位置基于运营商注册信息，不一定精确到当前位置。手机上网通常显示运营商所在地。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    <small>查询失败怎么办？</small>
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-muted py-2">
+                                    请检查输入的 IP 地址格式是否正确。如果是域名，请确保域名能正常解析。API 故障请稍后重试。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: transparent;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
