@@ -4,6 +4,7 @@ from django.utils.text import slugify
 from django.urls import reverse
 from django.db.models import F
 from django.core.cache import cache
+from datetime import datetime
 from apps.core.utils import generate_slug
 
 # Redis key 前缀（与 tasks.py 保持一致）
@@ -23,7 +24,8 @@ class Category(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            # 修复: generate_slug 支持中文（slugify 对非拉丁字符返回空）
+            self.slug = generate_slug(self.name)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -96,14 +98,13 @@ class Post(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        # 生成 slug
+        # 生成 slug (修复: slugify("中文")为空，改用 generate_slug 支持非拉丁字符)
         if not self.slug:
             if self.title:
-                self.slug = slugify(self.title)
+                self.slug = generate_slug(self.title)
             else:
                 # 标题为空时，使用时间戳作为 slug
                 from django.utils import timezone
-
                 self.slug = f"post-{timezone.now().timestamp():.0f}"
 
         # 确保 slug 唯一

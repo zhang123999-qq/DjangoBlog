@@ -8,25 +8,24 @@
 
 | 文档 | 说明 |
 |------|------|
-| [API.md](./API.md) | **API 接口文档**（21 个接口，含 curl 示例、错误码、FAQ） |
+| [API.md](./API.md) | **API 接口文档**（21 个口，含 curl 示例、错误码、FAQ） |
 | [deployment-manual.md](./deployment-manual.md) | Ubuntu / 宝塔手动部署教程（非 Docker） |
-| [PROJECT_EVALUATION.md](./PROJECT_EVALUATION.md) | 项目评估报告（代码质量、安全性分析） |
+| [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md) | 验证报告（2026-04-04） |
 
 ### 根目录文档
 
 | 文档 | 说明 |
 |------|------|
 | [README.md](../README.md) | 项目主文档（快速开始、Docker 部署） |
-| [CHANGELOG.md](../CHANGELOG.md) | 版本更新日志 |
+| [CHANGELOG.md](../CHANGELOG.md) | 版本更新日志（含 2026-04-04 安全修复） |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 贡献指南 |
-| [SECURITY.md](../SECURITY.md) | 安全策略与漏洞报告 |
-| [TECHNICAL_AUDIT_REPORT.md](../TECHNICAL_AUDIT_REPORT.md) | 技术评估报告 |
+| [SECURITY.md](../SECURITY.md) | 安全策略与漏洞报告（含 2026-04-04 修复记录） |
 
 ---
 
 ## 🚀 快速开始
 
-Docker 部署请参考项目根目录 [README.md](../README.md)
+Docker 部署请参考 [README.md](../README.md)
 
 ---
 
@@ -34,38 +33,40 @@ Docker 部署请参考项目根目录 [README.md](../README.md)
 
 ```
 DjangoBlog/
-├── README.md                      # 项目主文档（Docker 部署指南）
+├── README.md                      # 项目主文档
 ├── CHANGELOG.md                   # 版本更新日志
 ├── CONTRIBUTING.md                # 贡献指南
 ├── SECURITY.md                    # 安全策略
-├── TECHNICAL_AUDIT_REPORT.md      # 技术评估报告
 ├── docs/
 │   ├── README.md                  # 本文件（文档索引）
 │   ├── API.md                     # API 接口文档
 │   ├── deployment-manual.md       # 手动部署教程
-│   └── PROJECT_EVALUATION.md      # 项目评估报告
-├── scripts/
-│   └── README.md                  # 脚本使用说明
-└── deploy/
-    ├── Dockerfile                 # Docker 镜像构建
-    ├── docker-compose.yml         # Docker 服务编排
-    ├── auto-deploy.sh             # 一键自动部署脚本
-    └── nginx.conf                 # Nginx 配置
+│   └── VERIFICATION_REPORT.md     # 验证报告
+├── deploy/
+│   ├── Dockerfile                 # Docker 镜像构建
+│   ├── docker-compose.yml         # Docker 服务编排
+│   ├── auto-deploy.sh             # 一键自动部署脚本
+│   └── nginx.conf                 # Nginx 配置
+└── requirements/
+    ├── base.txt                   # 基础依赖
+    ├── development.txt            # 开发依赖
+    └── production.txt             # 生产依赖
 ```
 
 ---
 
-## 📝 最近更新（2026-04-02）
+## 📝 最近更新
 
-- **新增文档**
-  - `CHANGELOG.md` - 版本更新日志
-  - `CONTRIBUTING.md` - 贡献指南
-  - `SECURITY.md` - 安全策略与漏洞报告
-  - `docs/API.md` - 完整 API 接口文档
+### 2026-04-04
 
-- **文档优化**
-  - 更新文档索引结构
-  - 添加根目录文档链接
+- **安全修复**：生产 Cookie 与 HTTPS 联动、验证码密码学安全、中文 Slug 修复、API 路由修复
+- **测试提升**：89 passed / 0 failed（此前 83 / 6 failed）
+- **文档更新**：CHANGELOG.md、SECURITY.md、README.md
+
+### 2026-04-02
+
+- **新增文档**：CHANGELOG.md、CONTRIBUTING.md、SECURITY.md、docs/API.md
+- **文档优化**：更新文档索引结构
 
 ---
 

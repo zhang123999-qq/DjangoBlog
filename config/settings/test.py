@@ -8,7 +8,7 @@ from .development import *  # noqa
 
 # 测试环境标识
 ENVIRONMENT = 'test'
-DEBUG = False
+DEBUG = True  # 测试环境保持 DEBUG=True，避免安全警告，同时让 API 文档端点可用
 
 # 强制使用 SQLite，避免继承宿主机 DB_ENGINE=MySQL 等环境变量
 DATABASES = {

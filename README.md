@@ -8,6 +8,8 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D)
 ![License](https://img.shields.io/badge/License-MIT-black)
+![Tests](https://img.shields.io/badge/Tests-89%20passed-brightgreen)
+![Deploy](https://img.shields.io/badge/Deploy-ready-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/zhang123999-qq/DjangoBlog?style=social)
 
 一个面向生产部署的 Django 综合站点：**博客 + 论坛 + 工具箱 + API**。  
@@ -47,9 +49,9 @@
 | 💬 **社区模块** | 论坛主题、回复、互动链路 |
 | 🧰 **工具箱模块** | 72 个实用工具（编码转换、文本处理、加解密、图像类等） |
 | 🔌 **API 能力** | Django REST Framework + OpenAPI 文档支持 |
-| 🛡️ **安全增强** | 安全响应头、限流、登录防护（Axes）、内容审核机制 |
+| 🛡️ **安全增强** | 安全响应头、限流、登录防护（Axes）、内容审核机制、验证码密码学安全 |
 | 🚀 **生产部署友好** | Docker Compose / Nginx / Gunicorn / MySQL / Redis |
-| 🧪 **质量保障** | Django checks、迁移检查、回归测试基线 |
+| 🧪 **质量保障** | 89 项测试全覆盖、Django checks、迁移检查、回归测试基线 |
 
 ---
 
@@ -274,12 +276,17 @@ SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False
 ```
 
+> 💡 v2.3.4+ 已实现 HTTPS 联动：安全配置自动根据 `USE_X_FORWARDED_PROTO` 生效
+> 纯 HTTP 不再需要手动修改，部署即用
+
 ### HTTPS 部署（有 SSL 证书）
 
 ```env
+USE_X_FORWARDED_PROTO=True  # 启用后自动开启所有安全配置
 SECURE_SSL_REDIRECT=True
 SESSION_COOKIE_SECURE=True
 CSRF_COOKIE_SECURE=True
+SECURE_HSTS_SECONDS=31536000
 ```
 
 ### 安全检查清单

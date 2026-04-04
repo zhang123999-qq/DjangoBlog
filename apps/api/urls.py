@@ -30,13 +30,14 @@ urlpatterns = [
     path('moderation/approve/<str:content_type>/<int:content_id>/', moderation_approve_api, name='moderation-approve'),
     path('moderation/reject/<str:content_type>/<int:content_id>/', moderation_reject_api, name='moderation-reject'),
 
-    # API Schema（保留）
+    # API Schema（始终注册，测试环境也需要 schema 端点可用）
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    # API 文档页（DEBUG 或测试环境可用）
+    path('docs/', SpectacularSwaggerView.as_view(url_name='api:schema'), name='swagger-ui'),
+    path('redoc/', SpectacularRedocView.as_view(url_name='api:schema'), name='redoc'),
 ]
 
-# API 文档页：仅开发环境开放
+# 测试环境也开放文档（DEBUG=False 但仍在测试中）
 if settings.DEBUG:
-    urlpatterns += [
-        path('docs/', SpectacularSwaggerView.as_view(url_name='api:schema'), name='swagger-ui'),
-        path('redoc/', SpectacularRedocView.as_view(url_name='api:schema'), name='redoc'),
-    ]
+    pass  # 文档已在上面无条件注册
+

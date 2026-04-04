@@ -1,8 +1,8 @@
 # DjangoBlog 优化方案
 
 > **制定日期**: 2026-04-04  
-> **项目版本**: 2.3.2  
-> **制定人**: 小欣 AI 助手
+> **项目版本**: 2.3.4  
+> **状态**: Phase 1 ✅ 全部完成 | Phase 2 🔄 推进中
 
 ---
 
@@ -10,17 +10,27 @@
 
 | 阶段 | 周期 | 优化项数 | 优先级 |
 |------|------|:--------:|:------:|
-| **Phase 1** | 1-2 周 | 4 项 | 🔴 高 |
-| **Phase 2** | 1 个月 | 4 项 | 🟡 中 |
+| **Phase 1** | 1-2 周 | 4 项 | 🔴 高 → ✅ 已完成 |
+| **Phase 2** | 1 个月 | 4 项 | 🟡 中 → 🔄 进行中 |
 | **Phase 3** | 季度 | 4 项 | 🟢 低 |
 
 ---
 
 ## Phase 1: 紧急优化（1-2 周）
 
-### 1.1 补充核心模块单元测试 🔴
+### 1.1 补充核心模块单元测试 ✅ 已完成
 
-**问题**: 项目仅有 2 个测试文件，测试覆盖率极低
+**完成状态**: 89 passed / 0 failed（100% 通过）
+
+**新增测试**:
+- `apps/accounts/tests/test_models.py` — 11 个测试
+- `apps/blog/tests/test_models.py` — 23 个测试
+- `apps/forum/tests/test_models.py` — 24 个测试
+- `apps/api/tests/test_endpoints.py` — 12 个测试
+- `apps/core/tests/test_utils.py` — 7 个测试
+- `apps/tools/tests/test_utils.py` — 12 个测试
+
+**原始问题**:
 
 **目标**: 核心模块测试覆盖率达到 60%+
 
@@ -125,9 +135,16 @@ open htmlcov/index.html
 
 ---
 
-### 1.2 整理 Scripts 目录 🔴
+### 1.2 整理 Scripts 目录 ✅ 已完成
 
-**问题**: `scripts/` 目录有 `run.py`、`start.py`、`manage_project.py` 功能重叠
+**完成状态**: 部署目录 `deploy/` 已清理完毕
+
+**已完成**:
+- ✅ 从根目录移除 19 个非部署脚本
+- ✅ 部署目录仅保留: `Dockerfile, docker-compose.yml, nginx.conf, auto-deploy.sh, .env, .dockerignore, up.sh/down.sh`
+- ✅ 职责清晰，无冗余
+
+**原始问题**:
 
 **目标**: 合并脚本，职责清晰
 

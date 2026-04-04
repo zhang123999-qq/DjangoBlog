@@ -1,16 +1,18 @@
 """
 验证码生成和验证工具
+
+修复: 使用 secrets 模块替代 random，防止随机数可预测攻击
 """
-import random
+import secrets
 from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
 
 
-def generate_captcha():
-    """生成数字验证码"""
-    # 生成4位数字验证码
-    code = ''.join(random.choices('0123456789', k=4))
+def generate_captcha(code_length=6):
+    """生成数字验证码（使用密码学安全的随机数）"""
+    # 使用 secrets 模块生成6位数字验证码（100万种组合，防暴力破解）
+    code = ''.join(secrets.choice('0123456789') for _ in range(code_length))
 
     # 创建验证码图片
     width, height = 120, 40
@@ -19,14 +21,14 @@ def generate_captcha():
 
     # 绘制干扰线
     for _ in range(5):
-        start = (random.randint(0, width), random.randint(0, height))
-        end = (random.randint(0, width), random.randint(0, height))
+        start = (secrets.randbelow(120), secrets.randbelow(40))
+        end = (secrets.randbelow(120), secrets.randbelow(40))
         draw.line([start, end], fill=(100, 100, 100), width=1)
 
     # 绘制噪点
     for _ in range(50):
-        x = random.randint(0, width)
-        y = random.randint(0, height)
+        x = secrets.randbelow(120)
+        y = secrets.randbelow(40)
         draw.point((x, y), fill=(150, 150, 150))
 
     # 绘制验证码文本

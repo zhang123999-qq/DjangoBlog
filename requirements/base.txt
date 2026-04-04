@@ -1,3 +1,11 @@
+# ============================================
+# 基准依赖清单（开发/生产共用）
+# ⚠️ 注意：生产部署请使用 .lock 文件确保版本一致性
+#   pip install -r requirements/base.lock
+# 或使用 uv 安装：
+#   uv pip sync requirements/base.lock
+# ============================================
+
 # Django 核心 (Python 3.13+)
 Django>=4.2,<5.0
 django-environ>=0.11.0

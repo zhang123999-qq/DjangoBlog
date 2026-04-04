@@ -29,18 +29,23 @@ if 'django.middleware.security.SecurityMiddleware' not in MIDDLEWARE:
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-# ⚠️ 默认 False：纯 HTTP 部署时需要关闭
-# 配置 HTTPS 后改为 True
+# ⚠️ 安全配置与 HTTPS 状态联动：避免纯 HTTP 部署时登录和 CSRF 失效
+# 当使用反向代理 HTTPS（USE_X_FORWARDED_PROTO=True）时启用安全 cookie
+_use_https = env.bool('USE_X_FORWARDED_PROTO', default=False)
+
 SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=False)
-SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=True)
-CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=True)
-SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
-SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=True)
+# ⚠️ 修复: 安全 cookie 必须与 HTTPS 状态联动
+# 纯 HTTP 部署时如果强制 Secure=True，会导致 cookie 无法写入，登录和 CSRF 完全失效
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=_use_https)
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=_use_https)
+# HSTS 仅在 HTTPS 时启用
+SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0 if not _use_https else 31536000)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=_use_https)
+SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=_use_https)
 SECURE_REFERRER_POLICY = env('SECURE_REFERRER_POLICY', default='same-origin')
 
 # 反向代理 HTTPS 头（Nginx/Ingress）
-if env.bool('USE_X_FORWARDED_PROTO', default=True):
+if _use_https:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # =============================================================================

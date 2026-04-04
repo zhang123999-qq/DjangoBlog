@@ -1,12 +1,18 @@
 /**
  * 异步上传客户端（轮询 + 超时重试 + 错误码映射）
+ * 
  * 适配后端接口：
  * - POST /api/upload/file/
  * - GET  /api/upload/status/{upload_id}/
+ * 
+ * 依赖: utils.js (getCookie, requestJson, resolveErrorMessage)
  */
 (function (global) {
   'use strict';
 
+  // ============================================================
+  // 上传错误码映射
+  // ============================================================
   const ERROR_MESSAGE_MAP = {
     UPLOAD_NO_FILE: '未检测到文件，请重新选择。',
     UPLOAD_IMAGE_TOO_LARGE: '图片不能超过 5MB，请压缩后再上传。',
@@ -20,13 +26,6 @@
     UPLOAD_TASK_NOT_FOUND: '上传任务不存在或已过期，请重新上传。',
     UPLOAD_SAVE_FAILED: '上传失败，请稍后重试。',
   };
-
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return '';
-  }
 
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,43 +50,37 @@
   }
 
   async function requestJson(url, options = {}) {
-    const resp = await fetch(url, {
+    const headers = new Headers(options.headers || {});
+    headers.set('Accept', 'application/json');
+    
+    const csrfToken = getCookie('csrftoken');
+    if (csrfToken) {
+      headers.set('X-CSRFToken', csrfToken);
+    }
+    
+    const response = await fetch(url, {
       credentials: 'include',
       ...options,
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        ...(options.headers || {}),
-      },
+      headers: headers,
     });
-
+    
     let data;
     try {
-      data = await resp.json();
+      data = await response.json();
     } catch (_) {
-      data = { error: '服务返回非 JSON', statusCode: resp.status };
+      data = { error: '服务返回非 JSON', statusCode: response.status };
     }
-
-    if (!resp.ok) {
-      if (typeof data === 'object' && data) data.statusCode = resp.status;
-      throw toUploadError(data, resp.status);
+    
+    if (!response.ok) {
+      if (typeof data === 'object' && data) data.statusCode = response.status;
+      throw toUploadError(data, response.status);
     }
-
+    
     return data;
   }
 
-  /**
-   * 轮询上传状态
-   * @param {string} statusPath - /api/upload/status/{upload_id}/
-   * @param {object} opts
-   */
   async function pollUploadStatus(statusPath, opts = {}) {
-    const {
-      timeoutMs = 120000,
-      intervalMs = 1500,
-      maxRetries = 3,
-      onProgress,
-      signal,
-    } = opts;
+    const { timeoutMs = 120000, intervalMs = 1500, maxRetries = 3, onProgress, signal } = opts;
 
     const start = Date.now();
     let retries = 0;
@@ -112,92 +105,53 @@
 
         if (st === 'ready') return data;
         if (st === 'rejected') {
-          throw toUploadError(
-            {
-              error_code: data.error_code || 'UPLOAD_SECURITY_SCAN_REJECTED',
-              error: data.reason || data.error || '文件安全扫描未通过',
-              statusCode: 400,
-            },
-            400,
-          );
+          throw toUploadError({
+            error_code: data.error_code || 'UPLOAD_SECURITY_SCAN_REJECTED',
+            error: data.reason || data.error || '文件安全扫描未通过',
+            statusCode: 400,
+          }, 400);
         }
         if (st === 'failed') {
-          throw toUploadError(
-            {
-              error_code: data.error_code || 'UPLOAD_SAVE_FAILED',
-              error: data.error || '文件处理失败',
-              statusCode: 500,
-            },
-            500,
-          );
+          throw toUploadError({
+            error_code: data.error_code || 'UPLOAD_SAVE_FAILED',
+            error: data.error || '文件处理失败',
+            statusCode: 500,
+          }, 500);
         }
 
-        // pending / scanning
         await sleep(intervalMs);
         retries = 0;
       } catch (err) {
         if (signal?.aborted) throw err;
-
         retries += 1;
         if (retries > maxRetries) throw err;
-
         const backoff = intervalMs * Math.pow(2, retries - 1);
         await sleep(backoff);
       }
     }
   }
 
-  /**
-   * 上传文件（自动兼容同步/异步模式）
-   * - 同步模式：直接返回 location
-   * - 异步模式：先拿 pending，再轮询 status
-   */
   async function uploadFileWithPolling(file, opts = {}) {
-    const {
-      uploadUrl = '/api/upload/file/',
-      timeoutMs = 120000,
-      intervalMs = 1500,
-      maxRetries = 3,
-      onProgress,
-      signal,
-    } = opts;
+    const { uploadUrl = '/api/upload/file/', timeoutMs = 120000, intervalMs = 1500, maxRetries = 3, onProgress, signal } = opts;
 
     const formData = new FormData();
     formData.append('file', file);
 
-    const data = await requestJson(uploadUrl, {
-      method: 'POST',
-      body: formData,
-      signal,
-    });
+    const data = await requestJson(uploadUrl, { method: 'POST', body: formData, signal });
 
     if (data.location) {
-      return {
-        status: 'ready',
-        location: data.location,
-        filename: data.filename || file.name,
-        size: data.size || file.size,
-      };
+      return { status: 'ready', location: data.location, filename: data.filename || file.name, size: data.size || file.size };
     }
 
     if (data.status === 'pending' && data.status_path) {
-      return pollUploadStatus(data.status_path, {
-        timeoutMs,
-        intervalMs,
-        maxRetries,
-        onProgress,
-        signal,
-      });
+      return pollUploadStatus(data.status_path, { timeoutMs, intervalMs, maxRetries, onProgress, signal });
     }
 
-    throw toUploadError(
-      {
-        error_code: data.error_code || 'UPLOAD_SAVE_FAILED',
-        error: data.error || '上传响应格式异常',
-        statusCode: 500,
-      },
-      500,
-    );
+    throw toUploadError({
+      error_code: data.error_code || 'UPLOAD_SAVE_FAILED',
+      error: data.error || '上传响应格式异常',
+      statusCode: 500,
+    }, 500);
   }
 
   function getErrorMessage(err) {

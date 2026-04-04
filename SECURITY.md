@@ -36,7 +36,11 @@
 - **用户认证**：Django 内置认证系统
 - **密码安全**：使用 PBKDF2 + SHA256 密码哈希
 - **登录保护**：django-axes 防暴力破解
-- **Session 安全**：HttpOnly + Secure Cookie
+#### Session 安全（v2.3.4 修复）
+- **Cookie 安全联动**：`SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` 与 HTTPS 状态联动
+  - 纯 HTTP 部署 → 自动 False，登录/CSRF 正常工作
+  - HTTPS 部署 → 自动 True，防御中间人攻击
+- **HSTS 联动**：`SECURE_HSTS_SECONDS` 与 HTTPS 联动，非 HTTPS 时默认 0
 
 #### 2. 跨站防护
 
@@ -189,20 +193,41 @@ ssl_prefer_server_ciphers off;
 
 ---
 
+## 已修复的安全问题
+
+### 2026-04-04 — v2.3.4 安全修复
+
+| ID | 问题 | 严重度 | 修复方案 |
+|----|------|--------|---------|
+| SEC-20260404-001 | 纯 HTTP 部署时登录/CSRF 完全失效 | 🔴 P0 | `SESSION_COOKIE_SECURE`/`CSRF_COOKIE_SECURE` 与 HTTPS 联动 |
+| SEC-20260404-002 | 验证码随机数可预测（4位，仅1万种组合） | 🔴 P0 | `random` → `secrets`，4位 → 6位（100万种组合） |
+| SEC-20260404-003 | 中文标题/分类 slug 为空，URL 路由 404 | 🟡 P1 | `slugify()` → `generate_slug()`（SHA-256 fallback） |
+| SEC-20260404-004 | nginx 缺少安全响应头 | 🟡 P2 | 补充 X-Frame/XSS/CSP/Permissions-Policy |
+
+### 2026-04-02 — v2.3.3 安全修复
+
+- `SecurityMiddleware` 命名冲突修复（→ `SecurityMonitorMiddleware`）
+- Docker 部署 `SECURE_SSL_REDIRECT` 等默认值修正
+- SSRF 内网 IP 检测、端口扫描范围限制
+
+---
+
 ## 安全检查清单
 
 部署前请确认：
 
 - [ ] `DEBUG=False` 已设置
-- [ ] `SECRET_KEY` 已更改为强随机值
+- [ ] `SECRET_KEY` 已更改为强随机值（至少 64 字节）
 - [ ] `ALLOWED_HOSTS` 已正确配置
+- [ ] `USE_X_FORWARDED_PROTO=True`（有反代时）
 - [ ] 数据库不使用 root 用户
 - [ ] Redis 不暴露到公网
 - [ ] 上传目录不可执行
 - [ ] 静态文件正确配置
 - [ ] HTTPS 已启用（推荐）
-- [ ] 安全响应头已配置
-- [ ] 日志记录已启用
+- [ ] 安全响应头已配置（Nginx + Django 双重防护）
+- [ ] `python manage.py migrate` 已执行
+- [ ] 部署日志监控已配置
 
 ---
 
@@ -214,4 +239,37 @@ ssl_prefer_server_ciphers off;
 
 ---
 
-*最后更新: 2026-04-02*
+#### 8. 会话 Cookie 安全（2026-04-04 修复）
+
+- **HTTPS 联动**：`SESSION_COOKIE_SECURE` 和 `CSRF_COOKIE_SECURE` 与 `USE_X_FORWARDED_PROTO` 联动
+- **纯 HTTP 部署**：安全 cookie 自动禁用，避免登录/CSRF 失效
+- **HTTPS 部署**：安全 cookie 自动启用，防御中间人攻击
+- **HSTS**：与 HTTPS 联动自动启用 Strict-Transport-Security（1年）
+
+#### 9. 验证码安全（2026-04-04 修复）
+
+- **密码学安全**：从 `random` 模块升级为 `secrets` 模块
+- **验证码长度**：从 4 位（10000 种组合）提升至 6 位（1000000 种组合）
+- **干扰线/噪点**：位置生成同步使用 `secrets.randbelow`
+- **防暴力破解**：验证码一次性使用，验证后销毁
+
+#### 10. 中文 Slug 修复（2026-04-04）
+
+- **Category/Post**：改用 `generate_slug()` 替代 `slugify()`，修复中文标题生成空 slug 的 bug
+- **API 路由修复**：`PostViewSet.lookup_field` 改为 `slug`，支持按 slug 查找文章
+- **API 过滤器**：新增 `PostFilter` 自定义过滤器，支持 `category=<slug>` 和 `tags=<slug>` 筛选
+
+---
+
+## 版本安全更新
+
+| 版本 | 日期 | 安全更新 |
+|------|------|----------|
+| 2.3.4 | 2026-04-04 | Cookie 安全联动、验证码安全、Slug 修复、API 路由修复 |
+| 2.3.3 | 2026-04-02 | SecurityMiddleware 命名冲突、Docker 部署安全修复 |
+| 2.3.1 | 2026-04-01 | Docker 安全配置修正 |
+| 2.3.0 | 2026-03-31 | 审核系统、安全响应头、登录防护 |
+
+---
+
+*最后更新: 2026-04-04*

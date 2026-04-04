@@ -1,118 +1,133 @@
+/* admin-modern.css — Django 后台现代化样式 */
+
 :root {
-  --admin-primary: #4f46e5;
-  --admin-primary-2: #6366f1;
-  --admin-success: #10b981;
-  --admin-warn: #f59e0b;
-  --admin-danger: #ef4444;
-  --admin-border: #e5e7eb;
-  --admin-bg: #f8fafc;
-  --admin-card: #ffffff;
-  --admin-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    --admin-primary: #6366f1;
+    --admin-primary-2: #8b5cf6;
+    --admin-bg: #f1f5f9;
+    --admin-card: #ffffff;
+    --admin-border: #e2e8f0;
+    --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --admin-text: #1e293b;
+    --admin-text-secondary: #64748b;
+    --admin-radius: 12px;
+    --admin-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-body { background: var(--admin-bg); }
-
-#header {
-  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-2));
-  border-bottom: none;
-}
-
-#header a:link, #header a:visited, #user-tools a { color: #fff !important; }
-
-div.breadcrumbs, #breadcrumbs {
-  background: #fff;
-  border-bottom: 1px solid var(--admin-border);
-}
-
-.module {
-  background: var(--admin-card);
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  box-shadow: var(--admin-shadow);
-}
-
-.button, input[type=submit], input[type=button], .submit-row input, a.button {
-  background: var(--admin-primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-}
-
+/* 仪表盘统计卡片网格 */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
-  color: #fff;
-  padding: 14px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-2));
+    background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-2));
+    color: white;
+    padding: 1.25rem;
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+    text-align: center;
 }
 
-.stat-card h2, .stat-card h3 { margin: 0 0 4px; }
-.stat-card p { margin: 0; opacity: .92; }
-.stat-card small { opacity: .85; }
+.stat-card h2 {
+    margin: 0 0 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-card p {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.stat-card small {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
 .stat-card.is-success { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-card.is-warn { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.stat-card.is-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.stat-card.is-violet { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.stat-card.is-cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.stat-card.is-pink { background: linear-gradient(135deg, #ec4899, #db2777); }
-.stat-card.is-teal { background: linear-gradient(135deg, #14b8a6, #0d9488); }
-.stat-card.is-orange { background: linear-gradient(135deg, #f97316, #ea580c); }
+.stat-card.is-warn    { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.stat-card.is-danger   { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.stat-card.is-violet   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.stat-card.is-cyan     { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.stat-card.is-pink     { background: linear-gradient(135deg, #ec4899, #db2777); }
+.stat-card.is-orange   { background: linear-gradient(135deg, #f97316, #ea580c); }
 
-.dashboard-card {
-  background: #fff;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  padding: 18px;
-  margin-bottom: 18px;
-  box-shadow: var(--admin-shadow);
-}
+.stat-small { padding: 0.9rem; }
+.stat-small h3 { margin: 0 0 0.25rem; font-size: 1.4rem; font-weight: 600; }
+.stat-small p  { margin: 0; font-size: 0.85rem; opacity: 0.95; }
 
+/* 快捷操作按钮 */
 .quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
 }
 
 .quick-action-btn {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  padding: 12px;
-  color: #111827;
-  text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--admin-radius);
+    background: var(--admin-card);
+    color: var(--admin-text);
+    text-decoration: none;
+    border: 1px solid var(--admin-border);
+    transition: all 0.2s;
 }
 
 .quick-action-btn:hover {
-  background: #eef2ff;
-  color: #312e81;
+    border-color: var(--admin-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
+.quick-action-btn i { color: var(--admin-primary); }
+
+/* 工具网格 */
 .tools-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem;
 }
 
 .tool-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid var(--admin-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--admin-bg);
+    border-radius: 8px;
+    font-size: 0.85rem;
 }
 
-.tool-item i {
-  color: var(--admin-primary);
+.tool-item i { color: var(--admin-primary); }
+
+/* 仪表盘卡片 */
+.dashboard-card {
+    background: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-card h3 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: var(--admin-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Admin body 覆盖 */
+body.dashboard {
+    background: var(--admin-bg);
+    font-family: var(--admin-font);
+    color: var(--admin-text);
 }
