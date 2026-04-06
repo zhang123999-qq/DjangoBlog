@@ -1,7 +1,7 @@
 # DjangoBlog production Dockerfile
 # 优化版本：单阶段构建 + 清华 apt 源 + pip 清华源
 
-FROM docker.1ms.run/library/python:3.13-slim AS builder
+FROM docker.1ms.run/library/python:3.14.3-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -39,7 +39,7 @@ RUN pip install --no-cache-dir \
     -r /app/requirements/production.txt
 
 # ---- Final stage ----
-FROM docker.1ms.run/library/python:3.13-slim
+FROM docker.1ms.run/library/python:3.14.3-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
