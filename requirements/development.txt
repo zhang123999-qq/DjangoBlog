@@ -2,7 +2,7 @@
 -r base.txt
 
 # 调试工具 (Python 3.13+)
-django-debug-toolbar==5.0.1
+django-debug-toolbar==6.3.0
 django-extensions==3.2.3
 ipython==8.32.0
 
