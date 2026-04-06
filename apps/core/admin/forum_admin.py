@@ -1,8 +1,12 @@
 """
 论坛管理 Admin
+
+性能优化：
+- 使用 annotate 预计算关联数量，避免 N+1 查询
 """
 
 from django.contrib import admin
+from django.db.models import Count
 from .admin_site import admin_site
 
 from apps.forum.models import Board, Topic, Reply
@@ -10,21 +14,35 @@ from apps.forum.models import Board, Topic, Reply
 
 @admin.register(Board, site=admin_site)
 class BoardAdmin(admin.ModelAdmin):
-    """版块管理"""
+    """版块管理（优化版）"""
 
-    list_display = ["name", "slug", "topic_count", "reply_count", "created_at"]
+    list_display = ["name", "slug", "topic_count_display", "reply_count_display", "created_at"]
     search_fields = ["name", "description"]
     prepopulated_fields = {"slug": ("name",)}
 
-    def topic_count(self, obj):
-        return obj.topics.count()
+    def get_queryset(self, request):
+        """预加载关联数据，避免 N+1 查询"""
+        qs = super().get_queryset(request)
+        # 使用 annotate 预计算主题数
+        qs = qs.annotate(
+            _topic_count=Count('topics', distinct=True),
+            _reply_count=Count('topics__replies', distinct=True)
+        )
+        return qs
 
-    topic_count.short_description = "主题数"
+    def topic_count_display(self, obj):
+        """使用预计算的值"""
+        return obj._topic_count
 
-    def reply_count(self, obj):
-        return Reply.objects.filter(topic__board=obj).count()
+    topic_count_display.short_description = "主题数"
+    topic_count_display.admin_order_field = '_topic_count'
 
-    reply_count.short_description = "回复数"
+    def reply_count_display(self, obj):
+        """使用预计算的值"""
+        return obj._reply_count
+
+    reply_count_display.short_description = "回复数"
+    reply_count_display.admin_order_field = '_reply_count'
 
 
 @admin.register(Topic, site=admin_site)

@@ -16,17 +16,17 @@
             <p><i class="fas fa-users"></i> 注册用户</p>
             <small>今日新增: +{{ today_users }}</small>
         </div>
-        <div class="stat-card" class="stat-card is-success">
+        <div class="stat-card is-success">
             <h2>{{ post_count }}</h2>
             <p><i class="fas fa-file-alt"></i> 博客文章</p>
             <small>今日新增: +{{ today_posts }}</small>
         </div>
-        <div class="stat-card" class="stat-card is-warn">
+        <div class="stat-card is-warn">
             <h2>{{ topic_count }}</h2>
             <p><i class="fas fa-comments"></i> 论坛主题</p>
             <small>今日新增: +{{ today_topics|default:0 }}</small>
         </div>
-        <div class="stat-card" class="stat-card is-danger">
+        <div class="stat-card is-danger">
             <h2>{{ comment_count }}</h2>
             <p><i class="fas fa-comment-dots"></i> 评论/回复</p>
             <small>今日新增: +{{ today_comments }}</small>
@@ -35,15 +35,15 @@
 
     <!-- 第二行统计 -->
     <div class="stats-grid">
-        <div class="stat-card stat-small" class="stat-card is-violet">
+        <div class="stat-card stat-small is-violet">
             <h3>{{ total_views }}</h3>
             <p><i class="fas fa-eye"></i> 总浏览量</p>
         </div>
-        <div class="stat-card stat-small" class="stat-card is-cyan">
+        <div class="stat-card stat-small is-cyan">
             <h3>{{ category_count }}</h3>
             <p><i class="fas fa-folder"></i> 分类</p>
         </div>
-        <div class="stat-card stat-small" class="stat-card is-pink">
+        <div class="stat-card stat-small is-pink">
             <h3>{{ tag_count }}</h3>
             <p><i class="fas fa-tags"></i> 标签</p>
         </div>
@@ -51,7 +51,7 @@
             <h3>{{ tool_count }}</h3>
             <p><i class="fas fa-tools"></i> 工具</p>
         </div>
-        <div class="stat-card stat-small warning" class="stat-card is-orange">
+        <div class="stat-card stat-small is-orange warning">
             <h3>{{ pending_comments|add:pending_replies|add:pending_topics }}</h3>
             <p><i class="fas fa-exclamation-triangle"></i> 待审核</p>
             <small>评论: {{ pending_comments }} | 回复: {{ pending_replies }}</small>
