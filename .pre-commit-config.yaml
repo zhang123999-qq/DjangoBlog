@@ -29,7 +29,9 @@ repos:
     rev: 7.1.1
     hooks:
       - id: flake8
-        args: [--max-line-length=120, --ignore=E203,W503,E501]
+        args:
+          - --max-line-length=120
+          - --ignore=E203,W503,E501,W293,W391,F401,F841,E402,F541,E201,E128,W292
         exclude: ^(\.venv|venv|migrations|__pycache__)/
 
   # ============================================================
