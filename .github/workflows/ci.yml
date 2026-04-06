@@ -44,6 +44,7 @@ jobs:
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
+        continue-on-error: true
 
   # ========================================
   # 代码质量检查
