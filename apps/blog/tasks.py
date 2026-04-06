@@ -26,55 +26,14 @@ def sync_views_to_db():
 
     定时任务：每 5 分钟执行一次
     """
-    from apps.blog.models import Post
+    from apps.core.views_counter import ViewsCounter
 
     try:
-        # 获取所有浏览量 key（优先使用 iter_keys，避免 KEYS * 阻塞）
-        if hasattr(cache, 'iter_keys'):
-            keys = list(cache.iter_keys(f'{VIEWS_CACHE_PREFIX}*'))
-        else:
-            keys = []
+        # 使用新的 ViewsCounter 同步
+        result = ViewsCounter.sync_to_db('post')
 
-        if not keys:
-            return {'synced': 0, 'message': '没有需要同步的浏览量'}
-
-        synced_count = 0
-        batch_updates = {}
-
-        for key in keys:
-            try:
-                key_str = key.decode() if isinstance(key, bytes) else str(key)
-                # 提取 post_id
-                post_id = key_str.replace(VIEWS_CACHE_PREFIX, '')
-                views = cache.get(key_str, 0)
-
-                if views and isinstance(views, int):
-                    batch_updates[int(post_id)] = views
-                    # 清除已同步的计数
-                    cache.delete(key_str)
-
-            except (ValueError, TypeError) as e:
-                logger.warning(f'无效的 key: {key_str}, 错误: {e}')
-                continue
-
-        # 批量更新数据库
-        if batch_updates:
-            for post_id, views in batch_updates.items():
-                try:
-                    Post.objects.filter(pk=post_id).update(
-                        views_count=F('views_count') + views
-                    )
-                    synced_count += 1
-                except Exception as e:
-                    logger.error(f'更新文章 {post_id} 浏览量失败: {e}')
-                    # 恢复缓存中的计数
-                    cache.set(f'{VIEWS_CACHE_PREFIX}{post_id}', views, 3600)
-
-        logger.info(f'同步了 {synced_count} 篇文章的浏览量到数据库')
-        return {
-            'synced': synced_count,
-            'total_views': sum(batch_updates.values())
-        }
+        logger.info(f"同步了 {result['synced']} 篇文章的浏览量到数据库")
+        return result
 
     except Exception as e:
         logger.error(f'同步浏览量失败: {e}')

@@ -6,8 +6,10 @@ from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from apps.core.upload_views import upload_file, upload_image, upload_status
+from apps.notifications.api_views import NotificationViewSet
 from .moderation_views import moderation_approve_api, moderation_reject_api, moderation_metrics_api
 from .views import BoardViewSet, CategoryViewSet, PostViewSet, TagViewSet, TopicViewSet
+from .search_views import GlobalSearchView, PostSearchView, TopicSearchView, SearchHealthView
 
 app_name = 'api'
 
@@ -17,9 +19,17 @@ router.register(r'tags', TagViewSet, basename='tag')
 router.register(r'posts', PostViewSet, basename='post')
 router.register(r'boards', BoardViewSet, basename='board')
 router.register(r'topics', TopicViewSet, basename='topic')
+router.register(r'notifications', NotificationViewSet, basename='notification')
 
 urlpatterns = [
     path('', include(router.urls)),
+
+    # 搜索 API
+    path('search/', GlobalSearchView.as_view(), name='search'),
+    path('search/posts/', PostSearchView.as_view(), name='search-posts'),
+    path('search/topics/', TopicSearchView.as_view(), name='search-topics'),
+    path('search/health/', SearchHealthView.as_view(), name='search-health'),
+
     # 文件上传（鉴权+限流在视图中处理）
     path('upload/image/', upload_image, name='upload-image'),
     path('upload/file/', upload_file, name='upload-file'),
@@ -36,8 +46,4 @@ urlpatterns = [
     path('docs/', SpectacularSwaggerView.as_view(url_name='api:schema'), name='swagger-ui'),
     path('redoc/', SpectacularRedocView.as_view(url_name='api:schema'), name='redoc'),
 ]
-
-# 测试环境也开放文档（DEBUG=False 但仍在测试中）
-if settings.DEBUG:
-    pass  # 文档已在上面无条件注册
 

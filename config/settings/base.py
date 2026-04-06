@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'apps.forum',
     'apps.tools',
     'apps.api',
+    'apps.notifications',
     'moderation',
 ]
 
@@ -241,6 +242,14 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'sensitive_data': {
+            '()': 'apps.core.log_filters.SensitiveDataFilter',
+        },
+        'sanitize': {
+            '()': 'apps.core.log_filters.SanitizeLogFilter',
+        },
+    },
     'formatters': {
         'simple': {
             'format': '[%(levelname)s] %(message)s'
@@ -248,11 +257,16 @@ LOGGING = {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(message)s'
         },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s %(pathname)s %(lineno)d'
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
+            'filters': ['sensitive_data'],
         },
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
@@ -260,6 +274,15 @@ LOGGING = {
             'maxBytes': 10 * 1024 * 1024,
             'backupCount': 5,
             'formatter': 'verbose',
+            'filters': ['sensitive_data'],
+        },
+        'json_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.json'),
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'json',
+            'filters': ['sensitive_data'],
         },
     },
     'root': {
@@ -270,6 +293,27 @@ LOGGING = {
         'django': {
             'handlers': ['console', 'file'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+            'filters': ['sensitive_data'],
+        },
+        'django.security': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'security': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
@@ -305,6 +349,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': env.int('API_PAGE_SIZE', default=20),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # 统一异常处理
+    'EXCEPTION_HANDLER': 'apps.api.exception_handler.exception_handler',
 }
 
 # CORS 配置

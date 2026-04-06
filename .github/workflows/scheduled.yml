@@ -1,0 +1,157 @@
+name: Scheduled Tasks
+
+on:
+  schedule:
+    # 每周一凌晨 2 点运行安全扫描
+    - cron: '0 2 * * 1'
+    # 每天凌晨 3 点检查依赖更新
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    name: Weekly Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 2 * * 1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install security tools
+        run: |
+          pip install safety pip-audit bandit
+
+      - name: Run Safety check
+        run: safety check --full-report --output json > safety-report.json || true
+
+      - name: Run pip-audit
+        run: pip-audit --format json > pip-audit-report.json || true
+
+      - name: Run Bandit
+        run: bandit -r apps/ -f json -o bandit-report.json || true
+
+      - name: Create security issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const safetyReport = fs.existsSync('safety-report.json') ? fs.readFileSync('safety-report.json', 'utf8') : '{}';
+            const banditReport = fs.existsSync('bandit-report.json') ? fs.readFileSync('bandit-report.json', 'utf8') : '{}';
+
+            const title = `🔒 Weekly Security Scan Report - ${new Date().toISOString().split('T')[0]}`;
+
+            const body = `
+            ## Security Scan Results
+
+            ### Safety Check
+            \`\`\`json
+            ${safetyReport}
+            \`\`\`
+
+            ### Bandit Check
+            \`\`\`json
+            ${banditReport}
+            \`\`\`
+
+            ---
+            *This is an automated security scan report.*
+            `;
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,automated'
+            });
+
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'automated']
+              });
+            }
+
+  dependency-check:
+    name: Daily Dependency Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install pip-tools
+        run: pip install pip-tools
+
+      - name: Check for outdated dependencies
+        run: |
+          pip list --outdated --format=json > outdated.json || true
+
+          if [ -s outdated.json ]; then
+            echo "OUTDATED_DEPS<<EOF" >> $GITHUB_ENV
+            cat outdated.json >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+
+      - name: Create dependency update issue
+        if: env.OUTDATED_DEPS != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const outdated = process.env.OUTDATED_DEPS || '[]';
+            const deps = JSON.parse(outdated);
+
+            const title = `📦 Outdated Dependencies - ${new Date().toISOString().split('T')[0]}`;
+
+            let body = `## Outdated Dependencies\n\n`;
+            body += `| Package | Current | Latest | Type |\n`;
+            body += `|---------|---------|--------|------|\n`;
+
+            for (const dep of deps) {
+              body += `| ${dep.name} | ${dep.version} | ${dep.latest_version} | ${dep.latest_filetype} |\n`;
+            }
+
+            body += `\n---\n*This is an automated dependency check report.*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['dependencies', 'automated']
+            });
+
+  cleanup:
+    name: Cleanup Old Artifacts
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Delete old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '30 days'
+          skip-recent: 5
+
+      - name: Delete old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 30
+          keep_minimum_runs: 10

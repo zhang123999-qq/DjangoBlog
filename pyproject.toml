@@ -1,7 +1,7 @@
 [project]
 name = "djangoblog"
-version = "2.3.2"
-description = "Django 4.2 博客论坛系统，集成智能审核、85+在线工具、富文本编辑器"
+version = "2.4.0"
+description = "Django 4.2 博客论坛系统，集成智能审核、85+在线工具、WebSocket实时通知、全文搜索"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}

@@ -108,6 +108,26 @@ uv run python manage.py check
 uv run flake8 apps/
 ```
 
+### 6. 安装 pre-commit 钩子
+
+```bash
+# 安装 pre-commit
+uv pip install pre-commit
+
+# 安装 Git 钩子
+pre-commit install
+
+# 手动运行所有检查
+pre-commit run --all-files
+```
+
+pre-commit 将在每次提交时自动运行：
+- black：代码格式化
+- isort：导入排序
+- flake8：代码风格检查
+- mypy：类型检查
+- bandit：安全检查
+
 ---
 
 ## 代码规范
@@ -118,6 +138,7 @@ uv run flake8 apps/
 - 使用 `black` 格式化代码
 - 使用 `flake8` 检查代码风格
 - 使用 `mypy` 进行类型检查
+- 使用 `pre-commit` 自动检查
 
 ```bash
 # 格式化代码
@@ -128,6 +149,9 @@ flake8 apps/
 
 # 类型检查
 mypy apps/
+
+# 一键运行所有检查（推荐）
+pre-commit run --all-files
 ```
 
 ### 代码注释
@@ -242,7 +266,7 @@ git push origin feature/your-feature-name
 
 ### 5. PR 检查清单
 
-- [ ] 代码通过 `flake8` 检查
+- [ ] 代码通过 `pre-commit` 检查
 - [ ] 测试通过 `pytest`
 - [ ] 新功能有对应测试
 - [ ] 文档已更新（如需要）

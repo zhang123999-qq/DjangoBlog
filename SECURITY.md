@@ -84,6 +84,14 @@
 - **敏感词过滤**：可选百度内容审核 API
 - **垃圾内容防护**：审核 API 限流保护
 
+#### 8. 日志安全（v2.4.0 新增）
+
+- **敏感数据过滤**：日志自动脱敏密码、令牌、API 密钥
+- **过滤规则**：
+  - 密码字段：`password`, `password1`, `password2` → `***FILTERED***`
+  - 令牌字段：`token`, `access_token`, `refresh_token`, `api_key`, `secret_key` → `***FILTERED***`
+  - 支持自定义过滤规则
+
 ---
 
 ## 报告漏洞
@@ -239,37 +247,4 @@ ssl_prefer_server_ciphers off;
 
 ---
 
-#### 8. 会话 Cookie 安全（2026-04-04 修复）
-
-- **HTTPS 联动**：`SESSION_COOKIE_SECURE` 和 `CSRF_COOKIE_SECURE` 与 `USE_X_FORWARDED_PROTO` 联动
-- **纯 HTTP 部署**：安全 cookie 自动禁用，避免登录/CSRF 失效
-- **HTTPS 部署**：安全 cookie 自动启用，防御中间人攻击
-- **HSTS**：与 HTTPS 联动自动启用 Strict-Transport-Security（1年）
-
-#### 9. 验证码安全（2026-04-04 修复）
-
-- **密码学安全**：从 `random` 模块升级为 `secrets` 模块
-- **验证码长度**：从 4 位（10000 种组合）提升至 6 位（1000000 种组合）
-- **干扰线/噪点**：位置生成同步使用 `secrets.randbelow`
-- **防暴力破解**：验证码一次性使用，验证后销毁
-
-#### 10. 中文 Slug 修复（2026-04-04）
-
-- **Category/Post**：改用 `generate_slug()` 替代 `slugify()`，修复中文标题生成空 slug 的 bug
-- **API 路由修复**：`PostViewSet.lookup_field` 改为 `slug`，支持按 slug 查找文章
-- **API 过滤器**：新增 `PostFilter` 自定义过滤器，支持 `category=<slug>` 和 `tags=<slug>` 筛选
-
----
-
-## 版本安全更新
-
-| 版本 | 日期 | 安全更新 |
-|------|------|----------|
-| 2.3.4 | 2026-04-04 | Cookie 安全联动、验证码安全、Slug 修复、API 路由修复 |
-| 2.3.3 | 2026-04-02 | SecurityMiddleware 命名冲突、Docker 部署安全修复 |
-| 2.3.1 | 2026-04-01 | Docker 安全配置修正 |
-| 2.3.0 | 2026-03-31 | 审核系统、安全响应头、登录防护 |
-
----
-
-*最后更新: 2026-04-04*
+*最后更新: 2026-04-06*

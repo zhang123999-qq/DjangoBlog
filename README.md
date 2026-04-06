@@ -8,7 +8,7 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D)
 ![License](https://img.shields.io/badge/License-MIT-black)
-![Tests](https://img.shields.io/badge/Tests-89%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-185%20passed-brightgreen)
 ![Deploy](https://img.shields.io/badge/Deploy-ready-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/zhang123999-qq/DjangoBlog?style=social)
 
@@ -49,9 +49,11 @@
 | 💬 **社区模块** | 论坛主题、回复、互动链路 |
 | 🧰 **工具箱模块** | 72 个实用工具（编码转换、文本处理、加解密、图像类等） |
 | 🔌 **API 能力** | Django REST Framework + OpenAPI 文档支持 |
+| 🔔 **实时通知** | WebSocket 实时推送、未读消息计数 |
+| 🔍 **全文搜索** | Meilisearch/Elasticsearch 毫秒级响应 |
 | 🛡️ **安全增强** | 安全响应头、限流、登录防护（Axes）、内容审核机制、验证码密码学安全 |
 | 🚀 **生产部署友好** | Docker Compose / Nginx / Gunicorn / MySQL / Redis |
-| 🧪 **质量保障** | 89 项测试全覆盖、Django checks、迁移检查、回归测试基线 |
+| 🧪 **质量保障** | 185 项测试全覆盖、pre-commit 钩子、CI/CD 流水线 |
 
 ---
 
@@ -82,6 +84,7 @@
 | Python | 3.13 | 编程语言 |
 | Django | 4.2 LTS | Web 框架 |
 | Django REST Framework | 3.14+ | API 框架 |
+| Django Channels | 4.0+ | WebSocket 支持（可选） |
 | Celery | 5+ | 异步任务队列 |
 
 ### Data & Middleware
@@ -90,6 +93,7 @@
 |------|------|------|
 | MySQL | 8.0+ | 主数据库 |
 | Redis | 7+ | 缓存 & 消息队列 |
+| Meilisearch | 1.0+ | 全文搜索（可选） |
 
 ### Deploy
 
@@ -106,6 +110,8 @@
 | pytest | 测试框架 |
 | mypy | 类型检查 |
 | flake8 | 代码规范 |
+| pre-commit | Git 钩子 |
+| GitHub Actions | CI/CD 流水线 |
 
 ---
 
@@ -119,6 +125,7 @@ DjangoBlog/
 │   ├── forum/               # 论坛
 │   ├── tools/               # 工具箱（72+ 工具）
 │   ├── api/                 # REST API 层
+│   ├── notifications/       # 实时通知系统
 │   └── core/                # 公共能力（安全、中间件、Admin）
 ├── config/                  # Django 配置
 │   └── settings/            # base / development / production / test
@@ -333,12 +340,13 @@ docker compose -f deploy/docker-compose.yml exec web python manage.py check --de
 
 ## 📖 API 文档
 
-项目提供完整的 REST API，包含 **21 个接口**：
+项目提供完整的 REST API，包含 **25+ 个接口**：
 
 | 模块 | 接口 | 说明 |
 |------|------|------|
 | 博客 | 分类、标签、文章、评论 | 内容管理 |
 | 论坛 | 版块、主题、回复 | 社区互动 |
+| 通知 | 通知列表、已读标记、未读计数 | 实时通知 |
 | 上传 | 图片、文件上传 | 富媒体支持 |
 | 审核 | 审核操作、指标统计 | 内容管理 |
 
@@ -352,7 +360,10 @@ docker compose -f deploy/docker-compose.yml exec web python manage.py check --de
 
 ## 📌 路线图（Roadmap）
 
-- [ ] 完整 CI 工作流（lint + tests + deploy checks）
+- [x] 完整 CI 工作流（lint + tests + deploy checks）
+- [x] 统一 API 响应格式
+- [x] WebSocket 实时通知
+- [x] 全文搜索（Meilisearch/Elasticsearch）
 - [ ] 统一 API 权限策略与审计日志
 - [ ] 前端页面体验与主题体系持续优化
 - [ ] 监控告警（Prometheus / Sentry）进一步完善
@@ -390,9 +401,8 @@ docker compose -f deploy/docker-compose.yml exec web python manage.py check --de
 | [CHANGELOG.md](./CHANGELOG.md) | 版本更新日志 |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南 |
 | [SECURITY.md](./SECURITY.md) | 安全策略与漏洞报告 |
-| [docs/API.md](./docs/API.md) | API 接口文档（21 个接口） |
+| [docs/API.md](./docs/API.md) | API 接口文档（25+ 接口） |
 | [docs/deployment-manual.md](./docs/deployment-manual.md) | 手动部署教程 |
-| [TECHNICAL_AUDIT_REPORT.md](./TECHNICAL_AUDIT_REPORT.md) | 技术评估报告 |
 
 ---
 

@@ -8,9 +8,9 @@
 
 | 文档 | 说明 |
 |------|------|
-| [API.md](./API.md) | **API 接口文档**（21 个口，含 curl 示例、错误码、FAQ） |
+| [API.md](./API.md) | **API 接口文档**（25+ 接口，含通知 API、curl 示例、错误码、FAQ） |
 | [deployment-manual.md](./deployment-manual.md) | Ubuntu / 宝塔手动部署教程（非 Docker） |
-| [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md) | 验证报告（2026-04-04） |
+| [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md) | 验证报告（2026-04-06） |
 
 ### 根目录文档
 
@@ -57,13 +57,19 @@ DjangoBlog/
 
 ## 📝 最近更新
 
-### 2026-04-04
+### 2026-04-06 — v2.4.0
+
+- **重大更新**：WebSocket 实时通知、全文搜索、统一 API 响应格式
+- **代码质量**：pre-commit 钩子、185 项测试、CI/CD 流水线
+- **文档更新**：README.md、CHANGELOG.md、API.md、CONTRIBUTING.md
+
+### 2026-04-04 — v2.3.4
 
 - **安全修复**：生产 Cookie 与 HTTPS 联动、验证码密码学安全、中文 Slug 修复、API 路由修复
 - **测试提升**：89 passed / 0 failed（此前 83 / 6 failed）
 - **文档更新**：CHANGELOG.md、SECURITY.md、README.md
 
-### 2026-04-02
+### 2026-04-02 — v2.3.3
 
 - **新增文档**：CHANGELOG.md、CONTRIBUTING.md、SECURITY.md、docs/API.md
 - **文档优化**：更新文档索引结构

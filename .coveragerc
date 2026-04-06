@@ -1,0 +1,37 @@
+# Coverage.py 配置文件
+# 使用方法: pytest --cov=apps --cov-report=html
+
+[run]
+source = apps
+omit =
+    apps/*/migrations/*
+    apps/*/tests/*
+    apps/*/__init__.py
+    */__pycache__/*
+    */.venv/*
+branch = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @pytest.mark.skip
+show_missing = True
+skip_covered = True
+precision = 2
+
+[html]
+directory = htmlcov
+title = DjangoBlog 覆盖率报告
+
+[xml]
+output = coverage.xml
+
+[json]
+output = coverage.json
+show_contexts = True

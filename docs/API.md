@@ -1,8 +1,8 @@
 # DjangoBlog API 接口文档
 
-> 版本: 1.0.0  
-> 基础路径: `/api/`  
-> 文档更新: 2026-04-02
+> 版本: 1.4.0
+> 基础路径: `/api/`
+> 文档更新: 2026-04-06
 
 ---
 
@@ -14,13 +14,14 @@
 4. [通用规范](#通用规范)
 5. [博客 API](#博客-api)
 6. [论坛 API](#论坛-api)
-7. [工具 API](#工具-api)
-8. [上传 API](#上传-api)
-9. [审核 API](#审核-api)
-10. [错误码参考](#错误码参考)
-11. [限流策略](#限流策略)
-12. [常见问题](#常见问题)
-13. [在线文档](#在线文档)
+7. [通知 API](#通知-api)
+8. [工具 API](#工具-api)
+9. [上传 API](#上传-api)
+10. [审核 API](#审核-api)
+11. [错误码参考](#错误码参考)
+12. [限流策略](#限流策略)
+13. [常见问题](#常见问题)
+14. [在线文档](#在线文档)
 
 ---
 
@@ -46,17 +47,35 @@ https://your-domain.com/api/
 
 ### 响应格式
 
-所有 API 返回 JSON 格式数据：
+所有 API 返回统一的 JSON 格式：
+
+**成功响应**:
 
 ```json
 {
-  "id": 1,
-  "title": "文章标题",
-  "content": "文章内容..."
+  "code": 200,
+  "success": true,
+  "message": "操作成功",
+  "data": {
+    "id": 1,
+    "title": "文章标题",
+    "content": "文章内容..."
+  }
 }
 ```
 
-分页响应：
+**错误响应**:
+
+```json
+{
+  "code": 400,
+  "success": false,
+  "message": "请求参数错误",
+  "data": null
+}
+```
+
+**分页响应**:
 
 ```json
 {
@@ -814,6 +833,202 @@ curl -X GET "https://your-domain.com/api/topics/1/replies/" \
 
 ---
 
+## 通知 API
+
+> **注意**: 通知 API 需要用户认证。
+
+### 获取通知列表
+
+```
+GET /api/notifications/
+```
+
+**权限**: IsAuthenticated
+
+**curl 示例**:
+
+```bash
+curl -X GET "https://your-domain.com/api/notifications/" \
+  -H "Authorization: Token your-token-here" \
+  -H "Accept: application/json"
+```
+
+**查询参数**:
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| is_read | bool | 按已读/未读筛选 |
+| page | int | 页码 |
+| page_size | int | 每页数量 |
+
+**响应示例**:
+
+```json
+{
+  "count": 25,
+  "next": "/api/notifications/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "title": "新评论通知",
+      "content": "用户 admin 评论了你的文章",
+      "type": "comment",
+      "link": "/blog/post/example-post/",
+      "is_read": false,
+      "created_at": "2026-04-06T10:00:00Z"
+    }
+  ]
+}
+```
+
+### 获取未读通知数量
+
+```
+GET /api/notifications/unread_count/
+```
+
+**权限**: IsAuthenticated
+
+**curl 示例**:
+
+```bash
+curl -X GET "https://your-domain.com/api/notifications/unread_count/" \
+  -H "Authorization: Token your-token-here" \
+  -H "Accept: application/json"
+```
+
+**响应示例**:
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {
+    "count": 5
+  }
+}
+```
+
+### 标记单个通知为已读
+
+```
+POST /api/notifications/{id}/mark_read/
+```
+
+**权限**: IsAuthenticated
+
+**curl 示例**:
+
+```bash
+curl -X POST "https://your-domain.com/api/notifications/1/mark_read/" \
+  -H "Authorization: Token your-token-here" \
+  -H "Content-Type: application/json"
+```
+
+**响应示例**:
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "message": "已标记为已读"
+}
+```
+
+### 标记所有通知为已读
+
+```
+POST /api/notifications/mark_all_read/
+```
+
+**权限**: IsAuthenticated
+
+**curl 示例**:
+
+```bash
+curl -X POST "https://your-domain.com/api/notifications/mark_all_read/" \
+  -H "Authorization: Token your-token-here" \
+  -H "Content-Type: application/json"
+```
+
+**响应示例**:
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "message": "已标记 5 条通知为已读"
+}
+```
+
+### 清除已读通知
+
+```
+POST /api/notifications/clear_read/
+```
+
+**权限**: IsAuthenticated
+
+**curl 示例**:
+
+```bash
+curl -X POST "https://your-domain.com/api/notifications/clear_read/" \
+  -H "Authorization: Token your-token-here" \
+  -H "Content-Type: application/json"
+```
+
+**响应示例**:
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "message": "已清除 10 条通知"
+}
+```
+
+### WebSocket 实时通知
+
+**WebSocket 端点**: `ws://your-domain.com/ws/notifications/`
+
+**连接示例**:
+
+```javascript
+const socket = new WebSocket('ws://your-domain.com/ws/notifications/');
+
+socket.onmessage = function(event) {
+  const data = JSON.parse(event.data);
+  console.log('收到通知:', data);
+};
+
+socket.onopen = function() {
+  console.log('WebSocket 连接已建立');
+};
+
+socket.onclose = function() {
+  console.log('WebSocket 连接已关闭');
+};
+```
+
+**消息格式**:
+
+```json
+{
+  "type": "notification",
+  "data": {
+    "id": 1,
+    "title": "新评论通知",
+    "content": "用户 admin 评论了你的文章",
+    "notification_type": "comment",
+    "link": "/blog/post/example-post/",
+    "created_at": "2026-04-06T10:00:00Z"
+  }
+}
+```
+
+---
+
 ## 工具 API
 
 ### 获取访问者 IP
@@ -1373,7 +1588,8 @@ GET /api/posts/?page=2&page_size=50
 | 1.1.0 | 2024-06-01 | 添加审核 API |
 | 1.2.0 | 2024-12-01 | 添加异步上传支持 |
 | 1.3.0 | 2026-04-02 | 完善文档，添加错误码参考 |
+| 1.4.0 | 2026-04-06 | 添加通知 API、统一响应格式 |
 
 ---
 
-*文档生成时间: 2026-04-02*
+*文档生成时间: 2026-04-06*

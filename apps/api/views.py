@@ -39,11 +39,12 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Category.objects.annotate(post_count=Count("posts", filter=PUBLISHED_POST_COUNT_FILTER)).order_by("name")
     serializer_class = CategorySerializer
+    lookup_field = 'slug'
     permission_classes = [permissions.AllowAny]
     throttle_scope = "api_read"
 
     @action(detail=True, methods=["get"])
-    def posts(self, request, pk=None):
+    def posts(self, request, slug=None):
         """获取分类下的文章（分页）"""
         category = self.get_object()
         posts = (
@@ -67,6 +68,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.annotate(post_count=Count("posts", filter=PUBLISHED_POST_COUNT_FILTER)).order_by("name")
     serializer_class = TagSerializer
+    lookup_field = 'slug'
     permission_classes = [permissions.AllowAny]
 
 
@@ -94,7 +96,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
-    def comments(self, request, pk=None):
+    def comments(self, request, slug=None):
         """获取文章评论（分页）"""
         post = self.get_object()
         comments = (

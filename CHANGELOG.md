@@ -7,7 +7,71 @@
 
 ---
 
-## [Unreleased] - 2026-04-04
+## [Unreleased]
+
+### 🚀 新功能预览
+- WebSocket 实时通知系统完善
+- 全文搜索性能优化
+
+---
+
+## [2.4.0] - 2026-04-06
+
+### 🎉 重大更新
+
+#### P0 级改进：代码质量保障
+- **pre-commit 钩子**：新增 `.pre-commit-config.yaml`，集成 black、isort、flake8、mypy、bandit
+- **测试覆盖率提升**：从 89 个测试增加到 **185 个测试**，100% 通过
+- **Makefile 构建**：新增 Makefile 简化常用命令
+
+#### P1 级改进：架构优化
+- **统一 API 响应格式**：新增 `apps/api/response.py`，所有 API 返回统一格式
+  ```json
+  {"code": 200, "success": true, "message": "...", "data": {...}}
+  ```
+- **日志敏感数据过滤**：新增 `apps/core/log_filters.py`，自动脱敏密码、令牌、密钥
+- **CI/CD 流水线**：
+  - 新增 `.github/workflows/publish.yml`：多版本测试（Python 3.11/3.12/3.13，SQLite/MySQL）
+  - 新增 `.github/workflows/scheduled.yml`：定时依赖安全检查
+  - 新增 `.github/dependabot.yml`：依赖自动更新
+
+#### P2 级改进：功能增强
+- **浏览量计数系统**：新增 `apps/core/views_counter.py`
+  - 内存缓冲 + Redis + 批量数据库写入
+  - 自动防刷机制（IP + User-Agent 指纹）
+  - 中间件自动记录（`ViewsCounterMiddleware`）
+- **全文搜索**：新增 `apps/core/search.py`
+  - Meilisearch 优先（毫秒级响应）
+  - Elasticsearch 回退支持
+  - 自动索引同步
+- **WebSocket 实时通知**：新增 `apps/notifications/` 完整应用
+  - 实时通知推送
+  - 未读消息计数
+  - 通知类型分类
+  - API 接口：获取列表、标记已读、批量操作
+
+### 🔧 优化改进
+- **API 异常处理增强**：修复 Http404 异常处理，返回统一格式
+- **API 路由修复**：CategoryViewSet、TagViewSet 支持 slug 查找
+- **文章评论接口修复**：comments action 参数修复
+- **测试环境优化**：TESTING 标志跳过验证码验证
+- **正则表达式修复**：修复 docstring 中的转义序列警告
+
+### 📝 文档更新
+- **README.md**：更新测试数量、新增功能说明
+- **API.md**：添加通知 API 文档
+- **CONTRIBUTING.md**：添加 pre-commit 使用说明
+- **SECURITY.md**：更新安全特性列表
+
+### 🧪 测试
+- 测试数量：185 passed / 0 failed
+- 新增 `apps/notifications/tests/`
+- 新增 `apps/core/tests/test_views_counter.py`
+- 新增 `apps/core/tests/test_search.py`
+
+---
+
+## [2.3.4] - 2026-04-04
 
 ### 🔒 安全修复
 - **生产环境安全 Cookie 联动 HTTPS**：`SESSION_COOKIE_SECURE` / `CSRF_COOKIE_SECURE` / `SECURE_HSTS_SECONDS` 现与 `USE_X_FORWARDED_PROTO` 联动，避免纯 HTTP 部署时登录和 CSRF 全部失效（此前默认 True 导致无 HTTPS 时 cookie 无法写入）
