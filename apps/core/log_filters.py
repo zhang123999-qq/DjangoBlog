@@ -16,6 +16,24 @@ import re
 from typing import Any, Dict, List, Optional, Pattern, Tuple
 
 
+# 需要放行不脱敏的日志消息模式
+PASS_THROUGH_PATTERNS = [
+    # Django 请求日志: "GET /xxx HTTP/1.0" 200 1234
+    re.compile(r'^"(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+\S+\s+HTTP/\d\.\d"\s+\d+'),
+    # Django watch: Watching for file changes
+    re.compile(r'^Watching for file changes'),
+    # Django 启动信息: Django version / Starting development server
+    re.compile(r'^(?:Django version|Starting development|Quit the server)'),
+    # 静态文件 404: Not Found: /path
+    re.compile(r'^Not Found:\s+'),
+]
+
+
+def _should_pass_through(message: str) -> bool:
+    """判断消息是否是系统日志路径，应放行不脱敏"""
+    return any(p.match(message) for p in PASS_THROUGH_PATTERNS)
+
+
 class SensitiveDataFilter(logging.Filter):
     """
     敏感信息过滤器
@@ -129,6 +147,11 @@ class SensitiveDataFilter(logging.Filter):
         Returns:
             bool: 总是返回 True（允许记录通过，但会修改内容）
         """
+        # 放行系统/请求类日志，不做脱敏
+        if record.msg and isinstance(record.msg, str):
+            if _should_pass_through(record.msg):
+                return True
+
         # 处理消息
         if record.msg and isinstance(record.msg, str):
             record.msg = self._mask_sensitive_data(record.msg)
