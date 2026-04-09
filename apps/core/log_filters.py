@@ -25,7 +25,17 @@ PASS_THROUGH_PATTERNS = [
     # Django 启动信息: Django version / Starting development server
     re.compile(r'^(?:Django version|Starting development|Quit the server)'),
     # 静态文件 404: Not Found: /path
-    re.compile(r'^Not Found:\s+'),
+    re.compile(r'^Not Found:\s+/'),
+    # Faker 库日志: Provider `xxx` / Looking for locale / Specified locale
+    re.compile(r'^Provider\s+`'),
+    re.compile(r'^Looking for locale'),
+    re.compile(r'^Specified locale'),
+    re.compile(r'does not feature localization'),
+    re.compile(r'has been localized to'),
+    re.compile(r'Locale reset to'),
+    # HTTP 错误日志: Method Not Allowed / NotFound
+    re.compile(r'^Method Not Allowed\s+\('),
+    re.compile(r'^NotFound:\s+/'),
 ]
 
 
@@ -58,6 +68,8 @@ class SensitiveDataFilter(logging.Filter):
     """
 
     # 默认敏感字段名
+    # 注意：移除了 'auth' 和 'token'，因为单独出现太常见（如 faker.providers.auth）
+    # 保留了更具体的字段名如 'access_token'、'api_key' 等
     DEFAULT_SENSITIVE_KEYS = [
         'password',
         'passwd',
@@ -69,12 +81,12 @@ class SensitiveDataFilter(logging.Filter):
         'apikey',
         'api_secret',
         'apisecret',
-        'token',
+        # 'token',  # 移除：太常见，容易误杀 URL 路径
         'access_token',
         'accesstoken',
         'refresh_token',
         'refreshtoken',
-        'auth',
+        # 'auth',  # 移除：太常见，容易误杀 faker.providers.auth 等
         'authorization',
         'credential',
         'private_key',
@@ -105,8 +117,13 @@ class SensitiveDataFilter(logging.Filter):
         (re.compile(r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', re.I), '***UUID***'),
         # AWS Key
         (re.compile(r'AKIA[0-9A-Z]{16}'), '***AWS_KEY***'),
-        # Generic API Key (32-64 hex chars)
-        (re.compile(r'\b[a-f0-9]{32,64}\b', re.I), '***API_KEY***'),
+        # 精确匹配 token 键值对（只替换值，不会误杀 URL 路径）
+        # token="xxx" 或 token='xxx' 或 token=xxx 或 token: xxx
+        (re.compile(r'(\btoken["\'\s]*[=:]\s*["\']?)([^"\'\s,\]]+)', re.I), r'\1***'),
+        # auth 键值对（精确匹配，不会误杀 faker.providers.auth）
+        (re.compile(r'(\bauth["\'\s]*[=:]\s*["\']?)([^"\'\s,\]]+)', re.I), r'\1***'),
+        # 移除：Generic API Key 正则太宽泛，会误杀 URL 路径、Provider 名称等
+        # (re.compile(r'\b[a-f0-9]{32,64}\b', re.I), '***API_KEY***'),
     ]
 
     def __init__(

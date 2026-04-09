@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_GET
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CustomLoginForm
-from .captcha import generate_captcha
+from .captcha import generate_captcha, store_captcha
 
 
 def register_view(request):
@@ -21,11 +22,11 @@ def register_view(request):
         else:
             # 验证失败时，重新生成验证码
             captcha_code, captcha_image = generate_captcha()
-            request.session['captcha_code'] = captcha_code
+            store_captcha(request, captcha_code)
     else:
         # GET请求时生成验证码
         captcha_code, captcha_image = generate_captcha()
-        request.session['captcha_code'] = captcha_code
+        store_captcha(request, captcha_code)
         form = UserRegisterForm(request=request)
     return render(request, 'accounts/register.html', {'form': form, 'captcha_image': captcha_image})
 
@@ -112,11 +113,11 @@ def login_view(request):
                 return redirect('core:home')
         # 验证失败时，重新生成验证码
         captcha_code, captcha_image = generate_captcha()
-        request.session['captcha_code'] = captcha_code
+        store_captcha(request, captcha_code)
     else:
         # GET请求时生成验证码
         captcha_code, captcha_image = generate_captcha()
-        request.session['captcha_code'] = captcha_code
+        store_captcha(request, captcha_code)
         form = CustomLoginForm(request=request)
     return render(request, 'accounts/login.html', {'form': form, 'captcha_image': captcha_image})
 
@@ -128,3 +129,21 @@ def logout_view(request):
 
     logout(request)
     return redirect('core:home')
+
+
+@require_GET
+def captcha_refresh(request):
+    """AJAX 刷新验证码
+    
+    返回 JSON 格式:
+    {
+        "image": "base64_encoded_image",
+        "success": true
+    }
+    """
+    captcha_code, captcha_image = generate_captcha()
+    store_captcha(request, captcha_code)
+    return JsonResponse({
+        'image': captcha_image,
+        'success': True,
+    })

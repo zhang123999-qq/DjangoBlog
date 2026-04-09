@@ -21,8 +21,9 @@ class CustomLoginForm(AuthenticationForm):
     def clean_captcha(self):
         """验证验证码"""
         captcha = self.cleaned_data.get('captcha')
-        if not validate_captcha(self.request, captcha):
-            raise forms.ValidationError('验证码错误')
+        is_valid, error_msg = validate_captcha(self.request, captcha)
+        if not is_valid:
+            raise forms.ValidationError(error_msg or '验证码错误')
         return captcha
 
 
@@ -44,8 +45,9 @@ class UserRegisterForm(UserCreationForm):
     def clean_captcha(self):
         """验证验证码"""
         captcha = self.cleaned_data.get('captcha')
-        if not validate_captcha(self.request, captcha):
-            raise forms.ValidationError('验证码错误')
+        is_valid, error_msg = validate_captcha(self.request, captcha)
+        if not is_valid:
+            raise forms.ValidationError(error_msg or '验证码错误')
         return captcha
 
     class Meta:

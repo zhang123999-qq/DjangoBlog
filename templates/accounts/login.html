@@ -18,9 +18,9 @@
                                 {% if field.name == 'captcha' %}
                                     <div class="d-flex align-items-center gap-3">
                                         {{ field }}
-                                        <div class="captcha-image">
-                                            <img src="data:image/png;base64,{{ captcha_image }}" alt="验证码" class="rounded" style="height: 40px;">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="refreshCaptcha(this)">刷新</button>
+                                        <div class="captcha-container">
+                                            <img src="data:image/png;base64,{{ captcha_image }}" alt="验证码" class="rounded captcha-img" style="height: 40px; cursor: pointer;" title="点击刷新">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="refresh-captcha">刷新</button>
                                         </div>
                                     </div>
                                 {% else %}
@@ -34,10 +34,29 @@
                         <button type="submit" class="btn btn-primary w-100">登录</button>
                     </form>
                     <script>
-                        function refreshCaptcha(button) {
-                            // 重新加载页面以获取新的验证码
-                            window.location.reload();
+                    (function() {
+                        var captchaImg = document.querySelector('.captcha-img');
+                        var refreshBtn = document.getElementById('refresh-captcha');
+                        
+                        function refreshCaptcha() {
+                            fetch('/accounts/captcha/refresh/')
+                                .then(function(response) { return response.json(); })
+                                .then(function(data) {
+                                    if (data.success) {
+                                        captchaImg.src = 'data:image/png;base64,' + data.image;
+                                    }
+                                })
+                                .catch(function(err) {
+                                    console.error('刷新验证码失败:', err);
+                                });
                         }
+                        
+                        // 点击刷新按钮
+                        refreshBtn.addEventListener('click', refreshCaptcha);
+                        
+                        // 点击图片也可以刷新
+                        captchaImg.addEventListener('click', refreshCaptcha);
+                    })();
                     </script>
                 </div>
             </div>
