@@ -77,10 +77,14 @@ class SecurityHeadersMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
+        # ========================================
+        # 基础安全头
+        # ========================================
+
         # X-Content-Type-Options: 防止 MIME 类型嗅探
         response['X-Content-Type-Options'] = 'nosniff'
 
-        # X-XSS-Protection: XSS 过滤（已弃用但仍有效）
+        # X-XSS-Protection: XSS 过滤（已弃用但仍有效，旧浏览器兼容）
         response['X-XSS-Protection'] = '1; mode=block'
 
         # X-Frame-Options: 防止点击劫持
@@ -92,15 +96,50 @@ class SecurityHeadersMiddleware:
         # Referrer-Policy: 控制 Referer 头
         response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
-        # Permissions-Policy: 限制浏览器功能
+        # ========================================
+        # 方案A：基础增强（无兼容性风险）
+        # ========================================
+
+        # X-Permitted-Cross-Domain-Policies: 禁止 Flash/PDF 跨域访问
+        response['X-Permitted-Cross-Domain-Policies'] = 'none'
+
+        # X-Download-Options: 防止 IE 直接打开下载文件
+        response['X-Download-Options'] = 'noopen'
+
+        # Cross-Origin-Opener-Policy: 隔离浏览上下文（允许弹窗，兼容 OAuth）
+        response['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
+
+        # Cross-Origin-Resource-Policy: 防止跨域资源加载
+        response['Cross-Origin-Resource-Policy'] = 'same-site'
+
+        # Permissions-Policy: 限制浏览器功能（扩展版）
         response['Permissions-Policy'] = (
-            'geolocation=(), '
-            'microphone=(), '
+            'accelerometer=(), '
             'camera=(), '
-            'payment=()'
+            'display-capture=(), '
+            'encrypted-media=(), '
+            'fullscreen=(self), '  # 允许自己全屏
+            'geolocation=(), '
+            'gyroscope=(), '
+            'magnetometer=(), '
+            'microphone=(), '
+            'midi=(), '
+            'payment=(), '
+            'usb=()'
         )
 
+        # ========================================
+        # 敏感页面缓存控制
+        # ========================================
+        sensitive_paths = ['/accounts/', '/admin/', '/api/auth/']
+        if any(request.path.startswith(path) for path in sensitive_paths):
+            response['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+
+        # ========================================
         # HSTS: 仅在生产环境
+        # ========================================
         if not self.debug and hasattr(settings, 'SECURE_HSTS_SECONDS'):
             max_age = settings.SECURE_HSTS_SECONDS
             if max_age > 0:

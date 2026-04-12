@@ -48,8 +48,8 @@ tmp_upload_dir = None
 # ============================================
 # 日志配置
 # ============================================
-accesslog = os.environ.get('GUNICORN_ACCESS_LOG', 'logs/gunicorn_access.log')
-errorlog = os.environ.get('GUNICORN_ERROR_LOG', 'logs/gunicorn_error.log')
+accesslog = os.environ.get('GUNICORN_ACCESS_LOG', '-')
+errorlog = os.environ.get('GUNICORN_ERROR_LOG', '-')
 loglevel = os.environ.get('GUNICORN_LOG_LEVEL', 'info')
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 

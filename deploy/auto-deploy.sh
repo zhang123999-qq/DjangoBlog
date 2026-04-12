@@ -109,28 +109,33 @@ fi
 # ========================================
 if [ ! -f "$ENV_FILE" ]; then
     log "生成 .env 配置文件..."
-    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))" 2>/dev/null || openssl rand -base64 40)
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(64))" 2>/dev/null || openssl rand -base64 48)
+    DB_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(16))" 2>/dev/null || openssl rand -base64 16)
+    DB_ROOT_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(20))" 2>/dev/null || openssl rand -base64 20)
+
+    read -p "请输入域名 (如 www.example.com，默认 localhost): " DOMAIN
+    DOMAIN="${DOMAIN:-localhost}"
+
     cat > "$ENV_FILE" << EOF
 # DjangoBlog 配置（自动生成于 $(date '+%Y-%m-%d %H:%M:%S')）
+DJANGO_SETTINGS_MODULE=config.settings.production
 DEBUG=False
 SECRET_KEY=${SECRET_KEY}
-ALLOWED_HOSTS=*,127.0.0.1,localhost
+ALLOWED_HOSTS=${DOMAIN},127.0.0.1,localhost
 DB_ENGINE=django.db.backends.mysql
 DB_NAME=djangoblog
 DB_USER=djangouser
-DB_PASSWORD=djangopassword
+DB_PASSWORD=${DB_PASS}
 DB_HOST=db
 DB_PORT=3306
-DB_ROOT_PASSWORD=rootpassword
+DB_ROOT_PASSWORD=${DB_ROOT_PASS}
 REDIS_URL=redis://redis:6379/1
 CELERY_BROKER_URL=redis://redis:6379/0
 CELERY_RESULT_BACKEND=redis://redis:6379/0
-DB_PORT_EXPOSED=3306
-REDIS_PORT_EXPOSED=6379
 WEB_PORT_EXPOSED=8000
 NGINX_PORT_EXPOSED=80
 NGINX_HTTPS_PORT_EXPOSED=443
-CSRF_TRUSTED_ORIGINS=http://localhost,http://127.0.0.1
+CSRF_TRUSTED_ORIGINS=http://localhost,http://127.0.0.1,http://${DOMAIN}
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False

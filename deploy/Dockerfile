@@ -1,7 +1,8 @@
 # DjangoBlog production Dockerfile
-# 优化版本：单阶段构建 + 清华 apt 源 + pip 清华源
+# 多阶段构建：builder 编译依赖 → final 仅运行时
+# 优化：清华 apt/pip 源加速构建
 
-FROM docker.1ms.run/library/python:3.14.3-slim AS builder
+FROM docker.1ms.run/library/python:3.13-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -14,9 +15,9 @@ WORKDIR /app
 RUN rm -f /etc/apt/sources.list.d/debian.sources \
     && rm -f /etc/apt/sources.list.d/debian-security.sources \
     && { \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security trixie-security main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main"; \
     } > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -39,7 +40,7 @@ RUN pip install --no-cache-dir \
     -r /app/requirements/production.txt
 
 # ---- Final stage ----
-FROM docker.1ms.run/library/python:3.14.3-slim
+FROM docker.1ms.run/library/python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -51,9 +52,9 @@ WORKDIR /app
 RUN rm -f /etc/apt/sources.list.d/debian.sources \
     && rm -f /etc/apt/sources.list.d/debian-security.sources \
     && { \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security trixie-security main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main"; \
     } > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -65,10 +66,6 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources \
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Setup directories
-RUN mkdir -p /app/staticfiles /app/media /app/logs \
-    && chmod 777 /app/staticfiles /app/media /app/logs
-
 # Copy project files
 COPY --chown=root:root manage.py /app/manage.py
 COPY --chown=root:root apps/ /app/apps/
@@ -77,8 +74,18 @@ COPY --chown=root:root moderation/ /app/moderation/
 COPY --chown=root:root templates/ /app/templates/
 COPY --chown=root:root static/ /app/static/
 COPY --chown=root:root requirements/ /app/requirements/
+COPY --chown=root:root deploy/gunicorn.conf.py /app/deploy/gunicorn.conf.py
+
+# Setup directories
+RUN mkdir -p /app/staticfiles /app/media /app/logs \
+    && chmod 777 /app/staticfiles /app/media /app/logs
+
+# 构建时执行 collectstatic，生成 WhiteNoise 清单
+RUN DJANGO_SETTINGS_MODULE=config.settings.production \
+    SECRET_KEY=build-placeholder-key-for-collectstatic \
+    python manage.py collectstatic --noinput 2>/dev/null || true
 
 EXPOSE 8000
 
 # 默认运行 Gunicorn（celery/migrate 会覆盖此命令）
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "2", "--timeout", "120"]
+CMD ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]

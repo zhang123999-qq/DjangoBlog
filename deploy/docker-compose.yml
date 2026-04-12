@@ -32,8 +32,10 @@ services:
       - MYSQL_DATABASE=${DB_NAME:-djangoblog}
       - MYSQL_USER=${DB_USER:-djangouser}
       - MYSQL_PASSWORD=${DB_PASSWORD:-djangopassword123}
-    ports:
-      - "${DB_PORT_EXPOSED:-3306}:3306"
+    # 仅内部网络访问，不对外暴露
+    # 如需外部连接: docker compose exec db mysql -u root -p
+    expose:
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -57,8 +59,8 @@ services:
     image: redis:7-alpine
     container_name: djangoblog-redis
     restart: always
-    ports:
-      - "${REDIS_PORT_EXPOSED:-6379}:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     networks:
@@ -100,7 +102,8 @@ services:
     command: >
       sh -c "
         python manage.py migrate --noinput &&
-        echo 'Migrations complete.'
+        python manage.py collectstatic --noinput &&
+        echo 'Migrations and collectstatic complete.'
       "
 
   # ========================================
@@ -149,7 +152,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "gevent", "--worker-connections", "1000", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-"]
+    command: ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]
 
   # ========================================
   # Celery Worker (异步任务处理)
@@ -233,10 +236,9 @@ services:
       - "${NGINX_PORT_EXPOSED:-80}:80"
       - "${NGINX_HTTPS_PORT_EXPOSED:-443}:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.generic.conf:/etc/nginx/conf.d/default.conf:ro
       - static_volume:/app/staticfiles:ro
       - media_volume:/app/media:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
     networks:
       - djangoblog
     healthcheck:
