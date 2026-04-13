@@ -69,7 +69,7 @@ dependencies = [
     "django-mptt>=0.16.0",
 
     "baidu-aip>=4.16",
-    "gevent>=24.0",  # Gunicorn 异步 worker 必需
+    "gevent>=26.4.0",  # Gunicorn 异步 worker 必需
 ]
 
 [project.optional-dependencies]
