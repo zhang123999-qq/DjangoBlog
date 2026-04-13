@@ -2,7 +2,7 @@
 # 多阶段构建：builder 编译依赖 → final 仅运行时
 # 优化：清华 apt/pip 源加速构建
 
-FROM docker.1ms.run/library/python:3.13-slim AS builder
+FROM docker.1ms.run/library/python:3.14-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -40,7 +40,7 @@ RUN pip install --no-cache-dir \
     -r /app/requirements/production.txt
 
 # ---- Final stage ----
-FROM docker.1ms.run/library/python:3.13-slim
+FROM docker.1ms.run/library/python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
