@@ -58,7 +58,7 @@ dependencies = [
     "jsonpath-ng>=1.6.0",
     "faker>=20.0.0",
     "croniter>=2.0.0",
-    "python-barcode>=0.15.0",
+    "python-barcode>=0.16.1",
 
     "django-el-pagination>=4.1.0",
     "django-taggit>=6.1.0",
