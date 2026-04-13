@@ -91,7 +91,7 @@ dev = [
 prod = [
     "gunicorn>=23.0",
     "uvicorn[standard]>=0.34",
-    "whitenoise>=6.9",
+    "whitenoise>=6.12.0",
     "sentry-sdk>=2.22",
     "flower>=2.0",
 ]
