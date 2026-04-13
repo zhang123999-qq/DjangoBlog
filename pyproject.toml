@@ -65,7 +65,7 @@ dependencies = [
     "django-meta>=2.4.0",
     "python-json-logger>=3.3.0",
     "django-cors-headers>=4.7.0",
-    "python-slugify>=8.0.0",
+    "python-slugify>=8.0.4",
     "django-mptt>=0.16.0",
 
     "baidu-aip>=4.16",
