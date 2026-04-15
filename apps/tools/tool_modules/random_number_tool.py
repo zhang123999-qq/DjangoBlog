@@ -2,11 +2,12 @@
 随机数生成器工具
 """
 
-"""随机数生成器"""
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import random
+
+from django import forms
+
+from ..categories import ToolCategory
+from apps.tools.base_tool import BaseTool
 
 
 class RandomNumberForm(forms.Form):

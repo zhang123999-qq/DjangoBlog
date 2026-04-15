@@ -13,6 +13,33 @@ from .constants import CONCLUSION_TYPE
 logger = logging.getLogger(__name__)
 
 
+def parse_baidu_violation_data(data):
+    """
+    解析百度审核返回的违规数据
+
+    Args:
+        data: 百度 API 返回的 data 列表
+
+    Returns:
+        list: 解析后的违规信息列表
+    """
+    violations = []
+    if not data:
+        return violations
+
+    for item in data:
+        violation = {
+            "type": item.get("type", "未知"),
+            "subType": item.get("subType", ""),
+            "level": item.get("level", ""),
+            "msg": item.get("msg", ""),
+            "probability": item.get("probability", 0),
+        }
+        violations.append(violation)
+
+    return violations
+
+
 def get_baidu_client():
     """
     获取百度内容审核客户端

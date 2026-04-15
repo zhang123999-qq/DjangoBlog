@@ -127,7 +127,7 @@ def topic_create_view(request, board_slug):
         try:
             board = get_object_or_404(Board, slug=board_slug)
             return redirect(board.get_absolute_url())
-        except:
+        except Exception:
             return redirect("forum:board_list")
 
 
@@ -180,7 +180,7 @@ def reply_create_view(request, board_slug, topic_id):
         try:
             topic = get_object_or_404(Topic, id=topic_id, board__slug=board_slug)
             return redirect(topic.get_absolute_url())
-        except:
+        except Exception:
             return redirect("forum:board_list")
 
 
