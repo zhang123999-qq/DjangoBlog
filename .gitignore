@@ -98,3 +98,8 @@ memory/
 
 # uv/lock
 *.lock
+# 添加垃圾文件忽略规则
+=*
+*.egg-info/
+__pycache__/
+.pytest_cache/
