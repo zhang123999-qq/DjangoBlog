@@ -1,6 +1,7 @@
 """
 天气查询工具（支持多个 API 源作为 fallback）
 """
+
 from ..categories import ToolCategory
 from django import forms
 from django.conf import settings
@@ -10,24 +11,26 @@ import requests
 
 class WeatherForm(forms.Form):
     """天气查询表单"""
+
     city = forms.CharField(
-        label='城市名称',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '输入城市名称，如：北京'}),
-        required=True
+        label="城市名称",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "输入城市名称，如：北京"}),
+        required=True,
     )
     unit = forms.ChoiceField(
-        label='温度单位',
+        label="温度单位",
         choices=[
-            ('celsius', '摄氏度 (°C)'),
-            ('fahrenheit', '华氏度 (°F)'),
+            ("celsius", "摄氏度 (°C)"),
+            ("fahrenheit", "华氏度 (°F)"),
         ],
-        initial='celsius',
-        widget=forms.Select(attrs={'class': 'form-control'})
+        initial="celsius",
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
 
 
 class WeatherTool(BaseTool):
     """天气查询工具（多源 fallback）"""
+
     name = "天气查询"
     slug = "weather"
     description = "查询指定城市的天气信息（多数据源，一个失败自动切换）"
@@ -36,29 +39,29 @@ class WeatherTool(BaseTool):
     form_class = WeatherForm
 
     def handle(self, request, form):
-        city = form.cleaned_data['city']
-        unit = form.cleaned_data['unit']
+        city = form.cleaned_data["city"]
+        unit = form.cleaned_data["unit"]
 
         # 从 .env 读取 API Key，如果未配置则回退到公共 API
-        api_key = getattr(settings, 'OPENWEATHER_API_KEY', None)
+        api_key = getattr(settings, "OPENWEATHER_API_KEY", None)
 
         # 来源 1: OpenWeatherMap（需要 API Key，数据最全）
-        if api_key and api_key != 'YOUR_API_KEY':
+        if api_key and api_key != "YOUR_API_KEY":
             result = self._query_openweather(city, unit, api_key)
-            if result and 'error' not in result:
-                result['source'] = 'OpenWeatherMap'
+            if result and "error" not in result:
+                result["source"] = "OpenWeatherMap"
                 return result
 
         # 来源 2: wttr.in（免费无需 API Key）
         result = self._query_wttr(city, unit)
-        if result and 'error' not in result:
-            result['source'] = 'wttr.in'
+        if result and "error" not in result:
+            result["source"] = "wttr.in"
             return result
 
         # 全部失败
         return {
-            'error': '天气查询服务暂时不可用，请稍后重试。',
-            'city': city,
+            "error": "天气查询服务暂时不可用，请稍后重试。",
+            "city": city,
         }
 
     def _query_openweather(self, city, unit, api_key):
@@ -69,7 +72,7 @@ class WeatherTool(BaseTool):
                 "q": city,
                 "appid": api_key,
                 "lang": "zh_cn",
-                "units": "metric" if unit == "celsius" else "imperial"
+                "units": "metric" if unit == "celsius" else "imperial",
             }
             response = requests.get(base_url, params=params, timeout=10)
             data = response.json()
@@ -84,7 +87,7 @@ class WeatherTool(BaseTool):
                     "weather": data.get("weather", [{}])[0].get("description"),
                     "icon": data.get("weather", [{}])[0].get("icon"),
                     "wind_speed": data.get("wind", {}).get("speed"),
-                    "unit": "°C" if unit == "celsius" else "°F"
+                    "unit": "°C" if unit == "celsius" else "°F",
                 }
         except Exception:
             pass
@@ -109,7 +112,7 @@ class WeatherTool(BaseTool):
                         "humidity": parts[2].strip(),
                         "wind_speed": parts[3].strip(),
                         "precipitation": parts[4].strip(),
-                        "unit": "°C" if unit == "celsius" else "°F"
+                        "unit": "°C" if unit == "celsius" else "°F",
                     }
         except Exception:
             pass

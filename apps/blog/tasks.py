@@ -9,13 +9,12 @@
 import logging
 from celery import shared_task
 from django.core.cache import cache
-from django.db.models import F
 
 logger = logging.getLogger(__name__)
 
 
 # Redis key 前缀
-VIEWS_CACHE_PREFIX = 'post:views:'
+VIEWS_CACHE_PREFIX = "post:views:"
 VIEWS_SYNC_BATCH_SIZE = 100  # 每次同步的最大数量
 
 # 缓存 TTL 常量
@@ -34,14 +33,14 @@ def sync_views_to_db():
 
     try:
         # 使用新的 ViewsCounter 同步
-        result = ViewsCounter.sync_to_db('post')
+        result = ViewsCounter.sync_to_db("post")
 
         logger.info(f"同步了 {result['synced']} 篇文章的浏览量到数据库")
         return result
 
     except Exception as e:
-        logger.error(f'同步浏览量失败: {e}')
-        return {'synced': 0, 'error': str(e)}
+        logger.error(f"同步浏览量失败: {e}")
+        return {"synced": 0, "error": str(e)}
 
 
 @shared_task
@@ -60,37 +59,32 @@ def update_hot_posts():
         week_ago = timezone.now() - timedelta(days=7)
 
         hot_posts = list(
-            Post.objects.filter(
-                status='published',
-                published_at__gte=week_ago
-            ).order_by('-views_count')[:10].values_list('id', flat=True)
+            Post.objects.filter(status="published", published_at__gte=week_ago)
+            .order_by("-views_count")[:10]
+            .values_list("id", flat=True)
         )
 
         # 缓存热门文章 ID 列表
-        cache.set('blog:hot_posts:week', hot_posts, CACHE_TTL_LONG)
+        cache.set("blog:hot_posts:week", hot_posts, CACHE_TTL_LONG)
 
         # 获取最近 30 天的热门文章
         month_ago = timezone.now() - timedelta(days=30)
 
         hot_posts_month = list(
-            Post.objects.filter(
-                status='published',
-                published_at__gte=month_ago
-            ).order_by('-views_count')[:20].values_list('id', flat=True)
+            Post.objects.filter(status="published", published_at__gte=month_ago)
+            .order_by("-views_count")[:20]
+            .values_list("id", flat=True)
         )
 
-        cache.set('blog:hot_posts:month', hot_posts_month, CACHE_TTL_LONG)
+        cache.set("blog:hot_posts:month", hot_posts_month, CACHE_TTL_LONG)
 
-        logger.info(f'更新热门文章: 本周 {len(hot_posts)} 篇，本月 {len(hot_posts_month)} 篇')
+        logger.info(f"更新热门文章: 本周 {len(hot_posts)} 篇，本月 {len(hot_posts_month)} 篇")
 
-        return {
-            'week': len(hot_posts),
-            'month': len(hot_posts_month)
-        }
+        return {"week": len(hot_posts), "month": len(hot_posts_month)}
 
     except Exception as e:
-        logger.error(f'更新热门文章失败: {e}')
-        return {'error': str(e)}
+        logger.error(f"更新热门文章失败: {e}")
+        return {"error": str(e)}
 
 
 @shared_task
@@ -108,14 +102,11 @@ def cleanup_old_drafts(days=90):
         threshold = timezone.now() - timedelta(days=days)
 
         # 删除超过 90 天未更新的草稿
-        deleted_count = Post.objects.filter(
-            status='draft',
-            updated_at__lt=threshold
-        ).delete()[0]
+        deleted_count = Post.objects.filter(status="draft", updated_at__lt=threshold).delete()[0]
 
-        logger.info(f'清理了 {deleted_count} 篇旧草稿（{days}天前）')
+        logger.info(f"清理了 {deleted_count} 篇旧草稿（{days}天前）")
         return deleted_count
 
     except Exception as e:
-        logger.error(f'清理旧草稿失败: {e}')
+        logger.error(f"清理旧草稿失败: {e}")
         return 0

@@ -8,13 +8,14 @@ from .categories import TOOL_CATEGORIES, CATEGORY_ORDER
 logger = logging.getLogger(__name__)
 
 # 缓存 key
-TOOLS_CACHE_KEY = 'tools:all_tools'
-TOOLS_CATEGORY_CACHE_KEY = 'tools:by_category'
+TOOLS_CACHE_KEY = "tools:all_tools"
+TOOLS_CATEGORY_CACHE_KEY = "tools:by_category"
 CACHE_TIMEOUT = 3600  # 1 小时
 
 
 class ToolRegistry:
     """工具注册表（优化版：懒加载 + 缓存）"""
+
     def __init__(self):
         self.tools = {}
         self._discovered = False
@@ -25,7 +26,7 @@ class ToolRegistry:
             return
 
         # 工具模块目录
-        tool_modules_dir = os.path.join(os.path.dirname(__file__), 'tool_modules')
+        tool_modules_dir = os.path.join(os.path.dirname(__file__), "tool_modules")
         if not os.path.exists(tool_modules_dir):
             os.makedirs(tool_modules_dir)
             self._discovered = True
@@ -33,17 +34,13 @@ class ToolRegistry:
 
         # 遍历工具模块文件
         for filename in os.listdir(tool_modules_dir):
-            if filename.endswith('.py') and not filename.startswith('__init__'):
-                module_name = f'apps.tools.tool_modules.{filename[:-3]}'
+            if filename.endswith(".py") and not filename.startswith("__init__"):
+                module_name = f"apps.tools.tool_modules.{filename[:-3]}"
                 try:
                     module = importlib.import_module(module_name)
                     # 查找 BaseTool 子类
                     for name, obj in module.__dict__.items():
-                        if (
-                            isinstance(obj, type) and
-                            issubclass(obj, BaseTool) and
-                            obj is not BaseTool
-                        ):
+                        if isinstance(obj, type) and issubclass(obj, BaseTool) and obj is not BaseTool:
                             tool_instance = obj()
                             slug = tool_instance.slug
                             if slug in self.tools:
@@ -132,15 +129,17 @@ class ToolRegistry:
         for cat_key in CATEGORY_ORDER:
             if cat_key in categorized and categorized[cat_key]:
                 cat_info = TOOL_CATEGORIES.get(cat_key, {})
-                result.append({
-                    'key': cat_key,
-                    'name': cat_info.get('name', cat_key),
-                    'icon': cat_info.get('icon', 'bi-folder'),
-                    'color': cat_info.get('color', '#999'),
-                    'description': cat_info.get('description', ''),
-                    'tools': categorized[cat_key],
-                    'count': len(categorized[cat_key]),
-                })
+                result.append(
+                    {
+                        "key": cat_key,
+                        "name": cat_info.get("name", cat_key),
+                        "icon": cat_info.get("icon", "bi-folder"),
+                        "color": cat_info.get("color", "#999"),
+                        "description": cat_info.get("description", ""),
+                        "tools": categorized[cat_key],
+                        "count": len(categorized[cat_key]),
+                    }
+                )
 
         return result
 
@@ -148,7 +147,7 @@ class ToolRegistry:
         """清除工具缓存"""
         cache.delete(TOOLS_CACHE_KEY)
         cache.delete(TOOLS_CATEGORY_CACHE_KEY)
-        logger.info('工具缓存已清除')
+        logger.info("工具缓存已清除")
 
     def reset_discovered(self):
         """重置发现状态并清除缓存"""

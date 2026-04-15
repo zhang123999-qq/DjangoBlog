@@ -15,27 +15,26 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Pattern, Tuple
 
-
 # 需要放行不脱敏的日志消息模式
 PASS_THROUGH_PATTERNS = [
     # Django 请求日志: "GET /xxx HTTP/1.0" 200 1234
     re.compile(r'^"(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+\S+\s+HTTP/\d\.\d"\s+\d+'),
     # Django watch: Watching for file changes
-    re.compile(r'^Watching for file changes'),
+    re.compile(r"^Watching for file changes"),
     # Django 启动信息: Django version / Starting development server
-    re.compile(r'^(?:Django version|Starting development|Quit the server)'),
+    re.compile(r"^(?:Django version|Starting development|Quit the server)"),
     # 静态文件 404: Not Found: /path
-    re.compile(r'^Not Found:\s+/'),
+    re.compile(r"^Not Found:\s+/"),
     # Faker 库日志: Provider `xxx` / Looking for locale / Specified locale
-    re.compile(r'^Provider\s+`'),
-    re.compile(r'^Looking for locale'),
-    re.compile(r'^Specified locale'),
-    re.compile(r'does not feature localization'),
-    re.compile(r'has been localized to'),
-    re.compile(r'Locale reset to'),
+    re.compile(r"^Provider\s+`"),
+    re.compile(r"^Looking for locale"),
+    re.compile(r"^Specified locale"),
+    re.compile(r"does not feature localization"),
+    re.compile(r"has been localized to"),
+    re.compile(r"Locale reset to"),
     # HTTP 错误日志: Method Not Allowed / NotFound
-    re.compile(r'^Method Not Allowed\s+\('),
-    re.compile(r'^NotFound:\s+/'),
+    re.compile(r"^Method Not Allowed\s+\("),
+    re.compile(r"^NotFound:\s+/"),
 ]
 
 
@@ -71,65 +70,65 @@ class SensitiveDataFilter(logging.Filter):
     # 注意：移除了 'auth' 和 'token'，因为单独出现太常见（如 faker.providers.auth）
     # 保留了更具体的字段名如 'access_token'、'api_key' 等
     DEFAULT_SENSITIVE_KEYS = [
-        'password',
-        'passwd',
-        'pwd',
-        'secret',
-        'secret_key',
-        'secretkey',
-        'api_key',
-        'apikey',
-        'api_secret',
-        'apisecret',
+        "password",
+        "passwd",
+        "pwd",
+        "secret",
+        "secret_key",
+        "secretkey",
+        "api_key",
+        "apikey",
+        "api_secret",
+        "apisecret",
         # 'token',  # 移除：太常见，容易误杀 URL 路径
-        'access_token',
-        'accesstoken',
-        'refresh_token',
-        'refreshtoken',
+        "access_token",
+        "accesstoken",
+        "refresh_token",
+        "refreshtoken",
         # 'auth',  # 移除：太常见，容易误杀 faker.providers.auth 等
-        'authorization',
-        'credential',
-        'private_key',
-        'privatekey',
-        'session_key',
-        'sessionkey',
-        'csrf',
-        'csrf_token',
-        'csrftoken',
+        "authorization",
+        "credential",
+        "private_key",
+        "privatekey",
+        "session_key",
+        "sessionkey",
+        "csrf",
+        "csrf_token",
+        "csrftoken",
     ]
 
     # 部分脱敏的字段（保留部分信息）
     PARTIAL_MASK_KEYS = [
-        'email',
-        'phone',
-        'mobile',
-        'id_card',
-        'idcard',
-        'credit_card',
-        'creditcard',
+        "email",
+        "phone",
+        "mobile",
+        "id_card",
+        "idcard",
+        "credit_card",
+        "creditcard",
     ]
 
     # 正则匹配模式
     PATTERNS: List[Tuple[Pattern, str]] = [
         # JWT Token
-        (re.compile(r'eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*'), '***JWT***'),
+        (re.compile(r"eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*"), "***JWT***"),
         # UUID Token
-        (re.compile(r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}', re.I), '***UUID***'),
+        (re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", re.I), "***UUID***"),
         # AWS Key
-        (re.compile(r'AKIA[0-9A-Z]{16}'), '***AWS_KEY***'),
+        (re.compile(r"AKIA[0-9A-Z]{16}"), "***AWS_KEY***"),
         # 精确匹配 token 键值对（只替换值，不会误杀 URL 路径）
         # token="xxx" 或 token='xxx' 或 token=xxx 或 token: xxx
-        (re.compile(r'(\btoken["\'\s]*[=:]\s*["\']?)([^"\'\s,\]]+)', re.I), r'\1***'),
+        (re.compile(r'(\btoken["\'\s]*[=:]\s*["\']?)([^"\'\s,\]]+)', re.I), r"\1***"),
         # auth 键值对（精确匹配，不会误杀 faker.providers.auth）
-        (re.compile(r'(\bauth["\'\s]*[=:]\s*["\']?)([^"\'\s,\]]+)', re.I), r'\1***'),
+        (re.compile(r'(\bauth["\'\s]*[=:]\s*["\']?)([^"\'\s,\]]+)', re.I), r"\1***"),
         # 移除：Generic API Key 正则太宽泛，会误杀 URL 路径、Provider 名称等
         # (re.compile(r'\b[a-f0-9]{32,64}\b', re.I), '***API_KEY***'),
     ]
 
     def __init__(
         self,
-        name: str = '',
-        mask_char: str = '*',
+        name: str = "",
+        mask_char: str = "*",
         sensitive_keys: Optional[List[str]] = None,
         partial_mask_keys: Optional[List[str]] = None,
     ):
@@ -148,11 +147,8 @@ class SensitiveDataFilter(logging.Filter):
         self.partial_mask_keys = partial_mask_keys or self.PARTIAL_MASK_KEYS
 
         # 编译字段匹配正则
-        key_pattern = '|'.join(re.escape(k) for k in self.sensitive_keys)
-        self.sensitive_pattern = re.compile(
-            rf'({key_pattern})["\s:=]+(["\']?)([^\s"\',\]]+)',
-            re.I
-        )
+        key_pattern = "|".join(re.escape(k) for k in self.sensitive_keys)
+        self.sensitive_pattern = re.compile(rf'({key_pattern})["\s:=]+(["\']?)([^\s"\',\]]+)', re.I)
 
     def filter(self, record: logging.LogRecord) -> bool:
         """
@@ -178,10 +174,7 @@ class SensitiveDataFilter(logging.Filter):
             if isinstance(record.args, dict):
                 record.args = self._mask_dict(record.args)
             elif isinstance(record.args, tuple):
-                record.args = tuple(
-                    self._mask_value(arg) if isinstance(arg, str) else arg
-                    for arg in record.args
-                )
+                record.args = tuple(self._mask_value(arg) if isinstance(arg, str) else arg for arg in record.args)
 
         return True
 
@@ -201,8 +194,7 @@ class SensitiveDataFilter(logging.Filter):
 
         # 2. 键值对替换
         message = self.sensitive_pattern.sub(
-            lambda m: f'{m.group(1)}{m.group(2)}{self._mask_value(m.group(3))}',
-            message
+            lambda m: f"{m.group(1)}{m.group(2)}{self._mask_value(m.group(3))}", message
         )
 
         return message
@@ -219,7 +211,7 @@ class SensitiveDataFilter(logging.Filter):
         """
         result = {}
         for key, value in data.items():
-            lower_key = key.lower().replace('-', '_')
+            lower_key = key.lower().replace("-", "_")
 
             if lower_key in self.sensitive_keys:
                 result[key] = self._mask_value(str(value))
@@ -269,20 +261,20 @@ class SensitiveDataFilter(logging.Filter):
         key_lower = key.lower()
 
         # 邮箱脱敏：t***@example.com
-        if 'email' in key_lower and '@' in value:
-            parts = value.split('@')
+        if "email" in key_lower and "@" in value:
+            parts = value.split("@")
             if len(parts[0]) > 1:
                 parts[0] = parts[0][0] + self.mask_char * (len(parts[0]) - 1)
-            return '@'.join(parts)
+            return "@".join(parts)
 
         # 手机号脱敏：138****8888
-        if 'phone' in key_lower or 'mobile' in key_lower:
+        if "phone" in key_lower or "mobile" in key_lower:
             if len(value) >= 7:
                 return value[:3] + self.mask_char * 4 + value[-4:]
             return self._mask_value(value)
 
         # 身份证脱敏：110***********1234
-        if 'id_card' in key_lower or 'idcard' in key_lower:
+        if "id_card" in key_lower or "idcard" in key_lower:
             if len(value) >= 8:
                 return value[:3] + self.mask_char * (len(value) - 7) + value[-4:]
             return self._mask_value(value)
@@ -302,16 +294,16 @@ class SanitizeLogFilter(logging.Filter):
 
     SENSITIVE_PATTERNS = [
         # Password patterns
-        (re.compile(r'(password["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
-        (re.compile(r'(passwd["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
-        (re.compile(r'(pwd["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
+        (re.compile(r'(password["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
+        (re.compile(r'(passwd["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
+        (re.compile(r'(pwd["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
         # Secret patterns
-        (re.compile(r'(secret[_-]?key["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
-        (re.compile(r'(secret["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
+        (re.compile(r'(secret[_-]?key["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
+        (re.compile(r'(secret["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
         # Token patterns
-        (re.compile(r'(token["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
-        (re.compile(r'(api[_-]?key["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
-        (re.compile(r'(authorization["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r'\1***'),
+        (re.compile(r'(token["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
+        (re.compile(r'(api[_-]?key["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
+        (re.compile(r'(authorization["\']?\s*[:=]\s*["\']?)([^"\',\s]+)', re.I), r"\1***"),
     ]
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -340,6 +332,6 @@ def setup_logging_filters():
         handler.addFilter(sensitive_filter)
 
     # 也添加到 Django 请求日志
-    django_request_logger = logging.getLogger('django.request')
+    django_request_logger = logging.getLogger("django.request")
     for handler in django_request_logger.handlers:
         handler.addFilter(sensitive_filter)

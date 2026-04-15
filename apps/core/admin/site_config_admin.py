@@ -15,22 +15,31 @@ class SiteConfigAdmin(admin.ModelAdmin):
 
     list_display = ["site_name", "show_icp", "show_gongan_beian", "site_author", "is_installed", "created_at"]
     fieldsets = (
-        ("网站信息", {
-            "fields": (
-                ("site_name", "site_title"),
-                "site_description",
-                "site_author",
-                "logo",
-            ),
-        }),
-        ("备案信息", {
-            "fields": ("site_icp", "site_gongan_beian"),
-            "description": "💡 **ICP 备案**：填写备案号，保存后页脚自动显示。留空则隐藏。示例：豫ICP备20260102345号-1  |  **公安联网备案**：只需输入备案编号部分（如 11010502030001），下方按钮会自动补全格式。",
-        }),
-        ("系统设置", {
-            "fields": ("is_installed", "allow_registration"),
-            "classes": ("collapse",),
-        }),
+        (
+            "网站信息",
+            {
+                "fields": (
+                    ("site_name", "site_title"),
+                    "site_description",
+                    "site_author",
+                    "logo",
+                ),
+            },
+        ),
+        (
+            "备案信息",
+            {
+                "fields": ("site_icp", "site_gongan_beian"),
+                "description": "💡 **ICP 备案**：填写备案号，保存后页脚自动显示。留空则隐藏。示例：豫ICP备20260102345号-1  |  **公安联网备案**：只需输入备案编号部分（如 11010502030001），下方按钮会自动补全格式。",
+            },
+        ),
+        (
+            "系统设置",
+            {
+                "fields": ("is_installed", "allow_registration"),
+                "classes": ("collapse",),
+            },
+        ),
     )
 
     change_form_template = "admin/core/change_form_siteconfig.html"
@@ -50,8 +59,7 @@ class SiteConfigAdmin(admin.ModelAdmin):
         if obj.site_gongan_beian:
             link = obj.gongan_beian_link
             return format_html(
-                '<a href="{}" target="_blank" '
-                'style="color:#3b82f6;text-decoration:underline;">{}</a>',
+                '<a href="{}" target="_blank" ' 'style="color:#3b82f6;text-decoration:underline;">{}</a>',
                 link,
                 obj.site_gongan_beian,
             )
@@ -61,18 +69,19 @@ class SiteConfigAdmin(admin.ModelAdmin):
         """保存时自动清除缓存，公安备案号格式补全由 Model.save() 处理"""
         super().save_model(request, obj, form, change)
         from django.core.cache import cache
-        cache.delete('site_config_solo')
+
+        cache.delete("site_config_solo")
 
         # 消息提示
         msgs = []
         if obj.site_icp:
-            msgs.append(f'✅ ICP 备案号已保存为「{obj.site_icp}」')
+            msgs.append(f"✅ ICP 备案号已保存为「{obj.site_icp}」")
         if obj.site_gongan_beian:
-            msgs.append(f'🛡️ 公安联网备案号已保存为「{obj.site_gongan_beian}」')
+            msgs.append(f"🛡️ 公安联网备案号已保存为「{obj.site_gongan_beian}」")
         if not msgs:
-            self.message_user(request, '⚠️ 备案号为空，备案信息已隐藏。', messages.WARNING)
+            self.message_user(request, "⚠️ 备案号为空，备案信息已隐藏。", messages.WARNING)
         else:
-            self.message_user(request, '，'.join(msgs) + '，页脚自动生效。', messages.SUCCESS)
+            self.message_user(request, "，".join(msgs) + "，页脚自动生效。", messages.SUCCESS)
 
     def has_add_permission(self, request):
         if self.model.objects.count() >= 1:

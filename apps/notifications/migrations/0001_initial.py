@@ -15,24 +15,49 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=200, verbose_name='标题')),
-                ('content', models.TextField(verbose_name='内容')),
-                ('notification_type', models.CharField(choices=[('comment', '评论'), ('reply', '回复'), ('like', '点赞'), ('system', '系统通知'), ('moderation', '审核通知')], default='system', max_length=20, verbose_name='通知类型')),
-                ('link', models.URLField(blank=True, verbose_name='跳转链接')),
-                ('is_read', models.BooleanField(default=False, verbose_name='是否已读')),
-                ('read_at', models.DateTimeField(blank=True, null=True, verbose_name='阅读时间')),
-                ('extra_data', models.JSONField(blank=True, default=dict, verbose_name='额外数据')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL, verbose_name='接收用户')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=200, verbose_name="标题")),
+                ("content", models.TextField(verbose_name="内容")),
+                (
+                    "notification_type",
+                    models.CharField(
+                        choices=[
+                            ("comment", "评论"),
+                            ("reply", "回复"),
+                            ("like", "点赞"),
+                            ("system", "系统通知"),
+                            ("moderation", "审核通知"),
+                        ],
+                        default="system",
+                        max_length=20,
+                        verbose_name="通知类型",
+                    ),
+                ),
+                ("link", models.URLField(blank=True, verbose_name="跳转链接")),
+                ("is_read", models.BooleanField(default=False, verbose_name="是否已读")),
+                ("read_at", models.DateTimeField(blank=True, null=True, verbose_name="阅读时间")),
+                ("extra_data", models.JSONField(blank=True, default=dict, verbose_name="额外数据")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="接收用户",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '通知',
-                'verbose_name_plural': '通知',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', '-created_at'], name='notificatio_user_id_05b4bc_idx'), models.Index(fields=['user', 'is_read'], name='notificatio_user_id_427e4b_idx')],
+                "verbose_name": "通知",
+                "verbose_name_plural": "通知",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(fields=["user", "-created_at"], name="notificatio_user_id_05b4bc_idx"),
+                    models.Index(fields=["user", "is_read"], name="notificatio_user_id_427e4b_idx"),
+                ],
             },
         ),
     ]

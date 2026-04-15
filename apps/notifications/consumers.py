@@ -6,7 +6,6 @@ WebSocket 消费者
 
 import json
 import logging
-from typing import Optional
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -40,7 +39,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     """
 
     # 用户组名前缀
-    USER_GROUP_PREFIX = 'user_notifications_'
+    USER_GROUP_PREFIX = "user_notifications_"
 
     async def connect(self):
         """
@@ -49,7 +48,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         验证用户身份并加入用户专属组
         """
         # 获取用户
-        user = self.scope.get('user')
+        user = self.scope.get("user")
 
         if user is None or not user.is_authenticated:
             # 未认证用户拒绝连接
@@ -59,13 +58,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         # 设置用户
         self.user = user
-        self.user_group = f'{self.USER_GROUP_PREFIX}{user.id}'
+        self.user_group = f"{self.USER_GROUP_PREFIX}{user.id}"
 
         # 加入用户专属组
-        await self.channel_layer.group_add(
-            self.user_group,
-            self.channel_name
-        )
+        await self.channel_layer.group_add(self.user_group, self.channel_name)
 
         # 接受连接
         await self.accept()
@@ -76,25 +72,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         logger.info(f"用户 {user.username} 已连接 WebSocket")
 
         # 发送连接成功消息
-        await self.send(text_data=json.dumps({
-            'type': 'connected',
-            'message': 'WebSocket 连接成功',
-            'user_id': user.id,
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "connected",
+                    "message": "WebSocket 连接成功",
+                    "user_id": user.id,
+                }
+            )
+        )
 
     async def disconnect(self, close_code):
         """
         断开连接处理
         """
-        if hasattr(self, 'user_group'):
+        if hasattr(self, "user_group"):
             # 离开用户组
-            await self.channel_layer.group_discard(
-                self.user_group,
-                self.channel_name
-            )
+            await self.channel_layer.group_discard(self.user_group, self.channel_name)
 
         # 更新在线状态
-        if hasattr(self, 'user'):
+        if hasattr(self, "user"):
             await self.set_online_status(False)
             logger.info(f"用户 {self.user.username} 已断开 WebSocket")
 
@@ -106,18 +103,22 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """
         try:
             data = json.loads(text_data)
-            message_type = data.get('type')
+            message_type = data.get("type")
 
-            if message_type == 'ping':
+            if message_type == "ping":
                 # 心跳检测
-                await self.send(text_data=json.dumps({
-                    'type': 'pong',
-                    'timestamp': str(timezone.now()),
-                }))
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "type": "pong",
+                            "timestamp": str(timezone.now()),
+                        }
+                    )
+                )
 
-            elif message_type == 'mark_read':
+            elif message_type == "mark_read":
                 # 标记消息已读
-                notification_id = data.get('notification_id')
+                notification_id = data.get("notification_id")
                 if notification_id:
                     await self.mark_notification_read(notification_id)
 
@@ -135,19 +136,27 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         由 Channel Layer 调用
         """
-        await self.send(text_data=json.dumps({
-            'type': 'notification',
-            'data': event['data'],
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "notification",
+                    "data": event["data"],
+                }
+            )
+        )
 
     async def send_system_message(self, event):
         """
         发送系统消息
         """
-        await self.send(text_data=json.dumps({
-            'type': 'system',
-            'data': event['data'],
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "system",
+                    "data": event["data"],
+                }
+            )
+        )
 
     @database_sync_to_async
     def set_online_status(self, is_online: bool):
@@ -159,7 +168,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """
         try:
             from django.core.cache import cache
-            cache_key = f'user_online:{self.user.id}'
+
+            cache_key = f"user_online:{self.user.id}"
 
             if is_online:
                 cache.set(cache_key, True, 300)  # 5 分钟过期
@@ -186,11 +196,11 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
     广播用户在线/离线状态
     """
 
-    ONLINE_GROUP = 'online_users'
+    ONLINE_GROUP = "online_users"
 
     async def connect(self):
         """连接处理"""
-        user = self.scope.get('user')
+        user = self.scope.get("user")
 
         if user is None or not user.is_authenticated:
             await self.close()
@@ -199,10 +209,7 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         self.user = user
 
         # 加入在线用户组
-        await self.channel_layer.group_add(
-            self.ONLINE_GROUP,
-            self.channel_name
-        )
+        await self.channel_layer.group_add(self.ONLINE_GROUP, self.channel_name)
 
         await self.accept()
 
@@ -210,46 +217,51 @@ class OnlineStatusConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
             self.ONLINE_GROUP,
             {
-                'type': 'user_online',
-                'user_id': user.id,
-                'username': user.username,
-            }
+                "type": "user_online",
+                "user_id": user.id,
+                "username": user.username,
+            },
         )
 
     async def disconnect(self, close_code):
         """断开连接处理"""
-        if hasattr(self, 'user'):
+        if hasattr(self, "user"):
             # 广播离线消息
             await self.channel_layer.group_send(
                 self.ONLINE_GROUP,
                 {
-                    'type': 'user_offline',
-                    'user_id': self.user.id,
-                    'username': self.user.username,
-                }
+                    "type": "user_offline",
+                    "user_id": self.user.id,
+                    "username": self.user.username,
+                },
             )
 
             # 离开组
-            await self.channel_layer.group_discard(
-                self.ONLINE_GROUP,
-                self.channel_name
-            )
+            await self.channel_layer.group_discard(self.ONLINE_GROUP, self.channel_name)
 
     async def user_online(self, event):
         """广播上线消息"""
-        await self.send(text_data=json.dumps({
-            'type': 'user_online',
-            'user_id': event['user_id'],
-            'username': event['username'],
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "user_online",
+                    "user_id": event["user_id"],
+                    "username": event["username"],
+                }
+            )
+        )
 
     async def user_offline(self, event):
         """广播离线消息"""
-        await self.send(text_data=json.dumps({
-            'type': 'user_offline',
-            'user_id': event['user_id'],
-            'username': event['username'],
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "user_offline",
+                    "user_id": event["user_id"],
+                    "username": event["username"],
+                }
+            )
+        )
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -261,10 +273,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         """连接处理"""
-        self.room_name = self.scope['url_route']['kwargs'].get('room_name', 'public')
-        self.room_group = f'chat_{self.room_name}'
+        self.room_name = self.scope["url_route"]["kwargs"].get("room_name", "public")
+        self.room_group = f"chat_{self.room_name}"
 
-        user = self.scope.get('user')
+        user = self.scope.get("user")
         if user is None or not user.is_authenticated:
             await self.close()
             return
@@ -272,26 +284,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.user = user
 
         # 加入聊天室
-        await self.channel_layer.group_add(
-            self.room_group,
-            self.channel_name
-        )
+        await self.channel_layer.group_add(self.room_group, self.channel_name)
 
         await self.accept()
 
     async def disconnect(self, close_code):
         """断开连接"""
-        if hasattr(self, 'room_group'):
-            await self.channel_layer.group_discard(
-                self.room_group,
-                self.channel_name
-            )
+        if hasattr(self, "room_group"):
+            await self.channel_layer.group_discard(self.room_group, self.channel_name)
 
     async def receive(self, text_data):
         """接收消息"""
         try:
             data = json.loads(text_data)
-            message = data.get('message', '')
+            message = data.get("message", "")
 
             if not message.strip():
                 return
@@ -300,12 +306,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 self.room_group,
                 {
-                    'type': 'chat_message',
-                    'user_id': self.user.id,
-                    'username': self.user.username,
-                    'message': message,
-                    'timestamp': str(timezone.now()),
-                }
+                    "type": "chat_message",
+                    "user_id": self.user.id,
+                    "username": self.user.username,
+                    "message": message,
+                    "timestamp": str(timezone.now()),
+                },
             )
 
         except json.JSONDecodeError:
@@ -315,10 +321,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         """发送聊天消息"""
-        await self.send(text_data=json.dumps({
-            'type': 'chat_message',
-            'user_id': event['user_id'],
-            'username': event['username'],
-            'message': event['message'],
-            'timestamp': event['timestamp'],
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "chat_message",
+                    "user_id": event["user_id"],
+                    "username": event["username"],
+                    "message": event["message"],
+                    "timestamp": event["timestamp"],
+                }
+            )
+        )

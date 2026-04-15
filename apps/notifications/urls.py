@@ -7,11 +7,11 @@ from rest_framework.routers import DefaultRouter
 
 from .api_views import NotificationViewSet
 
-app_name = 'notifications'
+app_name = "notifications"
 
 router = DefaultRouter()
-router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

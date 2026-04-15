@@ -15,7 +15,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 from django.conf import settings
 from django.db.models import Q
@@ -29,40 +29,34 @@ class SearchBackend(ABC):
     @abstractmethod
     def index_document(self, index: str, doc_id: str, document: Dict) -> bool:
         """索引文档"""
-        pass
 
     @abstractmethod
     def delete_document(self, index: str, doc_id: str) -> bool:
         """删除文档"""
-        pass
 
     @abstractmethod
     def search(self, index: str, query: str, **kwargs) -> Dict:
         """搜索"""
-        pass
 
     @abstractmethod
     def create_index(self, index: str, settings: Optional[Dict] = None) -> bool:
         """创建索引"""
-        pass
 
     @abstractmethod
     def delete_index(self, index: str) -> bool:
         """删除索引"""
-        pass
 
     @abstractmethod
     def health_check(self) -> bool:
         """健康检查"""
-        pass
 
 
 class MeilisearchBackend(SearchBackend):
     """Meilisearch 后端"""
 
     def __init__(self):
-        self.host = getattr(settings, 'MEILISEARCH_HOST', 'http://localhost:7700')
-        self.api_key = getattr(settings, 'MEILISEARCH_API_KEY', '')
+        self.host = getattr(settings, "MEILISEARCH_HOST", "http://localhost:7700")
+        self.api_key = getattr(settings, "MEILISEARCH_API_KEY", "")
         self._client = None
 
     @property
@@ -70,6 +64,7 @@ class MeilisearchBackend(SearchBackend):
         if self._client is None:
             try:
                 import meilisearch
+
                 self._client = meilisearch.Client(self.host, self.api_key)
             except ImportError:
                 logger.warning("meilisearch-python 未安装，请运行: pip install meilisearch")
@@ -82,7 +77,7 @@ class MeilisearchBackend(SearchBackend):
                 return False
 
             index = self.client.index(index)
-            document['id'] = doc_id  # Meilisearch 使用 id 字段
+            document["id"] = doc_id  # Meilisearch 使用 id 字段
             index.add_documents([document])
             return True
         except Exception as e:
@@ -104,32 +99,32 @@ class MeilisearchBackend(SearchBackend):
     def search(self, index: str, query: str, **kwargs) -> Dict:
         try:
             if self.client is None:
-                return {'hits': [], 'total': 0}
+                return {"hits": [], "total": 0}
 
             search_index = self.client.index(index)
 
             # 构建搜索参数
             search_params = {}
-            if kwargs.get('filters'):
-                search_params['filter'] = kwargs['filters']
-            if kwargs.get('limit'):
-                search_params['limit'] = kwargs['limit']
-            if kwargs.get('offset'):
-                search_params['offset'] = kwargs['offset']
-            if kwargs.get('sort'):
-                search_params['sort'] = kwargs['sort']
+            if kwargs.get("filters"):
+                search_params["filter"] = kwargs["filters"]
+            if kwargs.get("limit"):
+                search_params["limit"] = kwargs["limit"]
+            if kwargs.get("offset"):
+                search_params["offset"] = kwargs["offset"]
+            if kwargs.get("sort"):
+                search_params["sort"] = kwargs["sort"]
 
             # 执行搜索
             results = search_index.search(query, search_params)
 
             return {
-                'hits': results.get('hits', []),
-                'total': results.get('estimatedTotalHits', 0),
-                'processing_time_ms': results.get('processingTimeMs', 0),
+                "hits": results.get("hits", []),
+                "total": results.get("estimatedTotalHits", 0),
+                "processing_time_ms": results.get("processingTimeMs", 0),
             }
         except Exception as e:
             logger.error(f"Meilisearch 搜索失败: {e}")
-            return {'hits': [], 'total': 0, 'error': str(e)}
+            return {"hits": [], "total": 0, "error": str(e)}
 
     def create_index(self, index: str, settings: Optional[Dict] = None) -> bool:
         try:
@@ -169,7 +164,7 @@ class ElasticsearchBackend(SearchBackend):
     """Elasticsearch 后端"""
 
     def __init__(self):
-        self.hosts = getattr(settings, 'ELASTICSEARCH_HOST', ['http://localhost:9200'])
+        self.hosts = getattr(settings, "ELASTICSEARCH_HOST", ["http://localhost:9200"])
         self._client = None
 
     @property
@@ -177,6 +172,7 @@ class ElasticsearchBackend(SearchBackend):
         if self._client is None:
             try:
                 from elasticsearch import Elasticsearch
+
                 self._client = Elasticsearch(self.hosts)
             except ImportError:
                 logger.warning("elasticsearch 未安装，请运行: pip install elasticsearch")
@@ -208,45 +204,37 @@ class ElasticsearchBackend(SearchBackend):
     def search(self, index: str, query: str, **kwargs) -> Dict:
         try:
             if self.client is None:
-                return {'hits': [], 'total': 0}
+                return {"hits": [], "total": 0}
 
             # 构建查询
             search_body = {
-                'query': {
-                    'multi_match': {
-                        'query': query,
-                        'fields': kwargs.get('fields', ['*']),
-                        'fuzziness': 'AUTO',
+                "query": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": kwargs.get("fields", ["*"]),
+                        "fuzziness": "AUTO",
                     }
                 },
-                'from': kwargs.get('offset', 0),
-                'size': kwargs.get('limit', 20),
+                "from": kwargs.get("offset", 0),
+                "size": kwargs.get("limit", 20),
             }
 
             # 添加过滤器
-            if kwargs.get('filters'):
-                search_body['query'] = {
-                    'bool': {
-                        'must': [search_body['query']],
-                        'filter': kwargs['filters']
-                    }
-                }
+            if kwargs.get("filters"):
+                search_body["query"] = {"bool": {"must": [search_body["query"]], "filter": kwargs["filters"]}}
 
             # 执行搜索
             response = self.client.search(index=index, body=search_body)
 
-            hits = [
-                {'id': hit['_id'], **hit['_source'], '_score': hit['_score']}
-                for hit in response['hits']['hits']
-            ]
+            hits = [{"id": hit["_id"], **hit["_source"], "_score": hit["_score"]} for hit in response["hits"]["hits"]]
 
             return {
-                'hits': hits,
-                'total': response['hits']['total']['value'],
+                "hits": hits,
+                "total": response["hits"]["total"]["value"],
             }
         except Exception as e:
             logger.error(f"Elasticsearch 搜索失败: {e}")
-            return {'hits': [], 'total': 0, 'error': str(e)}
+            return {"hits": [], "total": 0, "error": str(e)}
 
     def create_index(self, index: str, settings: Optional[Dict] = None) -> bool:
         try:
@@ -296,48 +284,50 @@ class DatabaseSearchBackend(SearchBackend):
             from django.apps import apps
 
             model_mapping = {
-                'posts': 'blog.Post',
-                'topics': 'forum.Topic',
+                "posts": "blog.Post",
+                "topics": "forum.Topic",
             }
 
             model_path = model_mapping.get(index)
             if not model_path:
-                return {'hits': [], 'total': 0}
+                return {"hits": [], "total": 0}
 
             model = apps.get_model(model_path)
 
             # 构建查询
-            search_fields = kwargs.get('fields', ['title', 'content'])
+            search_fields = kwargs.get("fields", ["title", "content"])
             q_objects = Q()
             for field in search_fields:
-                q_objects |= Q(**{f'{field}__icontains': query})
+                q_objects |= Q(**{f"{field}__icontains": query})
 
             # 执行查询
             queryset = model.objects.filter(q_objects)
 
             # 添加过滤条件
-            if index == 'posts':
-                queryset = queryset.filter(status='published')
+            if index == "posts":
+                queryset = queryset.filter(status="published")
 
             total = queryset.count()
-            limit = kwargs.get('limit', 20)
-            offset = kwargs.get('offset', 0)
+            limit = kwargs.get("limit", 20)
+            offset = kwargs.get("offset", 0)
 
-            results = queryset[offset:offset + limit]
+            results = queryset[offset : offset + limit]
 
             hits = []
             for obj in results:
-                hits.append({
-                    'id': str(obj.id),
-                    'title': getattr(obj, 'title', ''),
-                    'content': getattr(obj, 'content', '')[:200] + '...',
-                    'created_at': str(getattr(obj, 'created_at', '')),
-                })
+                hits.append(
+                    {
+                        "id": str(obj.id),
+                        "title": getattr(obj, "title", ""),
+                        "content": getattr(obj, "content", "")[:200] + "...",
+                        "created_at": str(getattr(obj, "created_at", "")),
+                    }
+                )
 
-            return {'hits': hits, 'total': total}
+            return {"hits": hits, "total": total}
         except Exception as e:
             logger.error(f"数据库搜索失败: {e}")
-            return {'hits': [], 'total': 0, 'error': str(e)}
+            return {"hits": [], "total": 0, "error": str(e)}
 
     def create_index(self, index: str, settings: Optional[Dict] = None) -> bool:
         return True
@@ -369,12 +359,12 @@ class SearchService:
     def get_backend(cls) -> SearchBackend:
         """获取搜索后端"""
         if cls._backend is None:
-            backend_name = getattr(settings, 'SEARCH_BACKEND', 'database')
+            backend_name = getattr(settings, "SEARCH_BACKEND", "database")
 
             backends = {
-                'meilisearch': MeilisearchBackend,
-                'elasticsearch': ElasticsearchBackend,
-                'database': DatabaseSearchBackend,
+                "meilisearch": MeilisearchBackend,
+                "elasticsearch": ElasticsearchBackend,
+                "database": DatabaseSearchBackend,
             }
 
             backend_class = backends.get(backend_name, DatabaseSearchBackend)
@@ -386,46 +376,46 @@ class SearchService:
     def index_post(cls, post) -> bool:
         """索引文章"""
         document = {
-            'title': post.title,
-            'content': post.content,
-            'summary': post.summary,
-            'slug': post.slug,
-            'status': post.status,
-            'views_count': post.views_count,
-            'author': post.author.username if post.author else '',
-            'category': post.category.name if post.category else '',
-            'tags': [tag.name for tag in post.tags.all()],
-            'published_at': str(post.published_at) if post.published_at else '',
-            'created_at': str(post.created_at),
+            "title": post.title,
+            "content": post.content,
+            "summary": post.summary,
+            "slug": post.slug,
+            "status": post.status,
+            "views_count": post.views_count,
+            "author": post.author.username if post.author else "",
+            "category": post.category.name if post.category else "",
+            "tags": [tag.name for tag in post.tags.all()],
+            "published_at": str(post.published_at) if post.published_at else "",
+            "created_at": str(post.created_at),
         }
 
-        return cls.get_backend().index_document('posts', str(post.id), document)
+        return cls.get_backend().index_document("posts", str(post.id), document)
 
     @classmethod
     def index_topic(cls, topic) -> bool:
         """索引主题"""
         document = {
-            'title': topic.title,
-            'content': topic.content,
-            'author': topic.author.username if topic.author else '',
-            'board': topic.board.name if topic.board else '',
-            'views_count': topic.views_count,
-            'reply_count': topic.reply_count,
-            'is_pinned': topic.is_pinned,
-            'created_at': str(topic.created_at),
+            "title": topic.title,
+            "content": topic.content,
+            "author": topic.author.username if topic.author else "",
+            "board": topic.board.name if topic.board else "",
+            "views_count": topic.views_count,
+            "reply_count": topic.reply_count,
+            "is_pinned": topic.is_pinned,
+            "created_at": str(topic.created_at),
         }
 
-        return cls.get_backend().index_document('topics', str(topic.id), document)
+        return cls.get_backend().index_document("topics", str(topic.id), document)
 
     @classmethod
     def delete_post(cls, post_id: int) -> bool:
         """删除文章索引"""
-        return cls.get_backend().delete_document('posts', str(post_id))
+        return cls.get_backend().delete_document("posts", str(post_id))
 
     @classmethod
     def delete_topic(cls, topic_id: int) -> bool:
         """删除主题索引"""
-        return cls.get_backend().delete_document('topics', str(topic_id))
+        return cls.get_backend().delete_document("topics", str(topic_id))
 
     @classmethod
     def search_posts(cls, query: str, **kwargs) -> Dict:
@@ -443,12 +433,12 @@ class SearchService:
         Returns:
             Dict: 搜索结果
         """
-        return cls.get_backend().search('posts', query, **kwargs)
+        return cls.get_backend().search("posts", query, **kwargs)
 
     @classmethod
     def search_topics(cls, query: str, **kwargs) -> Dict:
         """搜索主题"""
-        return cls.get_backend().search('topics', query, **kwargs)
+        return cls.get_backend().search("topics", query, **kwargs)
 
     @classmethod
     def global_search(cls, query: str, **kwargs) -> Dict:
@@ -461,15 +451,15 @@ class SearchService:
         Returns:
             Dict: 搜索结果
         """
-        limit = kwargs.get('limit', 10)
+        limit = kwargs.get("limit", 10)
 
         posts = cls.search_posts(query, limit=limit)
         topics = cls.search_topics(query, limit=limit)
 
         return {
-            'posts': posts,
-            'topics': topics,
-            'total': posts.get('total', 0) + topics.get('total', 0),
+            "posts": posts,
+            "topics": topics,
+            "total": posts.get("total", 0) + topics.get("total", 0),
         }
 
     @classmethod
@@ -480,25 +470,27 @@ class SearchService:
         Returns:
             Dict: 重建结果
         """
-        result = {'posts': 0, 'topics': 0, 'errors': []}
+        result = {"posts": 0, "topics": 0, "errors": []}
 
         # 重建文章索引
         try:
             from apps.blog.models import Post
-            for post in Post.objects.filter(status='published'):
+
+            for post in Post.objects.filter(status="published"):
                 if cls.index_post(post):
-                    result['posts'] += 1
+                    result["posts"] += 1
         except Exception as e:
-            result['errors'].append(f'posts: {str(e)}')
+            result["errors"].append(f"posts: {str(e)}")
 
         # 重建主题索引
         try:
             from apps.forum.models import Topic
-            for topic in Topic.objects.filter(review_status='approved'):
+
+            for topic in Topic.objects.filter(review_status="approved"):
                 if cls.index_topic(topic):
-                    result['topics'] += 1
+                    result["topics"] += 1
         except Exception as e:
-            result['errors'].append(f'topics: {str(e)}')
+            result["errors"].append(f"topics: {str(e)}")
 
         return result
 
@@ -518,24 +510,24 @@ def setup_search_signals():
     from django.db.models.signals import post_save, post_delete
     from django.dispatch import receiver
 
-    @receiver(post_save, sender='blog.Post', dispatch_uid='search_index_post_on_save')
+    @receiver(post_save, sender="blog.Post", dispatch_uid="search_index_post_on_save")
     def index_post_on_save(sender, instance, **kwargs):
-        if instance.status == 'published':
+        if instance.status == "published":
             SearchService.index_post(instance)
         else:
             SearchService.delete_post(instance.id)
 
-    @receiver(post_delete, sender='blog.Post', dispatch_uid='search_delete_post_on_delete')
+    @receiver(post_delete, sender="blog.Post", dispatch_uid="search_delete_post_on_delete")
     def delete_post_on_delete(sender, instance, **kwargs):
         SearchService.delete_post(instance.id)
 
-    @receiver(post_save, sender='forum.Topic', dispatch_uid='search_index_topic_on_save')
+    @receiver(post_save, sender="forum.Topic", dispatch_uid="search_index_topic_on_save")
     def index_topic_on_save(sender, instance, **kwargs):
-        if instance.review_status == 'approved':
+        if instance.review_status == "approved":
             SearchService.index_topic(instance)
         else:
             SearchService.delete_topic(instance.id)
 
-    @receiver(post_delete, sender='forum.Topic', dispatch_uid='search_delete_topic_on_delete')
+    @receiver(post_delete, sender="forum.Topic", dispatch_uid="search_delete_topic_on_delete")
     def delete_topic_on_delete(sender, instance, **kwargs):
         SearchService.delete_topic(instance.id)

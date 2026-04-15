@@ -6,22 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('moderation', '0005_userreputation_reputationlog'),
+        ("moderation", "0005_userreputation_reputationlog"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='moderationadmin',
-            options={'ordering': ['target_type', '-is_primary'], 'verbose_name': '审核管理员分配', 'verbose_name_plural': '审核管理员分配'},
+            name="moderationadmin",
+            options={
+                "ordering": ["target_type", "-is_primary"],
+                "verbose_name": "审核管理员分配",
+                "verbose_name_plural": "审核管理员分配",
+            },
         ),
         migrations.AddField(
-            model_name='moderationadmin',
-            name='is_primary',
-            field=models.BooleanField(default=True, verbose_name='是否主要负责人'),
+            model_name="moderationadmin",
+            name="is_primary",
+            field=models.BooleanField(default=True, verbose_name="是否主要负责人"),
         ),
         migrations.AlterField(
-            model_name='moderationadmin',
-            name='target_type',
-            field=models.CharField(choices=[('comment', '评论'), ('topic', '主题'), ('reply', '回复')], max_length=20, verbose_name='内容类型'),
+            model_name="moderationadmin",
+            name="target_type",
+            field=models.CharField(
+                choices=[("comment", "评论"), ("topic", "主题"), ("reply", "回复")],
+                max_length=20,
+                verbose_name="内容类型",
+            ),
         ),
     ]

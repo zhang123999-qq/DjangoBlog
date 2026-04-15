@@ -25,10 +25,10 @@ class BaseTool:
     def get_context(self, request, form=None, result=None):
         """获取上下文数据"""
         return {
-            'tool': self,
-            'form': form,
-            'result': result,
-            'category_info': TOOL_CATEGORIES.get(self.category, TOOL_CATEGORIES[ToolCategory.OTHER]),
+            "tool": self,
+            "form": form,
+            "result": result,
+            "category_info": TOOL_CATEGORIES.get(self.category, TOOL_CATEGORIES[ToolCategory.OTHER]),
         }
 
     def handle(self, request, form):

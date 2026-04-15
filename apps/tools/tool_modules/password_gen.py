@@ -7,15 +7,17 @@ from ..base_tool import BaseTool
 
 class PasswordGenForm(forms.Form):
     """密码生成表单"""
-    length = forms.IntegerField(label='密码长度', min_value=6, max_value=100, initial=12)
-    include_uppercase = forms.BooleanField(label='包含大写字母', initial=True, required=False)
-    include_lowercase = forms.BooleanField(label='包含小写字母', initial=True, required=False)
-    include_digits = forms.BooleanField(label='包含数字', initial=True, required=False)
-    include_symbols = forms.BooleanField(label='包含特殊字符', initial=True, required=False)
+
+    length = forms.IntegerField(label="密码长度", min_value=6, max_value=100, initial=12)
+    include_uppercase = forms.BooleanField(label="包含大写字母", initial=True, required=False)
+    include_lowercase = forms.BooleanField(label="包含小写字母", initial=True, required=False)
+    include_digits = forms.BooleanField(label="包含数字", initial=True, required=False)
+    include_symbols = forms.BooleanField(label="包含特殊字符", initial=True, required=False)
 
 
 class PasswordGenTool(BaseTool):
     """密码生成工具（使用 secrets 模块生成密码学安全的随机密码）"""
+
     name = "密码生成"
     slug = "password-gen"
     description = "生成密码学安全的随机密码（使用 secrets 模块）"
@@ -25,14 +27,14 @@ class PasswordGenTool(BaseTool):
 
     def handle(self, request, form):
         """处理密码生成"""
-        length = form.cleaned_data['length']
-        include_uppercase = form.cleaned_data['include_uppercase']
-        include_lowercase = form.cleaned_data['include_lowercase']
-        include_digits = form.cleaned_data['include_digits']
-        include_symbols = form.cleaned_data['include_symbols']
+        length = form.cleaned_data["length"]
+        include_uppercase = form.cleaned_data["include_uppercase"]
+        include_lowercase = form.cleaned_data["include_lowercase"]
+        include_digits = form.cleaned_data["include_digits"]
+        include_symbols = form.cleaned_data["include_symbols"]
 
         # 构建字符集
-        char_set = ''
+        char_set = ""
         if include_uppercase:
             char_set += string.ascii_uppercase
         if include_lowercase:
@@ -47,6 +49,6 @@ class PasswordGenTool(BaseTool):
             return {"error": "至少需要选择一种字符类型"}
 
         # 使用 secrets 生成密码学安全的密码
-        password = ''.join(secrets.choice(char_set) for _ in range(length))
+        password = "".join(secrets.choice(char_set) for _ in range(length))
 
         return {"password": password, "secure": True}

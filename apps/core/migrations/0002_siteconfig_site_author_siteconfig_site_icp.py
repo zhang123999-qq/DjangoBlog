@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='siteconfig',
-            name='site_author',
-            field=models.CharField(blank=True, default='', max_length=128, verbose_name='网站作者'),
+            model_name="siteconfig",
+            name="site_author",
+            field=models.CharField(blank=True, default="", max_length=128, verbose_name="网站作者"),
         ),
         migrations.AddField(
-            model_name='siteconfig',
-            name='site_icp',
-            field=models.CharField(blank=True, default='', max_length=128, verbose_name='ICP备案号'),
+            model_name="siteconfig",
+            name="site_icp",
+            field=models.CharField(blank=True, default="", max_length=128, verbose_name="ICP备案号"),
         ),
     ]

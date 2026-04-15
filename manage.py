@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+
 import os
 import sys
 
@@ -7,27 +8,27 @@ import sys
 def get_settings_module() -> str:
     """根据环境自动选择配置模块。"""
     # 如果已设置，使用环境变量
-    if os.environ.get('DJANGO_SETTINGS_MODULE'):
-        return os.environ['DJANGO_SETTINGS_MODULE']
+    if os.environ.get("DJANGO_SETTINGS_MODULE"):
+        return os.environ["DJANGO_SETTINGS_MODULE"]
 
     # 针对部署检查：默认走生产配置，避免误用开发配置产生 security.W008/W018 噪声告警
-    if len(sys.argv) > 1 and sys.argv[1] == 'check' and '--deploy' in sys.argv[2:]:
-        return 'config.settings.production'
+    if len(sys.argv) > 1 and sys.argv[1] == "check" and "--deploy" in sys.argv[2:]:
+        return "config.settings.production"
 
     # 根据 DEBUG 自动选择
-    debug = os.environ.get('DEBUG', 'True').lower() == 'true'
+    debug = os.environ.get("DEBUG", "True").lower() == "true"
     if debug:
-        return 'config.settings.development'
-    return 'config.settings.production'
+        return "config.settings.development"
+    return "config.settings.production"
 
 
 def main() -> None:
     """Run administrative tasks."""
     settings_module = get_settings_module()
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
 
     # 打印当前使用的配置
-    if len(sys.argv) > 1 and sys.argv[1] in ['runserver', 'shell', 'dbshell']:
+    if len(sys.argv) > 1 and sys.argv[1] in ["runserver", "shell", "dbshell"]:
         print(f"[INFO] 使用配置: {settings_module}")
 
     try:
@@ -42,5 +43,5 @@ def main() -> None:
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

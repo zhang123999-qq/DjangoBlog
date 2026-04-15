@@ -1,6 +1,7 @@
 """
 通用工具函数
 """
+
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from functools import wraps
@@ -12,13 +13,13 @@ def generate_slug(text):
     """生成 slug；非拉丁字符回退到 SHA-256 截断"""
     slug = slugify(text)
     if not slug:
-        digest = hashlib.sha256(text.encode('utf-8')).hexdigest()
+        digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
         # 保持短长度并增加碰撞安全性
         slug = digest[:12]
     return slug
 
 
-def toggle_like_view(model_class, like_model_class, related_name='likes', count_field='like_count'):
+def toggle_like_view(model_class, like_model_class, related_name="likes", count_field="like_count"):
     """
     通用的点赞/取消点赞视图工厂函数
 
@@ -31,27 +32,24 @@ def toggle_like_view(model_class, like_model_class, related_name='likes', count_
     Returns:
         function: 视图函数
     """
+
     @login_required
     def view(request, obj_id):
         # 获取对象
         obj = model_class.objects.filter(pk=obj_id).first()
         if not obj:
-            return JsonResponse({
-                'success': False,
-                'message': '对象不存在'
-            })
+            return JsonResponse({"success": False, "message": "对象不存在"})
 
         # 检查审核状态
-        if hasattr(obj, 'review_status') and obj.review_status != 'approved':
-            return JsonResponse({
-                'success': False,
-                'message': '只能对已审核通过的内容点赞'
-            })
+        if hasattr(obj, "review_status") and obj.review_status != "approved":
+            return JsonResponse({"success": False, "message": "只能对已审核通过的内容点赞"})
 
         # 获取或创建点赞记录
         like, created = like_model_class.objects.get_or_create(
             user=request.user,
-            **{related_name.replace('likes', 'comment') if 'comment' in related_name else related_name.rstrip('s'): obj}
+            **{
+                related_name.replace("likes", "comment") if "comment" in related_name else related_name.rstrip("s"): obj
+            },
         )
 
         if not created:
@@ -68,21 +66,20 @@ def toggle_like_view(model_class, like_model_class, related_name='likes', count_
             setattr(obj, count_field, likes_manager.count())
             obj.save(update_fields=[count_field])
 
-        return JsonResponse({
-            'success': True,
-            'liked': liked,
-            'like_count': getattr(obj, count_field, 0),
-            'message': '操作成功'
-        })
+        return JsonResponse(
+            {"success": True, "liked": liked, "like_count": getattr(obj, count_field, 0), "message": "操作成功"}
+        )
 
     return view
 
 
 def require_ajax(view_func):
     """要求AJAX请求的装饰器"""
+
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': '无效请求'}, status=400)
+        if not request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "message": "无效请求"}, status=400)
         return view_func(request, *args, **kwargs)
+
     return wrapper

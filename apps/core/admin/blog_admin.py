@@ -26,16 +26,20 @@ class PostAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if "content" in form.base_fields:
-            form.base_fields["content"].widget.attrs.update({
-                "rows": 20,
-                "style": "width: 100%; font-family: monospace;",
-                "data-editor": "tinymce",
-            })
+            form.base_fields["content"].widget.attrs.update(
+                {
+                    "rows": 20,
+                    "style": "width: 100%; font-family: monospace;",
+                    "data-editor": "tinymce",
+                }
+            )
         if "summary" in form.base_fields:
-            form.base_fields["summary"].widget.attrs.update({
-                "rows": 3,
-                "style": "width: 100%;",
-            })
+            form.base_fields["summary"].widget.attrs.update(
+                {
+                    "rows": 3,
+                    "style": "width: 100%;",
+                }
+            )
         return form
 
     # 添加 TinyMCE 编辑器媒体文件

@@ -7,36 +7,36 @@ import os
 # ============================================
 # 服务器绑定
 # ============================================
-bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:8000')
+bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
 backlog = 2048
 
 # ============================================
 # 工作进程配置
 # ============================================
 # 推荐公式: CPU核心数 * 2 + 1
-workers = int(os.environ.get('GUNICORN_WORKERS', multiprocessing.cpu_count() * 2 + 1))
+workers = int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2 + 1))
 
 # 工作模式: sync, gevent, eventlet, tornado
-worker_class = os.environ.get('GUNICORN_WORKER_CLASS', 'gevent')
+worker_class = os.environ.get("GUNICORN_WORKER_CLASS", "gevent")
 
 # 每个 worker 的最大并发连接数 (gevent 模式)
-worker_connections = int(os.environ.get('GUNICORN_WORKER_CONNECTIONS', 1000))
+worker_connections = int(os.environ.get("GUNICORN_WORKER_CONNECTIONS", 1000))
 
 # 最大并发请求数
-max_requests = int(os.environ.get('GUNICORN_MAX_REQUESTS', 1000))
-max_requests_jitter = int(os.environ.get('GUNICORN_MAX_REQUESTS_JITTER', 50))
+max_requests = int(os.environ.get("GUNICORN_MAX_REQUESTS", 1000))
+max_requests_jitter = int(os.environ.get("GUNICORN_MAX_REQUESTS_JITTER", 50))
 
 # ============================================
 # 超时设置
 # ============================================
-timeout = int(os.environ.get('GUNICORN_TIMEOUT', 120))
-graceful_timeout = int(os.environ.get('GUNICORN_GRACEFUL_TIMEOUT', 30))
-keepalive = int(os.environ.get('GUNICORN_KEEPALIVE', 5))
+timeout = int(os.environ.get("GUNICORN_TIMEOUT", 120))
+graceful_timeout = int(os.environ.get("GUNICORN_GRACEFUL_TIMEOUT", 30))
+keepalive = int(os.environ.get("GUNICORN_KEEPALIVE", 5))
 
 # ============================================
 # 进程配置
 # ============================================
-proc_name = os.environ.get('GUNICORN_PROC_NAME', 'djangoblog')
+proc_name = os.environ.get("GUNICORN_PROC_NAME", "djangoblog")
 preload_app = True
 daemon = False
 pidfile = None
@@ -48,9 +48,9 @@ tmp_upload_dir = None
 # ============================================
 # 日志配置
 # ============================================
-accesslog = os.environ.get('GUNICORN_ACCESS_LOG', '-')
-errorlog = os.environ.get('GUNICORN_ERROR_LOG', '-')
-loglevel = os.environ.get('GUNICORN_LOG_LEVEL', 'info')
+accesslog = os.environ.get("GUNICORN_ACCESS_LOG", "-")
+errorlog = os.environ.get("GUNICORN_ERROR_LOG", "-")
+loglevel = os.environ.get("GUNICORN_LOG_LEVEL", "info")
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
 # ============================================
@@ -95,7 +95,6 @@ def on_exit(server):
 
 def pre_fork(server, worker):
     """fork 前调用"""
-    pass
 
 
 def post_fork(server, worker):
@@ -103,6 +102,7 @@ def post_fork(server, worker):
     # 设置进程名
     try:
         import setproctitle
+
         setproctitle.setproctitle(f"gunicorn: worker [{worker.pid}]")
     except ImportError:
         pass

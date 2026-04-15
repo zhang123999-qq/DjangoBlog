@@ -6,20 +6,20 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('forum', '0004_topic_reply_route_composite_indexes'),
+        ("forum", "0004_topic_reply_route_composite_indexes"),
     ]
 
     operations = [
         migrations.RemoveIndex(
-            model_name='reply',
-            name='forum_reply_route_idx',
+            model_name="reply",
+            name="forum_reply_route_idx",
         ),
         migrations.RemoveIndex(
-            model_name='topic',
-            name='forum_topic_route_list_idx',
+            model_name="topic",
+            name="forum_topic_route_list_idx",
         ),
         migrations.RemoveIndex(
-            model_name='topic',
-            name='forum_topic_api_qs_idx',
+            model_name="topic",
+            name="forum_topic_api_qs_idx",
         ),
     ]

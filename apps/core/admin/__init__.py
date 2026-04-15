@@ -5,7 +5,6 @@ DjangoBlog Admin 包
 拆分自原 admin.py（约 550 行），按模块拆分为独立文件。
 """
 
-from .admin_site import admin_site
 from .blog_admin import *  # noqa: F401, F403
 from .category_tag_admin import *  # noqa: F401, F403
 from .comment_admin import *  # noqa: F401, F403

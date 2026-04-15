@@ -4,6 +4,7 @@
 Django Blog 项目管理脚本
 用法: python manage_project.py [命令]
 """
+
 import sys
 import subprocess
 import shutil
@@ -20,7 +21,7 @@ def safe_print(text):
         print(text)
     except UnicodeEncodeError:
         # 移除 emoji
-        text = text.encode('ascii', 'ignore').decode('ascii')
+        text = text.encode("ascii", "ignore").decode("ascii")
         print(text)
 
 

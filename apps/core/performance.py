@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # 常量定义
 MS_CONVERSION_FACTOR = 1000  # 毫秒转换因子
-DEFAULT_BATCH_SIZE = 1000    # 默认批量创建大小
+DEFAULT_BATCH_SIZE = 1000  # 默认批量创建大小
 DEFAULT_EXAMPLE_COUNT = 10000  # 默认示例数量
 
 
@@ -40,12 +40,7 @@ class CacheStats:
     def get_stats(cls):
         total = cls._hits + cls._misses
         hit_rate = (cls._hits / total * 100) if total > 0 else 0
-        return {
-            'hits': cls._hits,
-            'misses': cls._misses,
-            'total': total,
-            'hit_rate': f'{hit_rate:.2f}%'
-        }
+        return {"hits": cls._hits, "misses": cls._misses, "total": total, "hit_rate": f"{hit_rate:.2f}%"}
 
     @classmethod
     def reset(cls):
@@ -62,6 +57,7 @@ def cache_with_stats(key, timeout=300):
         def get_expensive_data():
             return expensive_operation()
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -70,18 +66,20 @@ def cache_with_stats(key, timeout=300):
 
             if result is not None:
                 CacheStats.record_hit()
-                logger.debug(f'缓存命中: {key}')
+                logger.debug(f"缓存命中: {key}")
                 return result
 
             # 缓存未命中，执行函数
             CacheStats.record_miss()
-            logger.debug(f'缓存未命中: {key}')
+            logger.debug(f"缓存未命中: {key}")
 
             result = func(*args, **kwargs)
             cache.set(key, result, timeout)
 
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -94,6 +92,7 @@ def slow_query_log(threshold_ms=100):
         def get_posts():
             return Post.objects.all()
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -114,12 +113,13 @@ def slow_query_log(threshold_ms=100):
             # 慢查询警告
             if duration_ms > threshold_ms:
                 logger.warning(
-                    f'慢查询警告: {func.__name__} 耗时 {duration_ms:.2f}ms, '
-                    f'执行了 {query_count} 个数据库查询'
+                    f"慢查询警告: {func.__name__} 耗时 {duration_ms:.2f}ms, " f"执行了 {query_count} 个数据库查询"
                 )
 
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -147,7 +147,7 @@ class QueryCounter:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.queries_after = len(connection.queries)
         self.count = self.queries_after - self.queries_before
-        self.queries = connection.queries[self.queries_before:self.queries_after]
+        self.queries = connection.queries[self.queries_before : self.queries_after]
         return False
 
 
@@ -158,11 +158,11 @@ def get_db_connection_info():
     info = {}
     for alias in connections:
         conn = connections[alias]
-        if hasattr(conn, 'connection'):
+        if hasattr(conn, "connection"):
             info[alias] = {
-                'engine': conn.settings_dict.get('ENGINE', 'unknown'),
-                'max_age': conn.settings_dict.get('CONN_MAX_AGE', 0),
-                'is_usable': conn.is_usable() if hasattr(conn, 'is_usable') else 'N/A',
+                "engine": conn.settings_dict.get("ENGINE", "unknown"),
+                "max_age": conn.settings_dict.get("CONN_MAX_AGE", 0),
+                "is_usable": conn.is_usable() if hasattr(conn, "is_usable") else "N/A",
             }
 
     return info
@@ -203,7 +203,7 @@ def bulk_create_optimized(model, objects, batch_size=DEFAULT_BATCH_SIZE):
     created_count = 0
 
     for i in range(0, len(objects), batch_size):
-        batch = objects[i:i + batch_size]
+        batch = objects[i : i + batch_size]
         created = model.objects.bulk_create(batch)
         created_count += len(created)
 
@@ -215,23 +215,23 @@ def get_performance_report():
     from django.core.cache import caches
 
     report = {
-        'cache_stats': CacheStats.get_stats(),
-        'db_connections': get_db_connection_info(),
+        "cache_stats": CacheStats.get_stats(),
+        "db_connections": get_db_connection_info(),
     }
 
     # Redis 信息（如果使用）
     try:
-        redis_cache = caches.get('default')
-        if hasattr(redis_cache, 'client'):
+        redis_cache = caches.get("default")
+        if hasattr(redis_cache, "client"):
             client = redis_cache.client.get_client()
             info = client.info()
-            report['redis'] = {
-                'connected_clients': info.get('connected_clients', 'N/A'),
-                'used_memory_human': info.get('used_memory_human', 'N/A'),
-                'keyspace_hits': info.get('keyspace_hits', 0),
-                'keyspace_misses': info.get('keyspace_misses', 0),
+            report["redis"] = {
+                "connected_clients": info.get("connected_clients", "N/A"),
+                "used_memory_human": info.get("used_memory_human", "N/A"),
+                "keyspace_hits": info.get("keyspace_hits", 0),
+                "keyspace_misses": info.get("keyspace_misses", 0),
             }
     except Exception as e:
-        report['redis_error'] = str(e)
+        report["redis_error"] = str(e)
 
     return report

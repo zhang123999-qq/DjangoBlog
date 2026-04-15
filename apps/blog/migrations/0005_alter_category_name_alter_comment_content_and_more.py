@@ -16,9 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="category",
             name="name",
-            field=models.CharField(
-                max_length=100, unique=True, verbose_name="分类名称"
-            ),
+            field=models.CharField(max_length=100, unique=True, verbose_name="分类名称"),
         ),
         migrations.AlterField(
             model_name="comment",
@@ -33,9 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="comment",
             name="ip_address",
-            field=models.GenericIPAddressField(
-                blank=True, null=True, verbose_name="IP地址"
-            ),
+            field=models.GenericIPAddressField(blank=True, null=True, verbose_name="IP地址"),
         ),
         migrations.AlterField(
             model_name="comment",
@@ -184,9 +180,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="post",
             name="tags",
-            field=models.ManyToManyField(
-                blank=True, related_name="posts", to="blog.tag", verbose_name="标签"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="posts", to="blog.tag", verbose_name="标签"),
         ),
         migrations.AlterField(
             model_name="post",

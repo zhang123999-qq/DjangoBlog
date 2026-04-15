@@ -4,11 +4,9 @@
 提供统一的通知发送接口
 """
 
-import json
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
@@ -53,15 +51,12 @@ class NotificationService:
         """获取 Channel Layer"""
         if cls._channel_layer is None:
             from channels.layers import get_channel_layer
+
             cls._channel_layer = get_channel_layer()
         return cls._channel_layer
 
     @classmethod
-    async def async_send_to_user(
-        cls,
-        user_id: int,
-        data: Dict[str, Any]
-    ) -> bool:
+    async def async_send_to_user(cls, user_id: int, data: Dict[str, Any]) -> bool:
         """
         异步发送通知给单个用户
 
@@ -78,14 +73,14 @@ class NotificationService:
                 logger.warning("Channel Layer 未配置")
                 return False
 
-            group_name = f'user_notifications_{user_id}'
+            group_name = f"user_notifications_{user_id}"
 
             await channel_layer.group_send(
                 group_name,
                 {
-                    'type': 'send_notification',
-                    'data': data,
-                }
+                    "type": "send_notification",
+                    "data": data,
+                },
             )
 
             return True
@@ -101,8 +96,8 @@ class NotificationService:
         title: str,
         content: str,
         link: Optional[str] = None,
-        notification_type: str = 'info',
-        **extra
+        notification_type: str = "info",
+        **extra,
     ) -> bool:
         """
         发送通知给单个用户（同步版本）
@@ -120,13 +115,7 @@ class NotificationService:
         """
         from asgiref.sync import async_to_sync
 
-        data = {
-            'title': title,
-            'content': content,
-            'link': link,
-            'type': notification_type,
-            **extra
-        }
+        data = {"title": title, "content": content, "link": link, "type": notification_type, **extra}
 
         try:
             return async_to_sync(cls.async_send_to_user)(user_id, data)
@@ -141,8 +130,8 @@ class NotificationService:
         title: str,
         content: str,
         link: Optional[str] = None,
-        notification_type: str = 'info',
-        **extra
+        notification_type: str = "info",
+        **extra,
     ) -> Dict[int, bool]:
         """
         发送通知给多个用户
@@ -162,21 +151,13 @@ class NotificationService:
 
         for user_id in user_ids:
             results[user_id] = cls.send_to_user(
-                user_id=user_id,
-                title=title,
-                content=content,
-                link=link,
-                notification_type=notification_type,
-                **extra
+                user_id=user_id, title=title, content=content, link=link, notification_type=notification_type, **extra
             )
 
         return results
 
     @classmethod
-    async def async_broadcast(
-        cls,
-        data: Dict[str, Any]
-    ) -> bool:
+    async def async_broadcast(cls, data: Dict[str, Any]) -> bool:
         """
         异步广播消息
 
@@ -194,11 +175,11 @@ class NotificationService:
             # 发送到所有在线用户
             # 注意：这需要有一个公共的广播组
             await channel_layer.group_send(
-                'broadcast',
+                "broadcast",
                 {
-                    'type': 'send_system_message',
-                    'data': data,
-                }
+                    "type": "send_system_message",
+                    "data": data,
+                },
             )
 
             return True
@@ -208,13 +189,7 @@ class NotificationService:
             return False
 
     @classmethod
-    def broadcast(
-        cls,
-        title: str,
-        content: str,
-        link: Optional[str] = None,
-        **extra
-    ) -> bool:
+    def broadcast(cls, title: str, content: str, link: Optional[str] = None, **extra) -> bool:
         """
         广播系统消息（同步版本）
 
@@ -229,12 +204,7 @@ class NotificationService:
         """
         from asgiref.sync import async_to_sync
 
-        data = {
-            'title': title,
-            'content': content,
-            'link': link,
-            **extra
-        }
+        data = {"title": title, "content": content, "link": link, **extra}
 
         try:
             return async_to_sync(cls.async_broadcast)(data)
@@ -247,27 +217,27 @@ class NotificationType:
     """通知类型常量"""
 
     # 评论相关
-    NEW_COMMENT = 'new_comment'
-    COMMENT_REPLY = 'comment_reply'
-    COMMENT_LIKE = 'comment_like'
+    NEW_COMMENT = "new_comment"
+    COMMENT_REPLY = "comment_reply"
+    COMMENT_LIKE = "comment_like"
 
     # 文章相关
-    POST_PUBLISHED = 'post_published'
-    POST_LIKE = 'post_like'
+    POST_PUBLISHED = "post_published"
+    POST_LIKE = "post_like"
 
     # 论坛相关
-    NEW_TOPIC = 'new_topic'
-    TOPIC_REPLY = 'topic_reply'
-    TOPIC_LIKE = 'topic_like'
+    NEW_TOPIC = "new_topic"
+    TOPIC_REPLY = "topic_reply"
+    TOPIC_LIKE = "topic_like"
 
     # 系统通知
-    SYSTEM = 'system'
-    SYSTEM_MAINTENANCE = 'system_maintenance'
-    SYSTEM_UPDATE = 'system_update'
+    SYSTEM = "system"
+    SYSTEM_MAINTENANCE = "system_maintenance"
+    SYSTEM_UPDATE = "system_update"
 
     # 审核相关
-    MODERATION_APPROVED = 'moderation_approved'
-    MODERATION_REJECTED = 'moderation_rejected'
+    MODERATION_APPROVED = "moderation_approved"
+    MODERATION_REJECTED = "moderation_rejected"
 
 
 # 便捷函数
@@ -276,8 +246,8 @@ def notify_comment_reply(comment):
     if comment.user:
         NotificationService.send_to_user(
             user_id=comment.user.id,
-            title='收到新回复',
-            content=f'有人回复了你在「{comment.post.title}」中的评论',
+            title="收到新回复",
+            content=f"有人回复了你在「{comment.post.title}」中的评论",
             link=comment.post.get_absolute_url(),
             notification_type=NotificationType.COMMENT_REPLY,
             comment_id=comment.id,
@@ -289,7 +259,7 @@ def notify_post_comment(post, comment):
     if post.author != comment.user:
         NotificationService.send_to_user(
             user_id=post.author.id,
-            title='文章收到新评论',
+            title="文章收到新评论",
             content=f'{comment.user.username if comment.user else "游客"} 评论了「{post.title}」',
             link=post.get_absolute_url(),
             notification_type=NotificationType.NEW_COMMENT,
@@ -302,21 +272,23 @@ def notify_topic_reply(topic, reply):
     if topic.author != reply.author:
         NotificationService.send_to_user(
             user_id=topic.author.id,
-            title='主题收到新回复',
-            content=f'{reply.author.username} 回复了「{topic.title}」',
+            title="主题收到新回复",
+            content=f"{reply.author.username} 回复了「{topic.title}」",
             link=topic.get_absolute_url(),
             notification_type=NotificationType.TOPIC_REPLY,
             reply_id=reply.id,
         )
 
 
-def notify_moderation_result(content, approved: bool, reason: str = ''):
+def notify_moderation_result(content, approved: bool, reason: str = ""):
     """通知审核结果"""
-    user = getattr(content, 'author', None) or getattr(content, 'user', None)
+    user = getattr(content, "author", None) or getattr(content, "user", None)
     if user:
         NotificationService.send_to_user(
             user_id=user.id,
-            title='审核通过' if approved else '审核未通过',
-            content=f'你的内容已通过审核' if approved else f'你的内容未通过审核：{reason}',
-            notification_type=NotificationType.MODERATION_APPROVED if approved else NotificationType.MODERATION_REJECTED,
+            title="审核通过" if approved else "审核未通过",
+            content=f"你的内容已通过审核" if approved else f"你的内容未通过审核：{reason}",
+            notification_type=(
+                NotificationType.MODERATION_APPROVED if approved else NotificationType.MODERATION_REJECTED
+            ),
         )

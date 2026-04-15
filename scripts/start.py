@@ -17,38 +17,36 @@ import platform
 import socket
 from pathlib import Path
 
-
 # ============================================
 # 终端编码处理
 # ============================================
 
+
 def setup_terminal():
     """设置终端编码"""
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         try:
-            os.system('chcp 65001 > nul 2>&1')
-            if hasattr(sys.stdout, 'reconfigure'):
-                sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+            os.system("chcp 65001 > nul 2>&1")
+            if hasattr(sys.stdout, "reconfigure"):
+                sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         except Exception:
             pass
-    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    os.environ["PYTHONIOENCODING"] = "utf-8"
 
 
 # ============================================
 # 颜色输出
 # ============================================
 
-class Colors:
-    SUPPORTS_COLOR = (
-        (hasattr(sys.stdout, 'isatty') and sys.stdout.isatty())
-        or os.environ.get('FORCE_COLOR', '') == '1'
-    )
 
-    OKGREEN = '\033[92m' if SUPPORTS_COLOR else ''
-    OKCYAN = '\033[96m' if SUPPORTS_COLOR else ''
-    WARNING = '\033[93m' if SUPPORTS_COLOR else ''
-    BOLD = '\033[1m' if SUPPORTS_COLOR else ''
-    ENDC = '\033[0m' if SUPPORTS_COLOR else ''
+class Colors:
+    SUPPORTS_COLOR = (hasattr(sys.stdout, "isatty") and sys.stdout.isatty()) or os.environ.get("FORCE_COLOR", "") == "1"
+
+    OKGREEN = "\033[92m" if SUPPORTS_COLOR else ""
+    OKCYAN = "\033[96m" if SUPPORTS_COLOR else ""
+    WARNING = "\033[93m" if SUPPORTS_COLOR else ""
+    BOLD = "\033[1m" if SUPPORTS_COLOR else ""
+    ENDC = "\033[0m" if SUPPORTS_COLOR else ""
 
 
 def safe_print(text: str):
@@ -56,8 +54,8 @@ def safe_print(text: str):
     try:
         print(text)
     except UnicodeEncodeError:
-        encoding = sys.stdout.encoding or 'utf-8'
-        print(text.encode(encoding, errors='replace').decode(encoding))
+        encoding = sys.stdout.encoding or "utf-8"
+        print(text.encode(encoding, errors="replace").decode(encoding))
 
 
 def print_success(text: str):
@@ -76,6 +74,7 @@ def print_warning(text: str):
 # 辅助函数
 # ============================================
 
+
 def get_venv_python() -> str:
     """获取虚拟环境中的 Python 路径
 
@@ -85,25 +84,27 @@ def get_venv_python() -> str:
     3. 当前运行的 Python（回退）
     """
     project_root = Path(__file__).parent.resolve()
-    is_windows = platform.system() == 'Windows'
+    is_windows = platform.system() == "Windows"
 
     if is_windows:
-        venv_python = project_root / '.venv' / 'Scripts' / 'python.exe'
+        venv_python = project_root / ".venv" / "Scripts" / "python.exe"
     else:
-        venv_python = project_root / '.venv' / 'bin' / 'python'
+        venv_python = project_root / ".venv" / "bin" / "python"
 
     if venv_python.exists():
         return str(venv_python)
 
     # uv 管理的 Python：检查 .python-version 或 uv.lock
-    python_version_file = project_root / '.python-version'
+    python_version_file = project_root / ".python-version"
     if python_version_file.exists():
         try:
             version_str = python_version_file.read_text().strip()
             if is_windows:
-                uv_python = Path.home() / '.local' / 'share' / 'uv' / 'python' / f'python-{version_str}' / 'python.exe'
+                uv_python = Path.home() / ".local" / "share" / "uv" / "python" / f"python-{version_str}" / "python.exe"
             else:
-                uv_python = Path.home() / '.local' / 'share' / 'uv' / 'python' / f'python-{version_str}' / 'bin' / 'python'
+                uv_python = (
+                    Path.home() / ".local" / "share" / "uv" / "python" / f"python-{version_str}" / "bin" / "python"
+                )
             if uv_python.exists():
                 return str(uv_python)
         except Exception:
@@ -117,12 +118,12 @@ def get_local_ip() -> str:
     """获取本机 IP"""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
+        s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
         return ip
     except Exception:
-        return '127.0.0.1'
+        return "127.0.0.1"
 
 
 def check_server_running(port: int) -> bool:
@@ -130,7 +131,7 @@ def check_server_running(port: int) -> bool:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        result = s.connect_ex(('127.0.0.1', port))
+        result = s.connect_ex(("127.0.0.1", port))
         s.close()
         return result == 0
     except Exception:
@@ -150,23 +151,24 @@ def print_banner():
 # 主函数
 # ============================================
 
+
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='DjangoBlog 快速启动脚本',
+        description="DjangoBlog 快速启动脚本",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
+        epilog="""
 示例:
   python start.py           # 启动服务器
   python start.py --lan     # 局域网访问
   python start.py --port 8080  # 自定义端口
-        '''
+        """,
     )
 
-    parser.add_argument('--lan', action='store_true', help='允许局域网访问')
-    parser.add_argument('--port', type=int, default=8000, help='端口 (默认: 8000)')
-    parser.add_argument('--no-browser', action='store_true', help='不打开浏览器')
+    parser.add_argument("--lan", action="store_true", help="允许局域网访问")
+    parser.add_argument("--port", type=int, default=8000, help="端口 (默认: 8000)")
+    parser.add_argument("--no-browser", action="store_true", help="不打开浏览器")
 
     args = parser.parse_args()
 
@@ -176,9 +178,9 @@ def main():
     # 获取参数
     python = get_venv_python()
     project_root = Path(__file__).parent.resolve()
-    manage_py = project_root / 'manage.py'
+    manage_py = project_root / "manage.py"
 
-    host = '0.0.0.0' if args.lan else '127.0.0.1'
+    host = "0.0.0.0" if args.lan else "127.0.0.1"
     port = args.port
 
     # 打印横幅
@@ -205,10 +207,10 @@ def main():
     safe_print("")
 
     # 构建命令
-    cmd = [python, str(manage_py), 'runserver', f'{host}:{port}']
+    cmd = [python, str(manage_py), "runserver", f"{host}:{port}"]
 
     # 设置环境变量
-    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    os.environ["PYTHONIOENCODING"] = "utf-8"
 
     # 启动服务器
     try:
@@ -220,5 +222,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

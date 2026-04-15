@@ -64,11 +64,11 @@ def _execute_rate_limit_script(cache_key, limit, window):
     try:
         # 尝试获取底层 Redis 客户端
         client = None
-        if hasattr(cache, 'client'):
+        if hasattr(cache, "client"):
             client = cache.client
-        elif hasattr(cache, 'get_client'):
+        elif hasattr(cache, "get_client"):
             client = cache.get_client()
-        elif hasattr(cache, '_client'):
+        elif hasattr(cache, "_client"):
             client = cache._client
 
         if client is None:
@@ -81,9 +81,7 @@ def _execute_rate_limit_script(cache_key, limit, window):
         # 使用 EVALSHA 执行（已缓存 SHA1）
         if _rate_limit_script_sha is not None:
             try:
-                result = client.evalsha(
-                    _rate_limit_script_sha, 1, cache_key, str(limit), str(window)
-                )
+                result = client.evalsha(_rate_limit_script_sha, 1, cache_key, str(limit), str(window))
                 return int(result[0]), int(result[1]), int(result[0]) >= limit
             except Exception:
                 # SHA1 可能失效（Redis 重启/flush），重新 EVAL
@@ -91,9 +89,7 @@ def _execute_rate_limit_script(cache_key, limit, window):
 
         if _rate_limit_script_sha is None:
             # EVAL 执行并缓存 SHA1
-            result = client.eval(
-                RATE_LIMIT_LUA_SCRIPT, 1, cache_key, str(limit), str(window)
-            )
+            result = client.eval(RATE_LIMIT_LUA_SCRIPT, 1, cache_key, str(limit), str(window))
             try:
                 _rate_limit_script_sha = client.script_load(RATE_LIMIT_LUA_SCRIPT)
             except Exception:
@@ -111,7 +107,7 @@ def _fallback_rate_limit(cache_key, limit, window):
     """降级方案：使用 Django cache（非原子，但向后兼容）"""
     current = cache.get(cache_key, 0)
     if current >= limit:
-        ttl = cache.ttl(cache_key) if hasattr(cache, 'ttl') else window
+        ttl = cache.ttl(cache_key) if hasattr(cache, "ttl") else window
         return current, ttl, True
     if current == 0:
         cache.set(cache_key, 1, window)
@@ -126,9 +122,9 @@ def _fallback_rate_limit(cache_key, limit, window):
 def _parse_rate(rate):
     """解析速率字符串，返回 (count, window_seconds)"""
     try:
-        count, period = rate.split('/')
+        count, period = rate.split("/")
         count = int(count)
-        period_map = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}
+        period_map = {"s": 1, "m": 60, "h": 3600, "d": 86400}
         window = period_map.get(period.lower(), 60)
     except (ValueError, TypeError):
         logger.warning("无效的速率格式: %s，使用默认值 10/m", rate)
@@ -137,7 +133,7 @@ def _parse_rate(rate):
     return count, window
 
 
-def rate_limit(key_prefix, rate='10/m', method='POST'):
+def rate_limit(key_prefix, rate="10/m", method="POST"):
     """
     速率限制装饰器（使用原子 Lua 脚本）
 
@@ -164,32 +160,37 @@ def rate_limit(key_prefix, rate='10/m', method='POST'):
                 return view_func(request, *args, **kwargs)
 
             # 生成缓存 key
-            ip = request.META.get('REMOTE_ADDR', 'unknown')
-            user_id = request.user.id if hasattr(request, 'user') and request.user.is_authenticated else None
+            ip = request.META.get("REMOTE_ADDR", "unknown")
+            user_id = request.user.id if hasattr(request, "user") and request.user.is_authenticated else None
 
             if user_id:
-                cache_key = f'ratelimit:{key_prefix}:user:{user_id}'
+                cache_key = f"ratelimit:{key_prefix}:user:{user_id}"
             else:
-                cache_key = f'ratelimit:{key_prefix}:ip:{ip}'
+                cache_key = f"ratelimit:{key_prefix}:ip:{ip}"
 
             # 原子执行速率限制检查
             current, ttl, is_limited = _execute_rate_limit_script(cache_key, limit, window)
 
             if is_limited:
-                return JsonResponse({
-                    'error': '请求过于频繁，请稍后再试',
-                    'retry_after': ttl,
-                    'limit': limit,
-                    'window': f'{window}s',
-                }, status=429, headers={'Retry-After': str(ttl)})
+                return JsonResponse(
+                    {
+                        "error": "请求过于频繁，请稍后再试",
+                        "retry_after": ttl,
+                        "limit": limit,
+                        "window": f"{window}s",
+                    },
+                    status=429,
+                    headers={"Retry-After": str(ttl)},
+                )
 
             return view_func(request, *args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
-def rate_limit_by_user(key_prefix, rate='10/m', method='POST'):
+def rate_limit_by_user(key_prefix, rate="10/m", method="POST"):
     """
     基于用户的速率限制（仅对登录用户，使用原子 Lua 脚本）
 
@@ -207,25 +208,30 @@ def rate_limit_by_user(key_prefix, rate='10/m', method='POST'):
                 return view_func(request, *args, **kwargs)
 
             # 未登录用户不限制
-            if not (hasattr(request, 'user') and request.user.is_authenticated):
+            if not (hasattr(request, "user") and request.user.is_authenticated):
                 return view_func(request, *args, **kwargs)
 
-            cache_key = f'ratelimit:{key_prefix}:user:{request.user.id}'
+            cache_key = f"ratelimit:{key_prefix}:user:{request.user.id}"
 
             # 原子执行速率限制检查
             current, ttl, is_limited = _execute_rate_limit_script(cache_key, limit, window)
 
             if is_limited:
-                return JsonResponse({
-                    'error': '操作过于频繁，请稍后再试',
-                    'retry_after': ttl,
-                    'limit': limit,
-                    'window': f'{window}s',
-                }, status=429, headers={'Retry-After': str(ttl)})
+                return JsonResponse(
+                    {
+                        "error": "操作过于频繁，请稍后再试",
+                        "retry_after": ttl,
+                        "limit": limit,
+                        "window": f"{window}s",
+                    },
+                    status=429,
+                    headers={"Retry-After": str(ttl)},
+                )
 
             return view_func(request, *args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -241,13 +247,13 @@ def get_rate_limit_status(key_prefix, identifier, limit=10, window=60):
             'is_limited': 是否已达上限,
         }
     """
-    cache_key = f'ratelimit:{key_prefix}:{identifier}'
+    cache_key = f"ratelimit:{key_prefix}:{identifier}"
     current = cache.get(cache_key, 0)
-    ttl = cache.ttl(cache_key) if hasattr(cache, 'ttl') else window
+    ttl = cache.ttl(cache_key) if hasattr(cache, "ttl") else window
 
     return {
-        'current': current,
-        'limit': limit,
-        'ttl': ttl if ttl > 0 else window,
-        'is_limited': current >= limit,
+        "current": current,
+        "limit": limit,
+        "ttl": ttl if ttl > 0 else window,
+        "is_limited": current >= limit,
     }

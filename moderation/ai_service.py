@@ -24,10 +24,10 @@ class BaiduModerationService:
     """百度内容审核服务"""
 
     def __init__(self):
-        self.app_id = getattr(settings, 'BAIDU_APP_ID', '')
-        self.api_key = getattr(settings, 'BAIDU_API_KEY', '')
-        self.secret_key = getattr(settings, 'BAIDU_SECRET_KEY', '')
-        self.enabled = getattr(settings, 'BAIDU_MODERATION_ENABLED', False)
+        self.app_id = getattr(settings, "BAIDU_APP_ID", "")
+        self.api_key = getattr(settings, "BAIDU_API_KEY", "")
+        self.secret_key = getattr(settings, "BAIDU_SECRET_KEY", "")
+        self.enabled = getattr(settings, "BAIDU_MODERATION_ENABLED", False)
 
         self._client = None
 
@@ -40,10 +40,10 @@ class BaiduModerationService:
 
                 self._client = AipContentCensor(self.app_id, self.api_key, self.secret_key)
             except ImportError:
-                logger.warning('baidu-aip 未安装，AI 审核功能不可用')
+                logger.warning("baidu-aip 未安装，AI 审核功能不可用")
                 self.enabled = False
             except Exception:
-                logger.exception('初始化百度 AI 客户端失败')
+                logger.exception("初始化百度 AI 客户端失败")
                 self.enabled = False
 
         return self._client
@@ -51,11 +51,13 @@ class BaiduModerationService:
     @staticmethod
     def _service_unavailable_payload() -> List[Dict[str, Any]]:
         """统一错误返回，避免把内部异常直接暴露给前端。"""
-        return [{
-            'type': 'error',
-            'code': ErrorCodes.MODERATION_SERVICE_UNAVAILABLE,
-            'msg': error_message(ErrorCodes.MODERATION_SERVICE_UNAVAILABLE),
-        }]
+        return [
+            {
+                "type": "error",
+                "code": ErrorCodes.MODERATION_SERVICE_UNAVAILABLE,
+                "msg": error_message(ErrorCodes.MODERATION_SERVICE_UNAVAILABLE),
+            }
+        ]
 
     def moderate_text(self, content: str) -> Tuple[str, Optional[List[Dict]]]:
         """文本审核
@@ -69,36 +71,36 @@ class BaiduModerationService:
                 - 违规详情: 违规项列表，无违规时为 None
         """
         if not self.enabled or not self.client:
-            logger.debug('AI 审核未启用，跳过')
-            return 'pending', None
+            logger.debug("AI 审核未启用，跳过")
+            return "pending", None
 
         if not content or not content.strip():
-            return 'approved', None
+            return "approved", None
 
         try:
             result = self.client.textCensorUserDefined(content)
             if not isinstance(result, dict):
-                logger.warning('AI 文本审核返回格式异常: %r', type(result))
-                return 'error', self._service_unavailable_payload()
+                logger.warning("AI 文本审核返回格式异常: %r", type(result))
+                return "error", self._service_unavailable_payload()
 
             # 结论类型: 1=合规, 2=疑似, 3=不合规
-            conclusion_type = result.get('conclusionType', 2)
+            conclusion_type = result.get("conclusionType", 2)
 
             if conclusion_type == 1:
-                return 'approved', None
+                return "approved", None
             if conclusion_type == 3:
-                data = result.get('data', [])
+                data = result.get("data", [])
                 violation_details = self._parse_violation_data(data)
-                return 'rejected', violation_details
+                return "rejected", violation_details
 
             # 疑似违规，返回详情供人工判断
-            data = result.get('data', [])
+            data = result.get("data", [])
             violation_details = self._parse_violation_data(data)
-            return 'pending', violation_details
+            return "pending", violation_details
 
         except Exception:
-            logger.exception('AI 文本审核失败')
-            return 'error', self._service_unavailable_payload()
+            logger.exception("AI 文本审核失败")
+            return "error", self._service_unavailable_payload()
 
     def moderate_image(self, image_path: str) -> Tuple[str, Optional[List[Dict]]]:
         """图片审核
@@ -110,36 +112,36 @@ class BaiduModerationService:
             tuple: (审核结果, 违规详情)
         """
         if not self.enabled or not self.client:
-            return 'pending', None
+            return "pending", None
 
         try:
-            with open(image_path, 'rb') as f:
+            with open(image_path, "rb") as f:
                 image_data = f.read()
 
             result = self.client.imageCensorUserDefined(image_data)
             if not isinstance(result, dict):
-                logger.warning('AI 图片审核返回格式异常: %r', type(result))
-                return 'error', self._service_unavailable_payload()
+                logger.warning("AI 图片审核返回格式异常: %r", type(result))
+                return "error", self._service_unavailable_payload()
 
-            conclusion_type = result.get('conclusionType', 2)
+            conclusion_type = result.get("conclusionType", 2)
 
             if conclusion_type == 1:
-                return 'approved', None
+                return "approved", None
             if conclusion_type == 3:
-                data = result.get('data', [])
+                data = result.get("data", [])
                 violation_details = self._parse_violation_data(data)
-                return 'rejected', violation_details
+                return "rejected", violation_details
 
-            data = result.get('data', [])
+            data = result.get("data", [])
             violation_details = self._parse_violation_data(data)
-            return 'pending', violation_details
+            return "pending", violation_details
 
         except FileNotFoundError:
-            logger.error('图片文件不存在: %s', image_path)
-            return 'error', [{'type': 'error', 'msg': '图片文件不存在'}]
+            logger.error("图片文件不存在: %s", image_path)
+            return "error", [{"type": "error", "msg": "图片文件不存在"}]
         except Exception:
-            logger.exception('AI 图片审核失败')
-            return 'error', self._service_unavailable_payload()
+            logger.exception("AI 图片审核失败")
+            return "error", self._service_unavailable_payload()
 
     def moderate_image_url(self, image_url: str) -> Tuple[str, Optional[List[Dict]]]:
         """图片 URL 审核
@@ -151,30 +153,30 @@ class BaiduModerationService:
             tuple: (审核结果, 违规详情)
         """
         if not self.enabled or not self.client:
-            return 'pending', None
+            return "pending", None
 
         try:
             result = self.client.imageCensorUserDefined(image_url)
             if not isinstance(result, dict):
-                logger.warning('AI 图片 URL 审核返回格式异常: %r', type(result))
-                return 'error', self._service_unavailable_payload()
+                logger.warning("AI 图片 URL 审核返回格式异常: %r", type(result))
+                return "error", self._service_unavailable_payload()
 
-            conclusion_type = result.get('conclusionType', 2)
+            conclusion_type = result.get("conclusionType", 2)
 
             if conclusion_type == 1:
-                return 'approved', None
+                return "approved", None
             if conclusion_type == 3:
-                data = result.get('data', [])
+                data = result.get("data", [])
                 violation_details = self._parse_violation_data(data)
-                return 'rejected', violation_details
+                return "rejected", violation_details
 
-            data = result.get('data', [])
+            data = result.get("data", [])
             violation_details = self._parse_violation_data(data)
-            return 'pending', violation_details
+            return "pending", violation_details
 
         except Exception:
-            logger.exception('AI 图片 URL 审核失败')
-            return 'error', self._service_unavailable_payload()
+            logger.exception("AI 图片 URL 审核失败")
+            return "error", self._service_unavailable_payload()
 
     def _parse_violation_data(self, data: List[Dict]) -> List[Dict]:
         """解析违规数据 — 委托到共享常量模块"""
@@ -186,34 +188,36 @@ class MockModerationService:
 
     # 模拟违规词
     MOCK_VIOLATION_WORDS = [
-        '测试违规词',
-        '广告测试',
-        '敏感测试',
+        "测试违规词",
+        "广告测试",
+        "敏感测试",
     ]
 
     def moderate_text(self, content: str) -> Tuple[str, Optional[List[Dict]]]:
         """模拟文本审核"""
         if not content:
-            return 'approved', None
+            return "approved", None
 
         # 检查模拟违规词
         for word in self.MOCK_VIOLATION_WORDS:
             if word in content:
-                return 'rejected', [{
-                    'type': '模拟违规',
-                    'msg': f'包含模拟违规词: {word}',
-                    'probability': 0.95,
-                }]
+                return "rejected", [
+                    {
+                        "type": "模拟违规",
+                        "msg": f"包含模拟违规词: {word}",
+                        "probability": 0.95,
+                    }
+                ]
 
-        return 'approved', None
+        return "approved", None
 
     def moderate_image(self, image_path: str) -> Tuple[str, Optional[List[Dict]]]:
         """模拟图片审核"""
-        return 'approved', None
+        return "approved", None
 
     def moderate_image_url(self, image_url: str) -> Tuple[str, Optional[List[Dict]]]:
         """模拟图片 URL 审核"""
-        return 'approved', None
+        return "approved", None
 
 
 @lru_cache(maxsize=1)
@@ -223,6 +227,6 @@ def get_moderation_service():
     Returns:
         审核服务实例（百度或模拟）
     """
-    if getattr(settings, 'BAIDU_MODERATION_ENABLED', False):
+    if getattr(settings, "BAIDU_MODERATION_ENABLED", False):
         return BaiduModerationService()
     return MockModerationService()

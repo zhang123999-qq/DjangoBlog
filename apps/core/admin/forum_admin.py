@@ -25,8 +25,7 @@ class BoardAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         # 使用 annotate 预计算主题数
         qs = qs.annotate(
-            _topic_count=Count('topics', distinct=True),
-            _reply_count=Count('topics__replies', distinct=True)
+            _topic_count=Count("topics", distinct=True), _reply_count=Count("topics__replies", distinct=True)
         )
         return qs
 
@@ -35,14 +34,14 @@ class BoardAdmin(admin.ModelAdmin):
         return obj._topic_count
 
     topic_count_display.short_description = "主题数"
-    topic_count_display.admin_order_field = '_topic_count'
+    topic_count_display.admin_order_field = "_topic_count"
 
     def reply_count_display(self, obj):
         """使用预计算的值"""
         return obj._reply_count
 
     reply_count_display.short_description = "回复数"
-    reply_count_display.admin_order_field = '_reply_count'
+    reply_count_display.admin_order_field = "_reply_count"
 
 
 @admin.register(Topic, site=admin_site)
@@ -50,8 +49,15 @@ class TopicAdmin(admin.ModelAdmin):
     """主题管理"""
 
     list_display = [
-        "title", "board", "author", "views_count", "reply_count",
-        "is_pinned", "is_locked", "review_status", "created_at",
+        "title",
+        "board",
+        "author",
+        "views_count",
+        "reply_count",
+        "is_pinned",
+        "is_locked",
+        "review_status",
+        "created_at",
     ]
     list_filter = ["board", "is_pinned", "is_locked", "review_status"]
     search_fields = ["title", "content", "author__username"]
@@ -62,6 +68,7 @@ class TopicAdmin(admin.ModelAdmin):
 
     def approve_topics(self, request, queryset):
         from moderation.services import approve_instance
+
         for topic in queryset:
             approve_instance(topic, request.user, note="")
         self.message_user(request, f"成功审核通过 {queryset.count()} 个主题")
@@ -70,6 +77,7 @@ class TopicAdmin(admin.ModelAdmin):
 
     def reject_topics(self, request, queryset):
         from moderation.services import reject_instance
+
         for topic in queryset:
             reject_instance(topic, request.user, note="")
         self.message_user(request, f"成功拒绝 {queryset.count()} 个主题")
@@ -107,6 +115,7 @@ class ReplyAdmin(admin.ModelAdmin):
 
     def approve_replies(self, request, queryset):
         from moderation.services import approve_instance
+
         for reply in queryset:
             approve_instance(reply, request.user, note="")
         self.message_user(request, f"成功审核通过 {queryset.count()} 条回复")
@@ -115,6 +124,7 @@ class ReplyAdmin(admin.ModelAdmin):
 
     def reject_replies(self, request, queryset):
         from moderation.services import reject_instance
+
         for reply in queryset:
             reject_instance(reply, request.user, note="")
         self.message_user(request, f"成功拒绝 {queryset.count()} 条回复")

@@ -2,6 +2,7 @@
 自定义 SQLite 数据库后端
 禁用外键约束检查，解决 Django 4.1+ 迁移问题
 """
+
 from django.db.backends.sqlite3 import base
 
 
@@ -17,5 +18,5 @@ class DatabaseWrapper(base.DatabaseWrapper):
     def get_new_connection(self, conn_params):
         conn = super().get_new_connection(conn_params)
         # 禁用外键约束检查
-        conn.execute('PRAGMA foreign_keys = OFF')
+        conn.execute("PRAGMA foreign_keys = OFF")
         return conn

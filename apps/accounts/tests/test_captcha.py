@@ -16,7 +16,6 @@ import pytest
 import time
 import hashlib
 from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
 from django.core.cache import cache
 
 from apps.accounts.captcha import (
@@ -24,7 +23,6 @@ from apps.accounts.captcha import (
     store_captcha,
     validate_captcha,
     CAPTCHA_CHARS,
-    CAPTCHA_EXPIRE_SECONDS,
     MAX_ATTEMPTS,
     get_client_ip,
     is_locked_out,
@@ -322,6 +320,6 @@ class TestCaptchaRefreshAPI:
     @pytest.mark.django_db
     def test_captcha_refresh_stores_session(self, client):
         """测试刷新验证码存储到 session"""
-        response = client.get('/accounts/captcha/refresh/')
+        client.get('/accounts/captcha/refresh/')
         
         assert 'captcha_code' in client.session

@@ -39,11 +39,14 @@ def exception_handler(exc: Exception, context: Dict[str, Any]) -> Optional[Respo
     """
     # 先处理 Django 原生异常（Http404 等）
     if isinstance(exc, Http404):
-        return Response({
-            "code": 404,
-            "message": "资源不存在",
-            "success": False,
-        }, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {
+                "code": 404,
+                "message": "资源不存在",
+                "success": False,
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
     # 调用 DRF 默认处理器
     response = drf_exception_handler(exc, context)
@@ -56,11 +59,7 @@ def exception_handler(exc: Exception, context: Dict[str, Any]) -> Optional[Respo
         return _handle_django_exception(exc, context)
 
 
-def _handle_drf_exception(
-    exc: APIException,
-    response: Response,
-    context: Dict[str, Any]
-) -> Response:
+def _handle_drf_exception(exc: APIException, response: Response, context: Dict[str, Any]) -> Response:
     """处理 DRF 异常"""
 
     # 获取错误消息
@@ -74,7 +73,7 @@ def _handle_drf_exception(
     }
 
     # 添加详细错误信息
-    if hasattr(exc, 'detail') and exc.detail:
+    if hasattr(exc, "detail") and exc.detail:
         if isinstance(exc.detail, dict):
             body["errors"] = exc.detail
         elif isinstance(exc.detail, list):
@@ -91,36 +90,45 @@ def _handle_django_exception(exc: Exception, context: Dict[str, Any]) -> Optiona
 
     # Http404
     if isinstance(exc, Http404):
-        return Response({
-            "code": 404,
-            "message": "资源不存在",
-            "success": False,
-        }, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {
+                "code": 404,
+                "message": "资源不存在",
+                "success": False,
+            },
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
     # Django ValidationError
     if isinstance(exc, DjangoValidationError):
-        errors = exc.message_dict if hasattr(exc, 'message_dict') else {"detail": exc.messages}
-        return Response({
-            "code": 400,
-            "message": "数据验证失败",
-            "success": False,
-            "errors": errors,
-        }, status=status.HTTP_400_BAD_REQUEST)
+        errors = exc.message_dict if hasattr(exc, "message_dict") else {"detail": exc.messages}
+        return Response(
+            {
+                "code": 400,
+                "message": "数据验证失败",
+                "success": False,
+                "errors": errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     # 其他未处理异常
     logger.exception(
         f"未处理的异常: {exc.__class__.__name__}: {str(exc)}",
         extra={
-            "view": context.get('view').__class__.__name__ if context.get('view') else None,
-            "request": str(context.get('request')),
-        }
+            "view": context.get("view").__class__.__name__ if context.get("view") else None,
+            "request": str(context.get("request")),
+        },
     )
 
-    return Response({
-        "code": 500,
-        "message": "服务器内部错误",
-        "success": False,
-    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response(
+        {
+            "code": 500,
+            "message": "服务器内部错误",
+            "success": False,
+        },
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
 
 
 def _get_error_message(exc) -> str:
@@ -145,7 +153,7 @@ def _get_error_message(exc) -> str:
         return "数据验证失败"
 
     # 使用默认消息
-    if hasattr(exc, 'detail') and exc.detail:
+    if hasattr(exc, "detail") and exc.detail:
         if isinstance(exc.detail, str):
             return exc.detail
         elif isinstance(exc.detail, dict):
@@ -161,8 +169,8 @@ def _get_error_message(exc) -> str:
 def _log_exception(exc: Exception, context: Dict[str, Any], status_code: int):
     """记录异常日志"""
 
-    view = context.get('view')
-    request = context.get('request')
+    view = context.get("view")
+    request = context.get("request")
 
     log_data = {
         "exception": exc.__class__.__name__,

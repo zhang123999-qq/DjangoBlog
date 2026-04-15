@@ -32,13 +32,13 @@ class PerformanceMonitorMiddleware:
     """
 
     # 慢请求阈值（毫秒）
-    SLOW_REQUEST_THRESHOLD = getattr(settings, 'SLOW_REQUEST_THRESHOLD_MS', 500)
+    SLOW_REQUEST_THRESHOLD = getattr(settings, "SLOW_REQUEST_THRESHOLD_MS", 500)
 
     # 查询过多阈值
-    HIGH_QUERY_THRESHOLD = getattr(settings, 'HIGH_QUERY_THRESHOLD', 20)
+    HIGH_QUERY_THRESHOLD = getattr(settings, "HIGH_QUERY_THRESHOLD", 20)
 
     # 内存警告阈值（MB）
-    MEMORY_WARNING_THRESHOLD = getattr(settings, 'MEMORY_WARNING_THRESHOLD_MB', 100)
+    MEMORY_WARNING_THRESHOLD = getattr(settings, "MEMORY_WARNING_THRESHOLD_MB", 100)
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -53,10 +53,11 @@ class PerformanceMonitorMiddleware:
         # 记录内存（可选）
         try:
             import tracemalloc
+
             if tracemalloc.is_tracing():
                 tracemalloc.get_traced_memory()[0] / (1024 * 1024)
         except Exception:
-            logger.debug('tracemalloc_probe_failed', exc_info=True)
+            logger.debug("tracemalloc_probe_failed", exc_info=True)
 
         # 执行请求
         response = self.get_response(request)
@@ -69,36 +70,29 @@ class PerformanceMonitorMiddleware:
         query_count = queries_after - queries_before
 
         # 查询总耗时
-        query_time_ms = sum(
-            float(q.get('time', 0)) * 1000
-            for q in connection.queries[queries_before:queries_after]
-        )
+        query_time_ms = sum(float(q.get("time", 0)) * 1000 for q in connection.queries[queries_before:queries_after])
 
         # 添加性能头
-        response['X-Request-Duration-Ms'] = f'{duration_ms:.2f}'
-        response['X-DB-Queries'] = str(query_count)
-        response['X-DB-Time-Ms'] = f'{query_time_ms:.2f}'
+        response["X-Request-Duration-Ms"] = f"{duration_ms:.2f}"
+        response["X-DB-Queries"] = str(query_count)
+        response["X-DB-Time-Ms"] = f"{query_time_ms:.2f}"
 
         # 慢请求警告
         if duration_ms > self.SLOW_REQUEST_THRESHOLD:
             logger.warning(
-                f'慢请求警告: {request.path} 耗时 {duration_ms:.2f}ms, '
-                f'{query_count} 个数据库查询 ({query_time_ms:.2f}ms)'
+                f"慢请求警告: {request.path} 耗时 {duration_ms:.2f}ms, "
+                f"{query_count} 个数据库查询 ({query_time_ms:.2f}ms)"
             )
 
         # 查询过多警告
         if query_count > self.HIGH_QUERY_THRESHOLD:
-            logger.warning(
-                f'查询过多警告: {request.path} 执行了 {query_count} 个数据库查询, '
-                f'可能存在 N+1 问题'
-            )
+            logger.warning(f"查询过多警告: {request.path} 执行了 {query_count} 个数据库查询, " f"可能存在 N+1 问题")
 
         # 记录详细信息（DEBUG 模式）
         if settings.DEBUG and query_count > 0:
             path = request.path
             logger.debug(
-                f'[性能] {path}: {duration_ms:.2f}ms, '
-                f'{query_count} queries, {query_time_ms:.2f}ms DB time'
+                f"[性能] {path}: {duration_ms:.2f}ms, " f"{query_count} queries, {query_time_ms:.2f}ms DB time"
             )
 
         return response
@@ -120,10 +114,10 @@ class QueryDebugMiddleware:
         if settings.DEBUG:
             # 添加查询统计
             queries = connection.queries
-            total_time = sum(float(q.get('time', 0)) for q in queries) * 1000
+            total_time = sum(float(q.get("time", 0)) for q in queries) * 1000
 
-            response['X-DB-Total-Time-Ms'] = f'{total_time:.2f}'
-            response['X-DB-Query-Count'] = str(len(queries))
+            response["X-DB-Total-Time-Ms"] = f"{total_time:.2f}"
+            response["X-DB-Query-Count"] = str(len(queries))
 
         return response
 
@@ -136,7 +130,7 @@ class MemoryMonitorMiddleware:
     """
 
     # 内存增长阈值（MB）
-    MEMORY_GROWTH_THRESHOLD = getattr(settings, 'MEMORY_GROWTH_THRESHOLD_MB', 10)
+    MEMORY_GROWTH_THRESHOLD = getattr(settings, "MEMORY_GROWTH_THRESHOLD_MB", 10)
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -148,7 +142,7 @@ class MemoryMonitorMiddleware:
         # 如果内存增长过大，触发垃圾回收
         collected = gc.collect()
         if collected > 100:
-            logger.debug(f'垃圾回收: 回收了 {collected} 个对象')
+            logger.debug(f"垃圾回收: 回收了 {collected} 个对象")
 
         return response
 
@@ -185,8 +179,8 @@ class ConnectionPoolMiddleware:
         for alias in connections:
             try:
                 conn = connections[alias]
-                if hasattr(conn, 'is_usable') and not conn.is_usable():
-                    logger.warning(f'数据库连接 {alias} 不可用')
+                if hasattr(conn, "is_usable") and not conn.is_usable():
+                    logger.warning(f"数据库连接 {alias} 不可用")
                     conn.close_if_unusable_or_obsolete()
             except (OperationalError, DatabaseError, OSError, ValueError) as e:
-                logger.error(f'检查连接 {alias} 失败: {e}')
+                logger.error(f"检查连接 {alias} 失败: {e}")

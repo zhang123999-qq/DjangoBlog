@@ -8,7 +8,7 @@ API 文档: https://cloud.baidu.com/doc/ANTIPORN/s/Nk3h6xb2j
 import logging
 from django.conf import settings
 
-from .constants import CONCLUSION_TYPE, VIOLATION_TYPES
+from .constants import CONCLUSION_TYPE
 
 logger = logging.getLogger(__name__)
 
@@ -25,17 +25,14 @@ def get_baidu_client():
 
     try:
         from aip import AipContentCensor
-        client = AipContentCensor(
-            settings.BAIDU_APP_ID,
-            settings.BAIDU_API_KEY,
-            settings.BAIDU_SECRET_KEY
-        )
+
+        client = AipContentCensor(settings.BAIDU_APP_ID, settings.BAIDU_API_KEY, settings.BAIDU_SECRET_KEY)
         return client
     except ImportError:
-        logger.error('baidu-aip 未安装，请运行: pip install baidu-aip')
+        logger.error("baidu-aip 未安装，请运行: pip install baidu-aip")
         return None
     except Exception as e:
-        logger.error(f'初始化百度内容审核客户端失败: {e}')
+        logger.error(f"初始化百度内容审核客户端失败: {e}")
         return None
 
 
@@ -52,65 +49,65 @@ def moderate_text(content):
             - details: 审核详情，包含违规类型、置信度等
     """
     if not content or not content.strip():
-        return 'approved', {'message': '内容为空，自动通过'}
+        return "approved", {"message": "内容为空，自动通过"}
 
     # 检查是否启用百度审核
     if not settings.BAIDU_MODERATION_ENABLED:
-        logger.debug('百度内容审核未启用，跳过 AI 审核')
-        return 'pending', {'message': 'AI审核未启用'}
+        logger.debug("百度内容审核未启用，跳过 AI 审核")
+        return "pending", {"message": "AI审核未启用"}
 
     client = get_baidu_client()
     if not client:
-        return 'pending', {'message': 'AI审核服务不可用'}
+        return "pending", {"message": "AI审核服务不可用"}
 
     try:
         # 调用百度文本审核 API
         result = client.textCensorUserDefined(content)
 
         # 解析结果
-        conclusion_type = result.get('conclusionType', 2)
+        conclusion_type = result.get("conclusionType", 2)
 
         if conclusion_type == 1:
             # 合规
-            return 'approved', {
-                'message': 'AI审核通过',
-                'conclusion': CONCLUSION_TYPE.get(conclusion_type, '未知'),
+            return "approved", {
+                "message": "AI审核通过",
+                "conclusion": CONCLUSION_TYPE.get(conclusion_type, "未知"),
             }
 
         elif conclusion_type == 3:
             # 不合规
-            data = result.get('data', [])
+            data = result.get("data", [])
             violations = parse_baidu_violation_data(data)
 
-            return 'rejected', {
-                'message': 'AI识别违规内容',
-                'conclusion': CONCLUSION_TYPE.get(conclusion_type, '不合规'),
-                'violations': violations,
+            return "rejected", {
+                "message": "AI识别违规内容",
+                "conclusion": CONCLUSION_TYPE.get(conclusion_type, "不合规"),
+                "violations": violations,
             }
 
         elif conclusion_type == 2:
             # 疑似，需要人工审核
-            data = result.get('data', [])
+            data = result.get("data", [])
             suspicions = parse_baidu_violation_data(data)
 
-            return 'pending', {
-                'message': 'AI识别疑似违规，需人工审核',
-                'conclusion': CONCLUSION_TYPE.get(conclusion_type, '疑似'),
-                'suspicions': suspicions,
+            return "pending", {
+                "message": "AI识别疑似违规，需人工审核",
+                "conclusion": CONCLUSION_TYPE.get(conclusion_type, "疑似"),
+                "suspicions": suspicions,
             }
 
         else:
             # 未知结论，保守处理
-            logger.warning(f'百度审核返回未知结论类型: {conclusion_type}')
-            return 'pending', {
-                'message': 'AI审核结果不确定',
-                'raw_result': result,
+            logger.warning(f"百度审核返回未知结论类型: {conclusion_type}")
+            return "pending", {
+                "message": "AI审核结果不确定",
+                "raw_result": result,
             }
 
     except Exception as e:
-        logger.error(f'百度文本审核失败: {e}')
-        return 'error', {
-            'message': f'AI审核服务异常: {str(e)}',
+        logger.error(f"百度文本审核失败: {e}")
+        return "error", {
+            "message": f"AI审核服务异常: {str(e)}",
         }
 
 
@@ -126,56 +123,56 @@ def moderate_image(image_data):
     """
     # 检查是否启用百度审核
     if not settings.BAIDU_MODERATION_ENABLED:
-        return 'pending', {'message': 'AI审核未启用'}
+        return "pending", {"message": "AI审核未启用"}
 
     client = get_baidu_client()
     if not client:
-        return 'pending', {'message': 'AI审核服务不可用'}
+        return "pending", {"message": "AI审核服务不可用"}
 
     try:
         # 读取图片数据
         if isinstance(image_data, str):
             # 文件路径
-            with open(image_data, 'rb') as f:
+            with open(image_data, "rb") as f:
                 image_data = f.read()
 
         # 调用百度图片审核 API
         result = client.imageCensorUserDefined(image_data)
 
-        conclusion_type = result.get('conclusionType', 2)
+        conclusion_type = result.get("conclusionType", 2)
 
         if conclusion_type == 1:
-            return 'approved', {
-                'message': '图片AI审核通过',
-                'conclusion': CONCLUSION_TYPE.get(conclusion_type, '合规'),
+            return "approved", {
+                "message": "图片AI审核通过",
+                "conclusion": CONCLUSION_TYPE.get(conclusion_type, "合规"),
             }
 
         elif conclusion_type == 3:
-            data = result.get('data', [])
+            data = result.get("data", [])
             violations = parse_baidu_violation_data(data)
 
-            return 'rejected', {
-                'message': '图片AI识别违规',
-                'conclusion': CONCLUSION_TYPE.get(conclusion_type, '不合规'),
-                'violations': violations,
+            return "rejected", {
+                "message": "图片AI识别违规",
+                "conclusion": CONCLUSION_TYPE.get(conclusion_type, "不合规"),
+                "violations": violations,
             }
 
         elif conclusion_type == 2:
-            return 'pending', {
-                'message': '图片AI识别疑似违规',
-                'conclusion': CONCLUSION_TYPE.get(conclusion_type, '疑似'),
+            return "pending", {
+                "message": "图片AI识别疑似违规",
+                "conclusion": CONCLUSION_TYPE.get(conclusion_type, "疑似"),
             }
 
         else:
-            return 'pending', {
-                'message': '图片AI审核结果不确定',
-                'raw_result': result,
+            return "pending", {
+                "message": "图片AI审核结果不确定",
+                "raw_result": result,
             }
 
     except Exception as e:
-        logger.error(f'百度图片审核失败: {e}')
-        return 'error', {
-            'message': f'图片AI审核服务异常: {str(e)}',
+        logger.error(f"百度图片审核失败: {e}")
+        return "error", {
+            "message": f"图片AI审核服务异常: {str(e)}",
         }
 
 
@@ -193,27 +190,27 @@ def smart_moderate(content, check_sensitive=True):
     from .utils import check_sensitive_content
 
     details = {
-        'sensitive_check': None,
-        'ai_check': None,
+        "sensitive_check": None,
+        "ai_check": None,
     }
 
     # 1. 敏感词快速检测（本地，速度快）
     if check_sensitive:
         has_sensitive, hit_words = check_sensitive_content(content)
-        details['sensitive_check'] = {
-            'has_sensitive': has_sensitive,
-            'hit_words': hit_words,
+        details["sensitive_check"] = {
+            "has_sensitive": has_sensitive,
+            "hit_words": hit_words,
         }
 
         if has_sensitive:
-            return 'pending', {
-                'message': f'命中敏感词: {", ".join(hit_words)}',
-                'details': details,
+            return "pending", {
+                "message": f'命中敏感词: {", ".join(hit_words)}',
+                "details": details,
             }
 
     # 2. AI 语义审核
     ai_status, ai_details = moderate_text(content)
-    details['ai_check'] = ai_details
+    details["ai_check"] = ai_details
 
     return ai_status, details
 
@@ -229,36 +226,36 @@ def get_moderation_summary(status, details):
     Returns:
         str: 审核摘要
     """
-    if status == 'approved':
-        return 'AI审核通过'
+    if status == "approved":
+        return "AI审核通过"
 
-    elif status == 'rejected':
-        violations = details.get('violations', [])
+    elif status == "rejected":
+        violations = details.get("violations", [])
         if violations:
-            types = [v['type'] for v in violations]
+            types = [v["type"] for v in violations]
             return f"AI识别违规: {', '.join(types)}"
-        return 'AI识别违规内容'
+        return "AI识别违规内容"
 
-    elif status == 'pending':
+    elif status == "pending":
         reasons = []
 
         # 敏感词
-        sensitive = details.get('details', {}).get('sensitive_check', {})
-        if sensitive.get('has_sensitive'):
-            words = sensitive.get('hit_words', [])
+        sensitive = details.get("details", {}).get("sensitive_check", {})
+        if sensitive.get("has_sensitive"):
+            words = sensitive.get("hit_words", [])
             reasons.append(f"敏感词: {', '.join(words[:3])}")
 
         # AI 疑似
-        ai = details.get('details', {}).get('ai_check', {})
-        if ai.get('suspicions'):
-            types = [s['type'] for s in ai['suspicions'][:3]]
+        ai = details.get("details", {}).get("ai_check", {})
+        if ai.get("suspicions"):
+            types = [s["type"] for s in ai["suspicions"][:3]]
             reasons.append(f"AI疑似: {', '.join(types)}")
 
         if reasons:
-            return ' | '.join(reasons)
-        return '需人工审核'
+            return " | ".join(reasons)
+        return "需人工审核"
 
-    elif status == 'error':
+    elif status == "error":
         return f"AI审核异常: {details.get('message', '未知错误')}"
 
-    return '未知状态'
+    return "未知状态"

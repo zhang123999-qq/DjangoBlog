@@ -45,9 +45,9 @@ def build_beian_block(number: str, url: str) -> str:
 
     return (
         f"\n{BEGIN_MARKER}\n"
-        f"<div class=\"row mt-2\">\n"
-        f"    <div class=\"col-12\">\n"
-        f"        <p class=\"text-gray-400 mb-0\">备案号：{link_html}</p>\n"
+        f'<div class="row mt-2">\n'
+        f'    <div class="col-12">\n'
+        f'        <p class="text-gray-400 mb-0">备案号：{link_html}</p>\n'
         f"    </div>\n"
         f"</div>\n"
         f"{END_MARKER}\n"

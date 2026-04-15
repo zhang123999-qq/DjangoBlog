@@ -4,7 +4,6 @@
 提供全局搜索、文章搜索、主题搜索等 API
 """
 
-from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -24,19 +23,19 @@ class GlobalSearchView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        operation_id='global_search',
-        summary='全局搜索',
-        description='同时搜索文章和论坛主题',
+        operation_id="global_search",
+        summary="全局搜索",
+        description="同时搜索文章和论坛主题",
         parameters=[
             OpenApiParameter(
-                name='q',
-                description='搜索关键词',
+                name="q",
+                description="搜索关键词",
                 required=True,
                 type=str,
             ),
             OpenApiParameter(
-                name='limit',
-                description='每个类型返回的最大结果数',
+                name="limit",
+                description="每个类型返回的最大结果数",
                 required=False,
                 type=int,
                 default=10,
@@ -44,56 +43,48 @@ class GlobalSearchView(APIView):
         ],
         responses={
             200: {
-                'type': 'object',
-                'properties': {
-                    'code': {'type': 'integer'},
-                    'message': {'type': 'string'},
-                    'success': {'type': 'boolean'},
-                    'data': {
-                        'type': 'object',
-                        'properties': {
-                            'posts': {'type': 'object'},
-                            'topics': {'type': 'object'},
-                            'total': {'type': 'integer'},
-                        }
-                    }
-                }
+                "type": "object",
+                "properties": {
+                    "code": {"type": "integer"},
+                    "message": {"type": "string"},
+                    "success": {"type": "boolean"},
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "posts": {"type": "object"},
+                            "topics": {"type": "object"},
+                            "total": {"type": "integer"},
+                        },
+                    },
+                },
             }
         },
         examples=[
             OpenApiExample(
-                '搜索示例',
+                "搜索示例",
                 value={
-                    'code': 200,
-                    'message': 'success',
-                    'success': True,
-                    'data': {
-                        'posts': {
-                            'hits': [
-                                {'id': '1', 'title': 'Django 入门教程', 'content': '...'}
-                            ],
-                            'total': 5
-                        },
-                        'topics': {
-                            'hits': [],
-                            'total': 0
-                        },
-                        'total': 5
-                    }
-                }
+                    "code": 200,
+                    "message": "success",
+                    "success": True,
+                    "data": {
+                        "posts": {"hits": [{"id": "1", "title": "Django 入门教程", "content": "..."}], "total": 5},
+                        "topics": {"hits": [], "total": 0},
+                        "total": 5,
+                    },
+                },
             )
-        ]
+        ],
     )
     def get(self, request):
         """全局搜索"""
-        query = request.query_params.get('q', '').strip()
-        limit = int(request.query_params.get('limit', 10))
+        query = request.query_params.get("q", "").strip()
+        limit = int(request.query_params.get("limit", 10))
 
         if not query:
-            return APIResponse.bad_request('请提供搜索关键词')
+            return APIResponse.bad_request("请提供搜索关键词")
 
         if len(query) < 2:
-            return APIResponse.bad_request('搜索关键词至少 2 个字符')
+            return APIResponse.bad_request("搜索关键词至少 2 个字符")
 
         # 执行搜索
         results = SearchService.global_search(query, limit=limit)
@@ -111,26 +102,26 @@ class PostSearchView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        operation_id='search_posts',
-        summary='文章搜索',
-        description='搜索博客文章',
+        operation_id="search_posts",
+        summary="文章搜索",
+        description="搜索博客文章",
         parameters=[
             OpenApiParameter(
-                name='q',
-                description='搜索关键词',
+                name="q",
+                description="搜索关键词",
                 required=True,
                 type=str,
             ),
             OpenApiParameter(
-                name='page',
-                description='页码',
+                name="page",
+                description="页码",
                 required=False,
                 type=int,
                 default=1,
             ),
             OpenApiParameter(
-                name='page_size',
-                description='每页数量',
+                name="page_size",
+                description="每页数量",
                 required=False,
                 type=int,
                 default=20,
@@ -139,15 +130,15 @@ class PostSearchView(APIView):
     )
     def get(self, request):
         """文章搜索"""
-        query = request.query_params.get('q', '').strip()
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 20))
+        query = request.query_params.get("q", "").strip()
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
 
         if not query:
-            return APIResponse.bad_request('请提供搜索关键词')
+            return APIResponse.bad_request("请提供搜索关键词")
 
         if len(query) < 2:
-            return APIResponse.bad_request('搜索关键词至少 2 个字符')
+            return APIResponse.bad_request("搜索关键词至少 2 个字符")
 
         # 执行搜索
         offset = (page - 1) * page_size
@@ -155,14 +146,14 @@ class PostSearchView(APIView):
             query,
             limit=page_size,
             offset=offset,
-            fields=['title', 'content', 'summary'],
+            fields=["title", "content", "summary"],
         )
 
         return APIResponse.paginated(
-            data=results.get('hits', []),
+            data=results.get("hits", []),
             page=page,
             page_size=page_size,
-            total=results.get('total', 0),
+            total=results.get("total", 0),
         )
 
 
@@ -176,26 +167,26 @@ class TopicSearchView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        operation_id='search_topics',
-        summary='主题搜索',
-        description='搜索论坛主题',
+        operation_id="search_topics",
+        summary="主题搜索",
+        description="搜索论坛主题",
         parameters=[
             OpenApiParameter(
-                name='q',
-                description='搜索关键词',
+                name="q",
+                description="搜索关键词",
                 required=True,
                 type=str,
             ),
             OpenApiParameter(
-                name='page',
-                description='页码',
+                name="page",
+                description="页码",
                 required=False,
                 type=int,
                 default=1,
             ),
             OpenApiParameter(
-                name='page_size',
-                description='每页数量',
+                name="page_size",
+                description="每页数量",
                 required=False,
                 type=int,
                 default=20,
@@ -204,15 +195,15 @@ class TopicSearchView(APIView):
     )
     def get(self, request):
         """主题搜索"""
-        query = request.query_params.get('q', '').strip()
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 20))
+        query = request.query_params.get("q", "").strip()
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
 
         if not query:
-            return APIResponse.bad_request('请提供搜索关键词')
+            return APIResponse.bad_request("请提供搜索关键词")
 
         if len(query) < 2:
-            return APIResponse.bad_request('搜索关键词至少 2 个字符')
+            return APIResponse.bad_request("搜索关键词至少 2 个字符")
 
         # 执行搜索
         offset = (page - 1) * page_size
@@ -220,14 +211,14 @@ class TopicSearchView(APIView):
             query,
             limit=page_size,
             offset=offset,
-            fields=['title', 'content'],
+            fields=["title", "content"],
         )
 
         return APIResponse.paginated(
-            data=results.get('hits', []),
+            data=results.get("hits", []),
             page=page,
             page_size=page_size,
-            total=results.get('total', 0),
+            total=results.get("total", 0),
         )
 
 
@@ -242,7 +233,9 @@ class SearchHealthView(APIView):
         """健康检查"""
         is_healthy = SearchService.health_check()
 
-        return Response({
-            'status': 'healthy' if is_healthy else 'unhealthy',
-            'backend': type(SearchService.get_backend()).__name__,
-        })
+        return Response(
+            {
+                "status": "healthy" if is_healthy else "unhealthy",
+                "backend": type(SearchService.get_backend()).__name__,
+            }
+        )

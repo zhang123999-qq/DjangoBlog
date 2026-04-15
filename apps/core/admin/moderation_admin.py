@@ -60,6 +60,7 @@ class ModerationReminderAdmin(admin.ModelAdmin):
 
     def mark_as_processed(self, request, queryset):
         from django.utils import timezone
+
         count = queryset.filter(is_processed=False).update(is_processed=True, processed_at=timezone.now())
         self.message_user(request, f"已标记 {count} 条提醒为已处理")
 

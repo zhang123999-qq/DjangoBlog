@@ -7,15 +7,43 @@ register = template.Library()
 
 # Allowed tags and attributes for user content
 ALLOWED_TAGS = [
-    'a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i', 'li', 'ol', 'p', 'pre',
-    'strong', 'ul', 'br', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead',
-    'tbody', 'tr', 'th', 'td', 'div', 'span'
+    "a",
+    "abbr",
+    "acronym",
+    "b",
+    "blockquote",
+    "code",
+    "em",
+    "i",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "strong",
+    "ul",
+    "br",
+    "img",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "hr",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "div",
+    "span",
 ]
 
 ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id', 'title'],
-    'a': ['href', 'title', 'rel', 'target'],
-    'img': ['src', 'alt', 'title', 'width', 'height'],
+    "*": ["class", "id", "title"],
+    "a": ["href", "title", "rel", "target"],
+    "img": ["src", "alt", "title", "width", "height"],
 }
 
 
@@ -26,7 +54,7 @@ def safe_html(value: str) -> str:
     Uses bleach to remove disallowed tags/attributes and linkify plain URLs.
     """
     if not value:
-        return ''
+        return ""
 
     # 如果内容中包含被转义的 HTML 实体（例如来自某些编辑器的保存格式），先反转义
     try:

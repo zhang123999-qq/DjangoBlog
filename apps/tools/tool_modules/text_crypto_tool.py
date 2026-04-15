@@ -1,6 +1,7 @@
 """
 文本加密/解密工具
 """
+
 from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
@@ -8,30 +9,30 @@ from apps.tools.base_tool import BaseTool
 
 class TextCryptoForm(forms.Form):
     """文本加密/解密表单"""
+
     mode = forms.ChoiceField(
-        label='操作',
+        label="操作",
         choices=[
-            ('encrypt', '加密'),
-            ('decrypt', '解密'),
+            ("encrypt", "加密"),
+            ("decrypt", "解密"),
         ],
-        initial='encrypt',
-        widget=forms.Select(attrs={'class': 'form-control'})
+        initial="encrypt",
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
     text = forms.CharField(
-        label='文本内容',
-        widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-        required=True
+        label="文本内容", widget=forms.Textarea(attrs={"rows": 4, "class": "form-control"}), required=True
     )
     key = forms.CharField(
-        label='密钥',
+        label="密钥",
         max_length=50,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '输入加密密钥'}),
-        required=True
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "输入加密密钥"}),
+        required=True,
     )
 
 
 class TextCryptoTool(BaseTool):
     """文本加密/解密工具"""
+
     name = "文本混淆/还原"
     slug = "text-crypto"
     description = "使用简单的替换算法对文本进行混淆和还原（仅供学习娱乐，不具备加密安全性）"
@@ -40,19 +41,19 @@ class TextCryptoTool(BaseTool):
     form_class = TextCryptoForm
 
     def handle(self, request, form):
-        mode = form.cleaned_data['mode']
-        text = form.cleaned_data['text']
-        key = form.cleaned_data['key']
+        mode = form.cleaned_data["mode"]
+        text = form.cleaned_data["text"]
+        key = form.cleaned_data["key"]
 
         try:
-            if mode == 'encrypt':
+            if mode == "encrypt":
                 result = self.encrypt(text, key)
-                return {'mode': 'encrypt', 'result': result}
+                return {"mode": "encrypt", "result": result}
             else:
                 result = self.decrypt(text, key)
-                return {'mode': 'decrypt', 'result': result}
+                return {"mode": "decrypt", "result": result}
         except Exception as e:
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     def encrypt(self, text, key):
         """加密文本"""
@@ -62,7 +63,7 @@ class TextCryptoTool(BaseTool):
             key_char = key[i % key_len]
             encrypted_char = chr((ord(char) + ord(key_char)) % 256)
             result.append(encrypted_char)
-        return ''.join(result)
+        return "".join(result)
 
     def decrypt(self, text, key):
         """解密文本"""
@@ -72,4 +73,4 @@ class TextCryptoTool(BaseTool):
             key_char = key[i % key_len]
             decrypted_char = chr((ord(char) - ord(key_char)) % 256)
             result.append(decrypted_char)
-        return ''.join(result)
+        return "".join(result)

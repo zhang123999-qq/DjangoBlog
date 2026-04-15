@@ -7,23 +7,22 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ToolConfig',
+            name="ToolConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('slug', models.SlugField(max_length=100, unique=True)),
-                ('name', models.CharField(max_length=100)),
-                ('is_enabled', models.BooleanField(default=True)),
-                ('sort_order', models.IntegerField(default=0)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("slug", models.SlugField(max_length=100, unique=True)),
+                ("name", models.CharField(max_length=100)),
+                ("is_enabled", models.BooleanField(default=True)),
+                ("sort_order", models.IntegerField(default=0)),
             ],
             options={
-                'verbose_name': '工具配置',
-                'verbose_name_plural': '工具配置',
-                'ordering': ['sort_order', 'name'],
+                "verbose_name": "工具配置",
+                "verbose_name_plural": "工具配置",
+                "ordering": ["sort_order", "name"],
             },
         ),
     ]

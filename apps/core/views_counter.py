@@ -21,7 +21,7 @@ import logging
 import threading
 import time
 from collections import defaultdict
-from typing import Dict, Optional, Set, Tuple
+from typing import Dict, Optional, Set
 
 from django.core.cache import cache
 from django.db.models import F
@@ -56,15 +56,15 @@ class ViewsBuffer:
         # 缓冲区锁
         self._buffer_lock = threading.Lock()
         # 缓冲区大小限制
-        self._max_size = getattr(settings, 'VIEWS_BUFFER_MAX_SIZE', 10000)
+        self._max_size = getattr(settings, "VIEWS_BUFFER_MAX_SIZE", 10000)
         # 最后刷新时间
         self._last_flush = time.time()
         # 刷新间隔（秒）
-        self._flush_interval = getattr(settings, 'VIEWS_FLUSH_INTERVAL', 10)
+        self._flush_interval = getattr(settings, "VIEWS_FLUSH_INTERVAL", 10)
         # 已记录的请求（防刷）: {model_type: {object_id: set(ip_or_user_id)}}
         self._recorded: Dict[str, Dict[int, Set[str]]] = defaultdict(lambda: defaultdict(set))
         # 防刷过期时间（秒）
-        self._anti_spam_ttl = getattr(settings, 'VIEWS_ANTI_SPAM_TTL', 300)  # 5分钟
+        self._anti_spam_ttl = getattr(settings, "VIEWS_ANTI_SPAM_TTL", 300)  # 5分钟
         # 防刷记录时间戳
         self._recorded_timestamp: Dict[str, Dict[int, float]] = defaultdict(dict)
 
@@ -135,7 +135,7 @@ class ViewsBuffer:
                     cache_key = f"views:{model_type}:{object_id}"
                     try:
                         # 原子递增
-                        if hasattr(cache, 'incr'):
+                        if hasattr(cache, "incr"):
                             try:
                                 cache.incr(cache_key, count)
                             except ValueError:
@@ -163,9 +163,9 @@ class ViewsBuffer:
         """获取缓冲区统计"""
         with self._buffer_lock:
             return {
-                'total_items': sum(len(items) for items in self._buffer.values()),
-                'model_types': {k: len(v) for k, v in self._buffer.items()},
-                'last_flush': self._last_flush,
+                "total_items": sum(len(items) for items in self._buffer.values()),
+                "model_types": {k: len(v) for k, v in self._buffer.items()},
+                "last_flush": self._last_flush,
             }
 
 
@@ -177,22 +177,18 @@ class ViewsCounter:
     """
 
     # Redis key 前缀
-    KEY_PREFIX = 'views'
+    KEY_PREFIX = "views"
     # 支持的模型类型
     MODEL_MAPPING = {
-        'post': 'blog.Post',
-        'topic': 'forum.Topic',
+        "post": "blog.Post",
+        "topic": "forum.Topic",
     }
 
     _buffer = ViewsBuffer()
 
     @classmethod
     def increment(
-        cls,
-        model_type: str,
-        object_id: int,
-        request: Optional[HttpRequest] = None,
-        identifier: Optional[str] = None
+        cls, model_type: str, object_id: int, request: Optional[HttpRequest] = None, identifier: Optional[str] = None
     ) -> bool:
         """
         记录浏览量
@@ -229,21 +225,21 @@ class ViewsCounter:
 
         # 使用 IP + User-Agent
         ip = cls._get_client_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')[:50]
+        user_agent = request.META.get("HTTP_USER_AGENT", "")[:50]
         return f"ip_{ip}_{hash(user_agent) % 10000}"
 
     @staticmethod
     def _get_client_ip(request: HttpRequest) -> str:
         """获取客户端 IP"""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
+            return x_forwarded_for.split(",")[0].strip()
 
-        x_real_ip = request.META.get('HTTP_X_REAL_IP')
+        x_real_ip = request.META.get("HTTP_X_REAL_IP")
         if x_real_ip:
             return x_real_ip
 
-        return request.META.get('REMOTE_ADDR', '0.0.0.0')
+        return request.META.get("REMOTE_ADDR", "0.0.0.0")
 
     @classmethod
     def get_views(cls, model_type: str, object_id: int, include_buffer: bool = True) -> int:
@@ -283,11 +279,12 @@ class ViewsCounter:
 
             # 动态导入模型
             from django.apps import apps
+
             model = apps.get_model(model_path)
 
             instance = model.objects.filter(pk=object_id).first()
             if instance:
-                return getattr(instance, 'views_count', 0)
+                return getattr(instance, "views_count", 0)
 
         except Exception as e:
             logger.warning(f"获取数据库浏览量失败: {e}")
@@ -305,14 +302,14 @@ class ViewsCounter:
         Returns:
             Dict: 同步结果
         """
-        result = {'synced': 0, 'errors': 0}
+        result = {"synced": 0, "errors": 0}
 
         # 先刷新缓冲区
         cls._buffer.force_flush()
 
         # 获取所有需要同步的 key
         try:
-            if hasattr(cache, 'iter_keys'):
+            if hasattr(cache, "iter_keys"):
                 keys = list(cache.iter_keys(f"{cls.KEY_PREFIX}:*"))
             else:
                 keys = []
@@ -326,7 +323,7 @@ class ViewsCounter:
             for key in keys:
                 try:
                     key_str = key.decode() if isinstance(key, bytes) else str(key)
-                    parts = key_str.split(':')
+                    parts = key_str.split(":")
 
                     if len(parts) != 3:
                         continue
@@ -344,17 +341,17 @@ class ViewsCounter:
                     # 更新数据库
                     if cls._update_db_views(mt, obj_id, views):
                         cache.delete(key_str)
-                        result['synced'] += 1
+                        result["synced"] += 1
                     else:
-                        result['errors'] += 1
+                        result["errors"] += 1
 
                 except Exception as e:
                     logger.error(f"同步 {key} 失败: {e}")
-                    result['errors'] += 1
+                    result["errors"] += 1
 
         except Exception as e:
             logger.error(f"同步浏览量到数据库失败: {e}")
-            result['error'] = str(e)
+            result["error"] = str(e)
 
         return result
 
@@ -367,11 +364,10 @@ class ViewsCounter:
                 return False
 
             from django.apps import apps
+
             model = apps.get_model(model_path)
 
-            model.objects.filter(pk=object_id).update(
-                views_count=F('views_count') + views
-            )
+            model.objects.filter(pk=object_id).update(views_count=F("views_count") + views)
             return True
 
         except Exception as e:

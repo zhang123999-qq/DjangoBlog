@@ -9,52 +9,53 @@
 # 百度审核结论类型
 # ============================================================
 CONCLUSION_TYPE = {
-    1: '合规',
-    2: '疑似',
-    3: '不合规',
+    1: "合规",
+    2: "疑似",
+    3: "不合规",
 }
 
 # ============================================================
 # 违规类型映射 — 完整版 (baidu_moderation.py 使用)
 # ============================================================
 VIOLATION_TYPES = {
-    1: '色情',
-    2: '性感',
-    3: '暴恐',
-    4: '违禁',
-    5: '涉政',
-    6: '辱骂',
-    7: '广告',
-    8: '灌水',
-    9: '涉黄',
-    10: '低俗',
-    11: '涉价值观',
-    12: '涉疆',
-    13: '涉港',
-    14: '涉台',
-    15: '涉藏',
-    16: '宗教',
-    17: '迷信',
-    18: '违法',
-    19: '欺诈',
-    20: '交易',
+    1: "色情",
+    2: "性感",
+    3: "暴恐",
+    4: "违禁",
+    5: "涉政",
+    6: "辱骂",
+    7: "广告",
+    8: "灌水",
+    9: "涉黄",
+    10: "低俗",
+    11: "涉价值观",
+    12: "涉疆",
+    13: "涉港",
+    14: "涉台",
+    15: "涉藏",
+    16: "宗教",
+    17: "迷信",
+    18: "违法",
+    19: "欺诈",
+    20: "交易",
 }
 
 # ============================================================
 # 违规类型映射 — 简化版 (ai_service.py 使用)
 # ============================================================
 VIOLATION_TYPES_SIMPLE = {
-    1: '色情',
-    2: '暴恐',
-    3: '政治敏感',
-    4: '恶意推广',
-    5: '低俗辱骂',
-    6: '低质灌水',
+    1: "色情",
+    2: "暴恐",
+    3: "政治敏感",
+    4: "恶意推广",
+    5: "低俗辱骂",
+    6: "低质灌水",
 }
 
 # ============================================================
 # 解析函数
 # ============================================================
+
 
 def parse_baidu_violation_data(data):
     """解析百度 API 返回的违规数据
@@ -72,14 +73,14 @@ def parse_baidu_violation_data(data):
     for item in data:
         if not isinstance(item, dict):
             continue
-        raw_type = item.get('type', -1)
+        raw_type = item.get("type", -1)
         violation_type = raw_type if isinstance(raw_type, int) else -1
-        probability = item.get('probability', 0)
+        probability = item.get("probability", 0)
         violation = {
-            'type': VIOLATION_TYPES.get(violation_type, f'类型{violation_type}'),
-            'msg': item.get('msg', ''),
-            'probability': probability,
-            'confidence': f'{probability * 100:.1f}%',
+            "type": VIOLATION_TYPES.get(violation_type, f"类型{violation_type}"),
+            "msg": item.get("msg", ""),
+            "probability": probability,
+            "confidence": f"{probability * 100:.1f}%",
         }
         violations.append(violation)
 
@@ -102,13 +103,13 @@ def parse_baidu_violation_data_simple(data):
     for item in data:
         if not isinstance(item, dict):
             continue
-        raw_type = item.get('type', -1)
+        raw_type = item.get("type", -1)
         violation_type = raw_type if isinstance(raw_type, int) else -1
         violation = {
-            'type': VIOLATION_TYPES_SIMPLE.get(violation_type, '其他'),
-            'msg': item.get('msg', ''),
-            'probability': item.get('probability', 0),
-            'hits': item.get('hits', []),
+            "type": VIOLATION_TYPES_SIMPLE.get(violation_type, "其他"),
+            "msg": item.get("msg", ""),
+            "probability": item.get("probability", 0),
+            "hits": item.get("hits", []),
         }
         violations.append(violation)
 

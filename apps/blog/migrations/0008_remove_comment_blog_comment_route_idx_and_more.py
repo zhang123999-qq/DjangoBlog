@@ -6,20 +6,20 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('blog', '0007_post_comment_route_composite_indexes'),
+        ("blog", "0007_post_comment_route_composite_indexes"),
     ]
 
     operations = [
         migrations.RemoveIndex(
-            model_name='comment',
-            name='blog_comment_route_idx',
+            model_name="comment",
+            name="blog_comment_route_idx",
         ),
         migrations.RemoveIndex(
-            model_name='post',
-            name='blog_post_route_list_idx',
+            model_name="post",
+            name="blog_post_route_list_idx",
         ),
         migrations.RemoveIndex(
-            model_name='post',
-            name='blog_post_cate_list_idx',
+            model_name="post",
+            name="blog_post_cate_list_idx",
         ),
     ]

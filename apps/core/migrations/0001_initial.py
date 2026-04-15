@@ -7,26 +7,25 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='SiteConfig',
+            name="SiteConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('site_name', models.CharField(default='Django 综合网站', max_length=255)),
-                ('site_title', models.CharField(default='Django 综合网站', max_length=255)),
-                ('site_description', models.TextField(default='这是一个基于 Django 的综合网站')),
-                ('logo', models.ImageField(blank=True, null=True, upload_to='logos/')),
-                ('is_installed', models.BooleanField(default=False)),
-                ('allow_registration', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("site_name", models.CharField(default="Django 综合网站", max_length=255)),
+                ("site_title", models.CharField(default="Django 综合网站", max_length=255)),
+                ("site_description", models.TextField(default="这是一个基于 Django 的综合网站")),
+                ("logo", models.ImageField(blank=True, null=True, upload_to="logos/")),
+                ("is_installed", models.BooleanField(default=False)),
+                ("allow_registration", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': '网站配置',
-                'verbose_name_plural': '网站配置',
+                "verbose_name": "网站配置",
+                "verbose_name_plural": "网站配置",
             },
         ),
     ]

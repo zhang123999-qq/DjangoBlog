@@ -1,10 +1,8 @@
 from django.db import models
 from django.conf import settings
-from django.utils.text import slugify
 from django.urls import reverse
 from django.db.models import F
 from django.core.cache import cache
-from datetime import datetime
 from apps.core.utils import generate_slug
 
 # Redis key 前缀（与 tasks.py 保持一致）
@@ -109,6 +107,7 @@ class Post(models.Model):
             else:
                 # 标题为空时，使用时间戳作为 slug
                 from django.utils import timezone
+
                 self.slug = f"post-{timezone.now().timestamp():.0f}"
 
         # 确保 slug 唯一
@@ -133,7 +132,7 @@ class Post(models.Model):
 
         super().save(*args, **kwargs)
         # 清除分类/标签缓存（文章发布/编辑/删除后侧边栏数量需要刷新）
-        cache.delete('blog_categories_tags')
+        cache.delete("blog_categories_tags")
 
     def __str__(self):
         return self.title
@@ -256,9 +255,7 @@ class Comment(models.Model):
 
     def update_like_count(self):
         """更新点赞"""
-        self.__class__.objects.filter(pk=self.pk).update(
-            like_count=self.likes.count()
-        )
+        self.__class__.objects.filter(pk=self.pk).update(like_count=self.likes.count())
         self.like_count = self.likes.count()
 
     def save(self, *args, **kwargs):

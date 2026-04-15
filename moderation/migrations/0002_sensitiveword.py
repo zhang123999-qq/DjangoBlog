@@ -6,21 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('moderation', '0001_initial'),
+        ("moderation", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SensitiveWord',
+            name="SensitiveWord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('word', models.CharField(max_length=100, unique=True, verbose_name='敏感词')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("word", models.CharField(max_length=100, unique=True, verbose_name="敏感词")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'verbose_name': '敏感词',
-                'verbose_name_plural': '敏感词',
-                'ordering': ['word'],
+                "verbose_name": "敏感词",
+                "verbose_name_plural": "敏感词",
+                "ordering": ["word"],
             },
         ),
     ]

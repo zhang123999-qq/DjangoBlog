@@ -26,12 +26,13 @@ PUBLISHED_POST_COUNT_FILTER = Q(posts__status="published") & Q(posts__slug__isnu
 
 class PostFilter(django_filters.FilterSet):
     """文章过滤器：支持按 category slug、tag slug 筛选"""
-    category = django_filters.CharFilter(field_name='category__slug', lookup_expr='exact')
-    tags = django_filters.CharFilter(field_name='tags__slug', lookup_expr='exact')
+
+    category = django_filters.CharFilter(field_name="category__slug", lookup_expr="exact")
+    tags = django_filters.CharFilter(field_name="tags__slug", lookup_expr="exact")
 
     class Meta:
         model = Post
-        fields = ['category', 'tags']
+        fields = ["category", "tags"]
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,7 +40,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Category.objects.annotate(post_count=Count("posts", filter=PUBLISHED_POST_COUNT_FILTER)).order_by("name")
     serializer_class = CategorySerializer
-    lookup_field = 'slug'
+    lookup_field = "slug"
     permission_classes = [permissions.AllowAny]
     throttle_scope = "api_read"
 
@@ -68,7 +69,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.annotate(post_count=Count("posts", filter=PUBLISHED_POST_COUNT_FILTER)).order_by("name")
     serializer_class = TagSerializer
-    lookup_field = 'slug'
+    lookup_field = "slug"
     permission_classes = [permissions.AllowAny]
 
 
@@ -76,7 +77,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     """文章 API"""
 
     queryset = Post.objects.filter(status="published").select_related("author", "category").prefetch_related("tags")
-    lookup_field = 'slug'  # 修复: 用 slug 查找而非 pk
+    lookup_field = "slug"  # 修复: 用 slug 查找而非 pk
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = PostFilter  # 自定义过滤器支持 category/tag slug 筛选

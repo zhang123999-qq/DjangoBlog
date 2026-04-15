@@ -76,42 +76,40 @@ class DjangoBlogAdminSite(admin.AdminSite):
         stats["pending_topics"] = Topic.objects.filter(review_status="pending").count()
 
         # ===== 总浏览量 =====
-        stats["total_views"] = Post.objects.aggregate(
-            total=Sum("views_count")
-        )["total"] or 0
+        stats["total_views"] = Post.objects.aggregate(total=Sum("views_count"))["total"] or 0
 
         # ===== 最近 7 天数据：使用数据库聚合替代循环 =====
         # 原来是 14 个查询（7天 × 2），现在只用 2 个聚合查询
-        seven_days_ago = timezone.make_aware(
-            datetime.combine(today - timedelta(days=6), datetime.min.time())
-        )
+        seven_days_ago = timezone.make_aware(datetime.combine(today - timedelta(days=6), datetime.min.time()))
 
         # 使用 TruncDate + 聚合，单次查询获取所有天的数据
         posts_by_day = dict(
             Post.objects.filter(created_at__gte=seven_days_ago)
-            .annotate(day=TruncDate('created_at'))
-            .values('day')
-            .annotate(count=Count('id'))
-            .values_list('day', 'count')
+            .annotate(day=TruncDate("created_at"))
+            .values("day")
+            .annotate(count=Count("id"))
+            .values_list("day", "count")
         )
 
         comments_by_day = dict(
             Comment.objects.filter(created_at__gte=seven_days_ago)
-            .annotate(day=TruncDate('created_at'))
-            .values('day')
-            .annotate(count=Count('id'))
-            .values_list('day', 'count')
+            .annotate(day=TruncDate("created_at"))
+            .values("day")
+            .annotate(count=Count("id"))
+            .values_list("day", "count")
         )
 
         # 构建 7 天数据
         week_data = []
         for i in range(7):
             day = today - timedelta(days=6 - i)
-            week_data.append({
-                "date": day.strftime("%m-%d"),
-                "posts": posts_by_day.get(day, 0),
-                "comments": comments_by_day.get(day, 0),
-            })
+            week_data.append(
+                {
+                    "date": day.strftime("%m-%d"),
+                    "posts": posts_by_day.get(day, 0),
+                    "comments": comments_by_day.get(day, 0),
+                }
+            )
         stats["week_data"] = week_data
 
         # ===== 系统信息（不常变，可缓存更久） =====
@@ -122,11 +120,9 @@ class DjangoBlogAdminSite(admin.AdminSite):
         stats["os_info"] = f"{platform.system()} {platform.release()}"
 
         db_backend = settings.DATABASES["default"]["ENGINE"].split(".")[-1]
-        stats["db_engine"] = {
-            "sqlite3": "SQLite",
-            "mysql": "MySQL",
-            "postgresql": "PostgreSQL"
-        }.get(db_backend, db_backend.upper())
+        stats["db_engine"] = {"sqlite3": "SQLite", "mysql": "MySQL", "postgresql": "PostgreSQL"}.get(
+            db_backend, db_backend.upper()
+        )
 
         # Redis 信息（带超时保护）
         stats["redis_info"] = self._get_redis_info()
@@ -144,6 +140,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
         """获取 Redis 信息（带超时保护）"""
         try:
             import redis
+
             r = redis.Redis(
                 host="localhost",
                 port=6379,
@@ -164,6 +161,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
 
         try:
             from apps.tools.registry import tool_registry
+
             count = len(tool_registry.get_all_tools())
             cache.set(cache_key, count, 300)  # 5 分钟缓存
             return count
@@ -179,6 +177,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
 
         try:
             from apps.tools.registry import tool_registry
+
             tools = tool_registry.get_all_tools()
             cache.set(cache_key, tools, 300)  # 5 分钟缓存
             return tools

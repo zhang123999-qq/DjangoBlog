@@ -1,6 +1,7 @@
 """
 .gitignore生成器工具
 """
+
 from ..categories import ToolCategory
 from django import forms
 from apps.tools.base_tool import BaseTool
@@ -8,74 +9,75 @@ from apps.tools.base_tool import BaseTool
 
 class GitignoreGeneratorForm(forms.Form):
     """gitignore生成器表单"""
+
     project_types = forms.MultipleChoiceField(
-        label='项目类型',
+        label="项目类型",
         choices=[
-            ('python', 'Python'),
-            ('django', 'Django'),
-            ('node', 'Node.js'),
-            ('react', 'React'),
-            ('vue', 'Vue.js'),
-            ('java', 'Java'),
-            ('spring', 'Spring Boot'),
-            ('go', 'Go'),
-            ('rust', 'Rust'),
-            ('dotnet', '.NET/C#'),
-            ('php', 'PHP'),
-            ('laravel', 'Laravel'),
-            ('ruby', 'Ruby'),
-            ('rails', 'Rails'),
-            ('swift', 'Swift/iOS'),
-            ('android', 'Android'),
-            ('flutter', 'Flutter'),
+            ("python", "Python"),
+            ("django", "Django"),
+            ("node", "Node.js"),
+            ("react", "React"),
+            ("vue", "Vue.js"),
+            ("java", "Java"),
+            ("spring", "Spring Boot"),
+            ("go", "Go"),
+            ("rust", "Rust"),
+            ("dotnet", ".NET/C#"),
+            ("php", "PHP"),
+            ("laravel", "Laravel"),
+            ("ruby", "Ruby"),
+            ("rails", "Rails"),
+            ("swift", "Swift/iOS"),
+            ("android", "Android"),
+            ("flutter", "Flutter"),
         ],
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
-        required=True
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+        required=True,
     )
     ides = forms.MultipleChoiceField(
-        label='IDE/编辑器',
+        label="IDE/编辑器",
         choices=[
-            ('vscode', 'VS Code'),
-            ('idea', 'IntelliJ IDEA'),
-            ('pycharm', 'PyCharm'),
-            ('webstorm', 'WebStorm'),
-            ('sublime', 'Sublime Text'),
-            ('vim', 'Vim'),
-            ('emacs', 'Emacs'),
-            ('eclipse', 'Eclipse'),
+            ("vscode", "VS Code"),
+            ("idea", "IntelliJ IDEA"),
+            ("pycharm", "PyCharm"),
+            ("webstorm", "WebStorm"),
+            ("sublime", "Sublime Text"),
+            ("vim", "Vim"),
+            ("emacs", "Emacs"),
+            ("eclipse", "Eclipse"),
         ],
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
-        required=False
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+        required=False,
     )
     os_types = forms.MultipleChoiceField(
-        label='操作系统',
+        label="操作系统",
         choices=[
-            ('macos', 'macOS'),
-            ('windows', 'Windows'),
-            ('linux', 'Linux'),
+            ("macos", "macOS"),
+            ("windows", "Windows"),
+            ("linux", "Linux"),
         ],
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
-        required=False
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+        required=False,
     )
     extras = forms.MultipleChoiceField(
-        label='额外选项',
+        label="额外选项",
         choices=[
-            ('secrets', '敏感文件(.env, credentials)'),
-            ('docker', 'Docker'),
-            ('terraform', 'Terraform'),
-            ('database', '数据库文件'),
-            ('logs', '日志文件'),
-            ('backup', '备份文件'),
-            ('archives', '压缩包'),
+            ("secrets", "敏感文件(.env, credentials)"),
+            ("docker", "Docker"),
+            ("terraform", "Terraform"),
+            ("database", "数据库文件"),
+            ("logs", "日志文件"),
+            ("backup", "备份文件"),
+            ("archives", "压缩包"),
         ],
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
-        required=False
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+        required=False,
     )
 
 
 # gitignore模板
 GITIGNORE_TEMPLATES = {
-    'python': '''
+    "python": """
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -136,8 +138,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-''',
-    'django': '''
+""",
+    "django": """
 # Django stuff:
 *.log
 local_settings.py
@@ -148,8 +150,8 @@ media/
 # Static files
 staticfiles/
 static/CACHE/
-''',
-    'node': '''
+""",
+    "node": """
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -177,8 +179,8 @@ pids/
 *.pid
 *.seed
 *.pid.lock
-''',
-    'react': '''
+""",
+    "react": """
 # React / Next.js
 .next/
 out/
@@ -190,8 +192,8 @@ build/
 # Misc
 .DS_Store
 Thumbs.db
-''',
-    'vue': '''
+""",
+    "vue": """
 # Vue
 .vite/
 .nuxt/
@@ -200,8 +202,8 @@ Thumbs.db
 
 # Production
 dist/
-''',
-    'java': '''
+""",
+    "java": """
 # Compiled class file
 *.class
 
@@ -233,8 +235,8 @@ buildNumber.properties
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
-''',
-    'spring': '''
+""",
+    "spring": """
 # Spring Boot
 *.jar
 *.war
@@ -243,8 +245,8 @@ target/
 # Application properties
 application-dev.properties
 application-prod.properties
-''',
-    'go': '''
+""",
+    "go": """
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -263,8 +265,8 @@ vendor/
 
 # Go workspace file
 go.work
-''',
-    'rust': '''
+""",
+    "rust": """
 # Generated files
 target/
 
@@ -273,8 +275,8 @@ Cargo.lock
 
 # Backup files
 **/*.rs.bk
-''',
-    'dotnet': '''
+""",
+    "dotnet": """
 # Build results
 [Dd]ebug/
 [Rr]elease/
@@ -300,8 +302,8 @@ packages/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-''',
-    'php': '''
+""",
+    "php": """
 # Composer
 vendor/
 composer.lock
@@ -313,8 +315,8 @@ composer.lock
 # Laravel
 /storage/
 /bootstrap/cache/
-''',
-    'laravel': '''
+""",
+    "laravel": """
 # Laravel
 /storage/*.key
 /storage/
@@ -324,8 +326,8 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
-''',
-    'ruby': '''
+""",
+    "ruby": """
 # Bundler
 /.bundle
 /vendor/bundle
@@ -343,8 +345,8 @@ Homestead.json
 .env
 .env.local
 .env.*.local
-''',
-    'rails': '''
+""",
+    "rails": """
 # Rails
 /public/assets
 /public/packs
@@ -353,8 +355,8 @@ Homestead.json
 /yarn.lock
 /yarn-error.log
 /storage
-''',
-    'swift': '''
+""",
+    "swift": """
 # Xcode
 build/
 DerivedData/
@@ -381,8 +383,8 @@ Pods/
 
 # Carthage
 Carthage/Build/
-''',
-    'android': '''
+""",
+    "android": """
 # Built application files
 *.apk
 *.aar
@@ -411,8 +413,8 @@ proguard/
 # Android Studio
 *.iml
 .idea/
-''',
-    'flutter': '''
+""",
+    "flutter": """
 # Flutter/Dart
 .dart_tool/
 .flutter-plugins
@@ -437,9 +439,9 @@ build/
 **/ios/**/*.moved-aside
 **/ios/**/*.pbxuser
 **/ios/**/*.perspectivev3
-''',
+""",
     # IDE
-    'vscode': '''
+    "vscode": """
 # VS Code
 .vscode/*
 !.vscode/settings.json
@@ -447,33 +449,33 @@ build/
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
-''',
-    'idea': '''
+""",
+    "idea": """
 # IntelliJ IDEA
 .idea/
 *.iml
 *.ipr
 *.iws
 out/
-''',
-    'pycharm': '''
+""",
+    "pycharm": """
 # PyCharm
 .idea/
 *.iml
-''',
-    'webstorm': '''
+""",
+    "webstorm": """
 # WebStorm
 .idea/
 *.iml
-''',
-    'sublime': '''
+""",
+    "sublime": """
 # Sublime Text
 *.tmlanguage.cache
 *.tmPreferences.cache
 *.stTheme.cache
 *.sublime-workspace
-''',
-    'vim': '''
+""",
+    "vim": """
 # Vim
 *.swp
 *.swo
@@ -482,8 +484,8 @@ out/
 *.un~
 Session.vim
 .netrwhist
-''',
-    'emacs': r'''
+""",
+    "emacs": r"""
 # Emacs
 *~
 \#*\#
@@ -493,8 +495,8 @@ Session.vim
 auto-save-list
 tramp
 .\#*
-''',
-    'eclipse': '''
+""",
+    "eclipse": """
 # Eclipse
 .settings/
 .classpath
@@ -502,9 +504,9 @@ tramp
 .metadata/
 bin/
 tmp/
-''',
+""",
     # OS
-    'macos': '''
+    "macos": """
 # macOS
 .DS_Store
 .AppleDouble
@@ -512,8 +514,8 @@ tmp/
 ._*
 .Spotlight-V100
 .Trashes
-''',
-    'windows': '''
+""",
+    "windows": """
 # Windows
 Thumbs.db
 Thumbs.db:encryptable
@@ -522,17 +524,17 @@ ehthumbs_vista.db
 *.stackdump
 [Dd]esktop.ini
 $RECYCLE.BIN/
-''',
-    'linux': '''
+""",
+    "linux": """
 # Linux
 *~
 .fuse_hidden*
 .directory
 .Trash-*
 .nfs*
-''',
+""",
     # Extras
-    'secrets': '''
+    "secrets": """
 # Secrets
 .env
 .env.*
@@ -541,13 +543,13 @@ $RECYCLE.BIN/
 credentials.json
 secrets.json
 .secrets/
-''',
-    'docker': '''
+""",
+    "docker": """
 # Docker
 .docker/
 docker-compose.override.yml
-''',
-    'terraform': '''
+""",
+    "terraform": """
 # Terraform
 .terraform/
 *.tfstate
@@ -555,31 +557,31 @@ docker-compose.override.yml
 *.tfvars
 .terraformrc
 terraform.rc
-''',
-    'database': '''
+""",
+    "database": """
 # Database
 *.db
 *.sqlite
 *.sqlite3
 *.sql
 *.mdb
-''',
-    'logs': '''
+""",
+    "logs": """
 # Logs
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-''',
-    'backup': '''
+""",
+    "backup": """
 # Backup
 *.bak
 *.backup
 *.old
 *.orig
-''',
-    'archives': '''
+""",
+    "archives": """
 # Archives
 *.zip
 *.tar
@@ -587,12 +589,13 @@ yarn-error.log*
 *.rar
 *.7z
 *.gz
-''',
+""",
 }
 
 
 class GitignoreGeneratorTool(BaseTool):
     """gitignore生成器工具"""
+
     name = ".gitignore生成器"
     slug = "gitignore-generator"
     description = "根据项目类型自动生成.gitignore文件"
@@ -602,10 +605,10 @@ class GitignoreGeneratorTool(BaseTool):
     template_name = "tools/gitignore_generator.html"
 
     def handle(self, request, form):
-        project_types = form.cleaned_data.get('project_types', [])
-        ides = form.cleaned_data.get('ides', [])
-        os_types = form.cleaned_data.get('os_types', [])
-        extras = form.cleaned_data.get('extras', [])
+        project_types = form.cleaned_data.get("project_types", [])
+        ides = form.cleaned_data.get("ides", [])
+        os_types = form.cleaned_data.get("os_types", [])
+        extras = form.cleaned_data.get("extras", [])
 
         # 合并所有选择
         all_selections = project_types + ides + os_types + extras
@@ -619,61 +622,61 @@ class GitignoreGeneratorTool(BaseTool):
                 template = GITIGNORE_TEMPLATES[selection]
                 if template not in result_parts:
                     # 添加注释头
-                    result_parts.append(f'\n# === {self._get_name(selection)} ===')
+                    result_parts.append(f"\n# === {self._get_name(selection)} ===")
                     result_parts.append(template.strip())
                     used_templates.append(self._get_name(selection))
 
-        result = '\n'.join(result_parts)
+        result = "\n".join(result_parts)
 
         # 清理多余空行
-        result = '\n'.join(line for line in result.split('\n') if line.strip() or line == '')
+        result = "\n".join(line for line in result.split("\n") if line.strip() or line == "")
 
         return {
-            'result': result.strip(),
-            'used_templates': used_templates,
-            'stats': {
-                'total_selections': len(all_selections),
-                'line_count': len(result.strip().split('\n')),
-            }
+            "result": result.strip(),
+            "used_templates": used_templates,
+            "stats": {
+                "total_selections": len(all_selections),
+                "line_count": len(result.strip().split("\n")),
+            },
         }
 
     def _get_name(self, key):
         """获取友好名称"""
         names = {
-            'python': 'Python',
-            'django': 'Django',
-            'node': 'Node.js',
-            'react': 'React',
-            'vue': 'Vue.js',
-            'java': 'Java',
-            'spring': 'Spring Boot',
-            'go': 'Go',
-            'rust': 'Rust',
-            'dotnet': '.NET/C#',
-            'php': 'PHP',
-            'laravel': 'Laravel',
-            'ruby': 'Ruby',
-            'rails': 'Rails',
-            'swift': 'Swift/iOS',
-            'android': 'Android',
-            'flutter': 'Flutter',
-            'vscode': 'VS Code',
-            'idea': 'IntelliJ IDEA',
-            'pycharm': 'PyCharm',
-            'webstorm': 'WebStorm',
-            'sublime': 'Sublime Text',
-            'vim': 'Vim',
-            'emacs': 'Emacs',
-            'eclipse': 'Eclipse',
-            'macos': 'macOS',
-            'windows': 'Windows',
-            'linux': 'Linux',
-            'secrets': 'Secrets',
-            'docker': 'Docker',
-            'terraform': 'Terraform',
-            'database': 'Database',
-            'logs': 'Logs',
-            'backup': 'Backup',
-            'archives': 'Archives',
+            "python": "Python",
+            "django": "Django",
+            "node": "Node.js",
+            "react": "React",
+            "vue": "Vue.js",
+            "java": "Java",
+            "spring": "Spring Boot",
+            "go": "Go",
+            "rust": "Rust",
+            "dotnet": ".NET/C#",
+            "php": "PHP",
+            "laravel": "Laravel",
+            "ruby": "Ruby",
+            "rails": "Rails",
+            "swift": "Swift/iOS",
+            "android": "Android",
+            "flutter": "Flutter",
+            "vscode": "VS Code",
+            "idea": "IntelliJ IDEA",
+            "pycharm": "PyCharm",
+            "webstorm": "WebStorm",
+            "sublime": "Sublime Text",
+            "vim": "Vim",
+            "emacs": "Emacs",
+            "eclipse": "Eclipse",
+            "macos": "macOS",
+            "windows": "Windows",
+            "linux": "Linux",
+            "secrets": "Secrets",
+            "docker": "Docker",
+            "terraform": "Terraform",
+            "database": "Database",
+            "logs": "Logs",
+            "backup": "Backup",
+            "archives": "Archives",
         }
         return names.get(key, key)

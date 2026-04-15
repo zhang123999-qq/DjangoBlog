@@ -42,7 +42,7 @@ class APIResponse:
         data: Optional[Union[Dict, List, Any]] = None,
         message: str = "success",
         code: int = 200,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ) -> Response:
         """
         成功响应
@@ -72,7 +72,7 @@ class APIResponse:
         code: int = 400,
         errors: Optional[Union[Dict, List, str]] = None,
         error_code: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ) -> Response:
         """
         错误响应
@@ -101,12 +101,7 @@ class APIResponse:
 
     @staticmethod
     def paginated(
-        data: List,
-        page: int,
-        page_size: int,
-        total: int,
-        message: str = "success",
-        extra: Optional[Dict] = None
+        data: List, page: int, page_size: int, total: int, message: str = "success", extra: Optional[Dict] = None
     ) -> Response:
         """
         分页响应
@@ -136,7 +131,7 @@ class APIResponse:
                 "total_pages": total_pages,
                 "has_next": page < total_pages,
                 "has_prev": page > 1,
-            }
+            },
         }
         if extra:
             body.update(extra)
@@ -144,10 +139,7 @@ class APIResponse:
         return Response(body, status=status.HTTP_200_OK)
 
     @staticmethod
-    def created(
-        data: Optional[Union[Dict, List, Any]] = None,
-        message: str = "创建成功"
-    ) -> Response:
+    def created(data: Optional[Union[Dict, List, Any]] = None, message: str = "创建成功") -> Response:
         """创建成功响应 (201)"""
         return APIResponse.success(data=data, message=message, code=status.HTTP_201_CREATED)
 
@@ -157,10 +149,7 @@ class APIResponse:
         return APIResponse.success(data=None, message=message, code=status.HTTP_204_NO_CONTENT)
 
     @staticmethod
-    def bad_request(
-        message: str = "请求参数错误",
-        errors: Optional[Union[Dict, List, str]] = None
-    ) -> Response:
+    def bad_request(message: str = "请求参数错误", errors: Optional[Union[Dict, List, str]] = None) -> Response:
         """400 错误"""
         return APIResponse.error(message=message, code=400, errors=errors)
 
@@ -217,11 +206,6 @@ class APIResponseMixin:
 
     def paginated_response(self, data, total, page=None, page_size=None):
         """分页响应"""
-        page = page or self.request.query_params.get('page', 1)
-        page_size = page_size or self.request.query_params.get('page_size', 20)
-        return APIResponse.paginated(
-            data=data,
-            page=int(page),
-            page_size=int(page_size),
-            total=total
-        )
+        page = page or self.request.query_params.get("page", 1)
+        page_size = page_size or self.request.query_params.get("page_size", 20)
+        return APIResponse.paginated(data=data, page=int(page), page_size=int(page_size), total=total)
