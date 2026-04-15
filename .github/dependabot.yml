@@ -25,6 +25,25 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "djangorestframework"
         update-types: ["version-update:semver-major"]
+      # django-filter 25.x 不支持 Django <5.2，项目使用 Django 4.2 LTS
+      - dependency-name: "django-filter"
+        versions: ["25.x"]
+      # 限制其他关键依赖的版本范围，确保 Django 4.2 兼容性
+      - dependency-name: "django-allauth"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "django-axes"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "django-redis"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "celery"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "djangorestframework"
+        versions: [">=4.0.0"]
+      # 忽略可能导致兼容性问题的包
+      - dependency-name: "Pillow"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
 
   # Docker 基础镜像
   - package-ecosystem: "docker"
