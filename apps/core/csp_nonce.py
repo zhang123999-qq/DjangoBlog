@@ -77,15 +77,15 @@ class CSPNonceMiddleware:
             # 图片：允许 self、data: 和 https
             "img-src 'self' data: https: blob:",
             # 字体：允许 self、data: 和 Google Fonts
-            f"font-src 'self' data: https://fonts.gstatic.com",
+            "font-src 'self' data: https://fonts.gstatic.com",
             # 连接：允许 self
-            f"connect-src 'self'",
+            "connect-src 'self'",
             # 框架祖先：防止被嵌入
-            f"frame-ancestors 'none'",
+            "frame-ancestors 'none'",
             # 表单提交目标
-            f"form-action 'self'",
+            "form-action 'self'",
             # 基础 URL
-            f"base-uri 'self'",
+            "base-uri 'self'",
         ]
 
         # 添加报告 URI（可选）

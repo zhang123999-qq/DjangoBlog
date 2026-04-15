@@ -68,7 +68,7 @@ def migrate():
     category_table = Category._meta.db_table
     tag_table = Tag._meta.db_table
     post_table = Post._meta.db_table
-    post_tags_table = "blog_post_tags"  # M2M 中间表（不通过 ORM 获取）
+    _post_tags_table = "blog_post_tags"  # M2M 中间表（不通过 ORM 获取）
     comment_table = Comment._meta.db_table
     board_table = Board._meta.db_table
     topic_table = Topic._meta.db_table
