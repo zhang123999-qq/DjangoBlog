@@ -12,8 +12,13 @@ from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from moderation.services import smart_moderate_instance
 from apps.core.rate_limit import rate_limit, rate_limit_by_user
+from django.views.decorators.cache import cache_page
 from .models import Post, Category, Tag, Comment, CommentLike
 from .forms import CommentForm, PostForm
+
+# 限流常量
+COMMENT_RATE_LIMIT = '10/m'  # 每分钟最多10条评论
+LIKE_RATE_LIMIT = '30/m'     # 每分钟最多30次点赞
 
 
 def get_categories_and_tags():
@@ -55,6 +60,7 @@ def get_categories_and_tags():
     return result
 
 
+@method_decorator(cache_page(60), name='dispatch')  # 缓存 1 分钟
 class PostListView(ListView):
     """文章列表视图"""
     model = Post
@@ -190,7 +196,7 @@ class PostDetailView(DetailView):
         return context
 
 
-@rate_limit('comment', rate='10/m', method='POST')
+@rate_limit('comment', rate=COMMENT_RATE_LIMIT, method='POST')
 def comment_create_view(request, post_slug):
     """
     创建评论视图
@@ -235,12 +241,17 @@ def comment_create_view(request, post_slug):
                 messages.success(request, '评论已提交，等待审核后显示')
 
             return redirect(post.get_absolute_url())
+        else:
+            # 表单验证失败，显示错误信息
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
 
     return redirect(post.get_absolute_url())
 
 
 @login_required
-@rate_limit('like', rate='30/m', method='POST')
+@rate_limit('like', rate=LIKE_RATE_LIMIT, method='POST')
 def like_comment_view(request, comment_id):
     """
     点赞评论视图
@@ -355,7 +366,13 @@ def post_draft_list(request):
     categories, tags = get_categories_and_tags()
 
     paginator = Paginator(drafts, 20)
-    page = request.GET.get('page', 1)
+    # 安全地获取页码参数
+    try:
+        page = int(request.GET.get('page', 1))
+        if page < 1:
+            page = 1
+    except (ValueError, TypeError):
+        page = 1
     page_obj = paginator.get_page(page)
 
     return render(request, 'blog/post_draft_list.html', {
@@ -373,7 +390,13 @@ def my_posts(request):
     categories, tags = get_categories_and_tags()
 
     paginator = Paginator(posts, 20)
-    page = request.GET.get('page', 1)
+    # 安全地获取页码参数
+    try:
+        page = int(request.GET.get('page', 1))
+        if page < 1:
+            page = 1
+    except (ValueError, TypeError):
+        page = 1
     page_obj = paginator.get_page(page)
 
     return render(request, 'blog/my_posts.html', {

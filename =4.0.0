@@ -1,0 +1,8 @@
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Collecting django-cors-headers
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/30/d8/19ed1e47badf477d17fb177c1c19b5a21da0fd2d9f093f23be3fb86c5fab/django_cors_headers-4.9.0-py3-none-any.whl (12 kB)
+Requirement already satisfied: asgiref>=3.6 in /usr/local/lib/python3.12/dist-packages (from django-cors-headers) (3.11.1)
+Requirement already satisfied: django>=4.2 in /usr/local/lib/python3.12/dist-packages (from django-cors-headers) (6.0.4)
+Requirement already satisfied: sqlparse>=0.5.0 in /usr/local/lib/python3.12/dist-packages (from django>=4.2->django-cors-headers) (0.5.5)
+Installing collected packages: django-cors-headers
+Successfully installed django-cors-headers-4.9.0

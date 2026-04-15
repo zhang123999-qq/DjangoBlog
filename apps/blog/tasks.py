@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 VIEWS_CACHE_PREFIX = 'post:views:'
 VIEWS_SYNC_BATCH_SIZE = 100  # 每次同步的最大数量
 
+# 缓存 TTL 常量
+CACHE_TTL_SHORT = 300  # 5分钟
+CACHE_TTL_LONG = 3600  # 1小时
+
 
 @shared_task
 def sync_views_to_db():
@@ -63,7 +67,7 @@ def update_hot_posts():
         )
 
         # 缓存热门文章 ID 列表
-        cache.set('blog:hot_posts:week', hot_posts, 3600)
+        cache.set('blog:hot_posts:week', hot_posts, CACHE_TTL_LONG)
 
         # 获取最近 30 天的热门文章
         month_ago = timezone.now() - timedelta(days=30)
@@ -75,7 +79,7 @@ def update_hot_posts():
             ).order_by('-views_count')[:20].values_list('id', flat=True)
         )
 
-        cache.set('blog:hot_posts:month', hot_posts_month, 3600)
+        cache.set('blog:hot_posts:month', hot_posts_month, CACHE_TTL_LONG)
 
         logger.info(f'更新热门文章: 本周 {len(hot_posts)} 篇，本月 {len(hot_posts_month)} 篇')
 

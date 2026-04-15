@@ -188,7 +188,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# 静态文件压缩
+# 静态文件压缩 - 高级配置
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -196,6 +196,17 @@ STATICFILES_FINDERS = [
 ]
 
 COMPRESS_ENABLED = not DEBUG
+COMPRESS_OFFLINE = not DEBUG  # 生产环境离线压缩
+COMPRESS_CSS_FILTERS = [
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    'compressor.filters.cssmin.rCSSMinFilter',  # 使用 rcssmin 压缩
+]
+COMPRESS_JS_FILTERS = [
+    'compressor.filters.jsmin.rJSMinFilter',  # 使用 rjsmin 压缩
+]
+COMPRESS_OUTPUT_DIR = 'compressed'  # 压缩文件输出目录
+COMPRESS_STORAGE = 'compressor.storage.CompressorFileStorage'
+
 
 # Media files
 MEDIA_URL = 'media/'

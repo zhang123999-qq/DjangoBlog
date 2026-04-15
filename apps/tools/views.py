@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
+from django.contrib.auth.decorators import login_required
 from .registry import registry
 from .models import ToolConfig
 from .categories import TOOL_CATEGORIES
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @cache_page(300)  # 缓存 5 分钟
 def tool_list(request):
-    """工具列表视图"""
+    """工具列表视图（公开访问）"""
     # 获取分类后的工具（使用 registry 内部缓存）
     categories = registry.get_categories_with_tools()
 
@@ -32,8 +33,9 @@ def tool_list(request):
     })
 
 
+@login_required
 def tool_detail(request, tool_slug):
-    """工具详情视图"""
+    """工具详情视图（需要登录）"""
     # 获取工具
     tool = registry.get_tool(tool_slug)
     if not tool:
@@ -57,16 +59,31 @@ def tool_detail(request, tool_slug):
 
     form = tool.get_form()
     result = None
+    error_message = None
 
     if request.method == 'POST':
         form = tool.get_form(request.POST)
         if form.is_valid():
-            result = tool.handle(request, form)
+            try:
+                result = tool.handle(request, form)
+            except Exception as e:
+                # 捕获工具执行异常
+                logger.error(f'工具 {tool_slug} 执行失败: {e}', exc_info=True)
+                error_message = f'工具执行失败: {str(e)}'
+        else:
+            # 表单验证失败，收集错误信息
+            errors = []
+            for field, field_errors in form.errors.items():
+                for error in field_errors:
+                    errors.append(f'{field}: {error}')
+            error_message = '; '.join(errors) if errors else '输入数据验证失败'
 
     context = tool.get_context(request, form, result)
+    context['error_message'] = error_message
     return render(request, tool.template_name, context)
 
 
+@login_required
 def my_ip_json(request):
     """返回访问者 IP（供 NAT 工具前端回退获取公网 IP）。"""
     tool = registry.get_tool('my-ip')

@@ -518,24 +518,24 @@ def setup_search_signals():
     from django.db.models.signals import post_save, post_delete
     from django.dispatch import receiver
 
-    @receiver(post_save, sender='blog.Post')
+    @receiver(post_save, sender='blog.Post', dispatch_uid='search_index_post_on_save')
     def index_post_on_save(sender, instance, **kwargs):
         if instance.status == 'published':
             SearchService.index_post(instance)
         else:
             SearchService.delete_post(instance.id)
 
-    @receiver(post_delete, sender='blog.Post')
+    @receiver(post_delete, sender='blog.Post', dispatch_uid='search_delete_post_on_delete')
     def delete_post_on_delete(sender, instance, **kwargs):
         SearchService.delete_post(instance.id)
 
-    @receiver(post_save, sender='forum.Topic')
+    @receiver(post_save, sender='forum.Topic', dispatch_uid='search_index_topic_on_save')
     def index_topic_on_save(sender, instance, **kwargs):
         if instance.review_status == 'approved':
             SearchService.index_topic(instance)
         else:
             SearchService.delete_topic(instance.id)
 
-    @receiver(post_delete, sender='forum.Topic')
+    @receiver(post_delete, sender='forum.Topic', dispatch_uid='search_delete_topic_on_delete')
     def delete_topic_on_delete(sender, instance, **kwargs):
         SearchService.delete_topic(instance.id)

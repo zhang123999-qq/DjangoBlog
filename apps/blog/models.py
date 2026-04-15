@@ -10,6 +10,10 @@ from apps.core.utils import generate_slug
 # Redis key 前缀（与 tasks.py 保持一致）
 VIEWS_CACHE_PREFIX = "post:views:"
 
+# 缓存 TTL 常量
+CACHE_TTL_SHORT = 300  # 5分钟
+CACHE_TTL_LONG = 3600  # 1小时
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="分类名称")
@@ -157,7 +161,7 @@ class Post(models.Model):
                     cache.incr(cache_key)
                 except ValueError:
                     # key 不存在，初始化
-                    cache.set(cache_key, 1, 3600)  # 1 小时过期
+                    cache.set(cache_key, 1, CACHE_TTL_LONG)  # 1 小时过期
             else:
                 # 降级处理：直接使用数据库
                 Post.objects.filter(pk=self.pk).update(views_count=F("views_count") + 1)

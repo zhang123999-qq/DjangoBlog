@@ -1,0 +1,21 @@
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Collecting django-compressor
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/d5/9d/9a0ba39f33574994e5b33aea55a68e8fad72b8dd923a82300e4e91774f59/django_compressor-4.6.0-py3-none-any.whl (96 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 96.8/96.8 kB 964.2 kB/s eta 0:00:00
+Collecting django>=4.2 (from django-compressor)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/e9/47/3d61d611609764aa71a37f7037b870e7bfb22937366974c4fd46cada7bab/django-6.0.4-py3-none-any.whl (8.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.4/8.4 MB 27.6 MB/s eta 0:00:00
+Collecting django-appconf>=1.0.3 (from django-compressor)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl (6.5 kB)
+Collecting rcssmin>=1.2.1 (from django-compressor)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/89/dc/b522a5e1a0a8ef8af50adbb3bdd9f5a059a9890b9fc5ce3f44a37a996a74/rcssmin-1.2.2-cp312-cp312-manylinux1_x86_64.whl (49 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 49.2/49.2 kB 1.9 MB/s eta 0:00:00
+Collecting rjsmin>=1.2.4 (from django-compressor)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/13/dc/72ca27c526925e88e273c3af6848777b289e4eb0854afcd7c6dbbfd4d196/rjsmin-1.2.5-cp312-cp312-manylinux1_x86_64.whl (31 kB)
+Collecting asgiref>=3.9.1 (from django>=4.2->django-compressor)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/5c/0a/a72d10ed65068e115044937873362e6e32fab1b7dce0046aeb224682c989/asgiref-3.11.1-py3-none-any.whl (24 kB)
+Collecting sqlparse>=0.5.0 (from django>=4.2->django-compressor)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/49/4b/359f28a903c13438ef59ebeee215fb25da53066db67b305c125f1c6d2a25/sqlparse-0.5.5-py3-none-any.whl (46 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 46.1/46.1 kB 1.6 MB/s eta 0:00:00
+Installing collected packages: rjsmin, rcssmin, sqlparse, asgiref, django, django-appconf, django-compressor
+Successfully installed asgiref-3.11.1 django-6.0.4 django-appconf-1.2.0 django-compressor-4.6.0 rcssmin-1.2.2 rjsmin-1.2.5 sqlparse-0.5.5

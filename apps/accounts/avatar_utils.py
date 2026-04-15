@@ -2,7 +2,7 @@
 随机头像工具
 """
 import os
-import random
+import secrets
 from django.conf import settings
 
 
@@ -33,8 +33,8 @@ def get_random_avatar():
         # 如果没有头像，返回默认头像
         return 'avatars/default-avatar.png'
 
-    # 随机选择一个头像
-    selected = random.choice(avatars)
+    # 随机选择一个头像（使用密码学安全的随机数）
+    selected = secrets.choice(avatars)
 
     # 复制到 media/avatars 目录
     import shutil

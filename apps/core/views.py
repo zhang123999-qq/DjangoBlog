@@ -18,6 +18,24 @@ from apps.tools.registry import registry as tool_registry
 
 logger = logging.getLogger(__name__)
 
+# 常量定义
+SEARCH_QUERY_MAX_LENGTH = 100  # 搜索词最大长度
+SEARCH_RESULT_LIMIT = 20       # 搜索结果最大数量
+HOME_CACHE_TTL = 60            # 首页缓存时间（秒）
+HEALTH_CHECK_CACHE_TTL = 10    # 健康检查缓存时间（秒）
+ENV_CONFIG_DATE = '2026-03-20' # 环境配置生成日期
+MS_CONVERSION_FACTOR = 1000    # 毫秒转换因子
+
+# 首页显示数量常量
+HOME_POSTS_COUNT = 6           # 首页显示文章数量
+HOME_TOPICS_COUNT = 5          # 首页显示热门主题数量
+HOME_TOOLS_COUNT = 8           # 首页显示工具数量
+
+# 设置页面字段长度常量
+SITE_NAME_MAX_LENGTH = 100     # 站点名称最大长度
+SITE_DESC_MAX_LENGTH = 500     # 站点描述最大长度
+SITE_URL_MAX_LENGTH = 200      # 站点URL最大长度
+
 # .env 文件路径
 ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
 
@@ -39,7 +57,7 @@ def save_env_config(config):
     """保存 .env 配置"""
     with open(ENV_FILE, 'w', encoding='utf-8') as f:
         f.write('# Django 配置\n')
-        f.write('# 生成时间: 2026-03-20\n\n')
+        f.write(f'# 生成时间: {ENV_CONFIG_DATE}\n\n')
         for key, value in config.items():
             f.write(f'{key}={value}\n')
 
@@ -59,7 +77,7 @@ def home_view(request):
             'views_count', 'author__username', 'author__nickname',
             'category__name', 'category__slug'
         )
-        .order_by('-created_at')[:6]
+        .order_by('-created_at')[:HOME_POSTS_COUNT]
     )
 
     hot_topics = list(
@@ -69,11 +87,11 @@ def home_view(request):
             'id', 'title', 'reply_count', 'views_count', 'last_reply_at',
             'board__name', 'board__slug', 'author__username', 'author__nickname'
         )
-        .order_by('-reply_count')[:5]
+        .order_by('-reply_count')[:HOME_TOPICS_COUNT]
     )
 
     all_tools = tool_registry.get_all_tools()
-    popular_tools = all_tools[:8] if len(all_tools) >= 8 else all_tools
+    popular_tools = all_tools[:HOME_TOOLS_COUNT] if len(all_tools) >= HOME_TOOLS_COUNT else all_tools
 
     published_posts = Post.objects.filter(status='published')
     post_count = published_posts.count()
@@ -95,13 +113,21 @@ def home_view(request):
         'view_count': view_count,
     }
 
-    cache.set(cache_key, context, 60)
+    cache.set(cache_key, context, HOME_CACHE_TTL)
     return render(request, 'home.html', context)
 
 
 def search_view(request):
     """全局搜索"""
     query = request.GET.get('q', '').strip()
+    
+    # 验证搜索词长度
+    if len(query) > SEARCH_QUERY_MAX_LENGTH:
+        query = query[:SEARCH_QUERY_MAX_LENGTH]
+    
+    # 清理搜索词（移除潜在的危险字符）
+    query = _sanitize_search_query(query)
+    
     results = {
         'posts': [],
         'topics': [],
@@ -114,15 +140,31 @@ def search_view(request):
             Q(content__icontains=query) |
             Q(summary__icontains=query),
             status='published'
-        ).distinct()[:20]
+        ).distinct()[:SEARCH_RESULT_LIMIT]
 
         results['topics'] = Topic.objects.filter(
             Q(title__icontains=query) |
             Q(content__icontains=query),
             review_status='approved'
-        ).distinct()[:20]
+        ).distinct()[:SEARCH_RESULT_LIMIT]
 
     return render(request, 'search/results.html', results)
+
+
+def _sanitize_search_query(query):
+    """清理搜索查询，移除潜在的危险字符"""
+    # 移除SQL注入相关字符
+    dangerous_chars = [';', '--', '/*', '*/', 'xp_', 'exec', 'execute', 'select', 'drop', 'delete', 'update', 'insert']
+    sanitized = query
+    for char in dangerous_chars:
+        sanitized = sanitized.replace(char, '')
+    
+    # 移除XSS相关字符
+    xss_chars = ['<', '>', 'script', 'javascript:', 'onload=', 'onerror=']
+    for char in xss_chars:
+        sanitized = sanitized.replace(char, '')
+    
+    return sanitized.strip()
 
 
 def healthz_view(request):
@@ -133,7 +175,7 @@ def healthz_view(request):
         'cache': _check_cache(),
     }
 
-    duration_ms = (time.time() - start_time) * 1000
+    duration_ms = (time.time() - start_time) * MS_CONVERSION_FACTOR
     all_healthy = all(checks.values())
     status_code = 200 if all_healthy else 503
 
@@ -161,7 +203,7 @@ def _check_cache():
     try:
         test_key = 'health_check_test'
         test_value = str(time.time())
-        cache.set(test_key, test_value, 10)
+        cache.set(test_key, test_value, HEALTH_CHECK_CACHE_TTL)
         result = cache.get(test_key)
         cache.delete(test_key)
         return result == test_value
@@ -200,11 +242,31 @@ def settings_view(request):
 
     if request.method == 'POST':
         config = get_env_config()
-        config['SITE_NAME'] = request.POST.get('site_name', 'Django Blog')
-        config['SITE_DESCRIPTION'] = request.POST.get('site_description', '')
-        config['SITE_URL'] = request.POST.get('site_url', '')
+        
+        # 验证和清理站点名称
+        site_name = request.POST.get('site_name', 'Django Blog').strip()
+        if len(site_name) > SITE_NAME_MAX_LENGTH:
+            site_name = site_name[:SITE_NAME_MAX_LENGTH]
+        config['SITE_NAME'] = site_name
+        
+        # 验证和清理站点描述
+        site_description = request.POST.get('site_description', '').strip()
+        if len(site_description) > SITE_DESC_MAX_LENGTH:
+            site_description = site_description[:SITE_DESC_MAX_LENGTH]
+        config['SITE_DESCRIPTION'] = site_description
+        
+        # 验证和清理站点URL
+        site_url = request.POST.get('site_url', '').strip()
+        if len(site_url) > SITE_URL_MAX_LENGTH:
+            site_url = site_url[:SITE_URL_MAX_LENGTH]
+        # 验证URL格式
+        if site_url and not site_url.startswith(('http://', 'https://')):
+            site_url = 'https://' + site_url
+        config['SITE_URL'] = site_url
 
-        if request.POST.get('allow_lan') == 'on':
+        # 验证LAN设置
+        allow_lan = request.POST.get('allow_lan') == 'on'
+        if allow_lan:
             config['ALLOWED_HOSTS'] = 'localhost,127.0.0.1,0.0.0.0,*'
         else:
             config['ALLOWED_HOSTS'] = 'localhost,127.0.0.1'

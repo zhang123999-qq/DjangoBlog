@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import login_required
@@ -9,6 +10,8 @@ from django.views.decorators.cache import cache_page
 from moderation.services import smart_moderate_instance
 from .models import Board, Topic, Reply, ReplyLike
 from .forms import TopicForm, ReplyForm
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(cache_page(60), name='dispatch')
@@ -84,108 +87,138 @@ class TopicDetailView(DetailView):
 @login_required
 def topic_create_view(request, board_slug):
     """创建主题视图"""
-    board = get_object_or_404(Board, slug=board_slug)
+    try:
+        board = get_object_or_404(Board, slug=board_slug)
 
-    if request.method == 'POST':
-        form = TopicForm(request.POST)
-        if form.is_valid():
-            topic = form.save(commit=False)
-            topic.board = board
-            topic.author = request.user
+        if request.method == 'POST':
+            form = TopicForm(request.POST)
+            if form.is_valid():
+                topic = form.save(commit=False)
+                topic.board = board
+                topic.author = request.user
 
-            # 先保存为 pending 状态
-            topic.review_status = 'pending'
-            topic.save()
+                # 先保存为 pending 状态
+                topic.review_status = 'pending'
+                topic.save()
 
-            # 智能审核：敏感词 + AI 双重检测
-            status, message = smart_moderate_instance(topic)
+                # 智能审核：敏感词 + AI 双重检测
+                status, message = smart_moderate_instance(topic)
 
-            # 更新版块统计信息
-            board.update_counts()
+                # 更新版块统计信息
+                board.update_counts()
 
-            # 根据审核结果显示提示
-            if status == 'approved':
-                messages.success(request, '主题已发布')
-            elif status == 'rejected':
-                messages.warning(request, f'主题未通过审核：{message}')
-            else:
-                messages.success(request, '主题已提交，等待审核后显示')
+                # 根据审核结果显示提示
+                if status == 'approved':
+                    messages.success(request, '主题已发布')
+                elif status == 'rejected':
+                    messages.warning(request, f'主题未通过审核：{message}')
+                else:
+                    messages.success(request, '主题已提交，等待审核后显示')
 
+                return redirect(board.get_absolute_url())
+        else:
+            form = TopicForm()
+
+        return render(request, 'forum/topic_form.html', {'form': form, 'board': board, 'title': '发布主题'})
+    except Exception as e:
+        logger.error(f'创建主题失败: {e}', exc_info=True)
+        messages.error(request, '创建主题失败，请稍后重试')
+        try:
+            board = get_object_or_404(Board, slug=board_slug)
             return redirect(board.get_absolute_url())
-    else:
-        form = TopicForm()
-
-    return render(request, 'forum/topic_form.html', {'form': form, 'board': board, 'title': '发布主题'})
+        except:
+            return redirect('forum:board_list')
 
 
 @login_required
 def reply_create_view(request, board_slug, topic_id):
     """创建回复视图"""
-    topic = get_object_or_404(Topic, id=topic_id, board__slug=board_slug)
+    try:
+        topic = get_object_or_404(Topic, id=topic_id, board__slug=board_slug)
 
-    # 检查主题是否被锁定
-    if topic.is_locked:
-        return HttpResponseForbidden('主题已被锁定，无法回复')
+        # 检查主题是否被锁定
+        if topic.is_locked:
+            return HttpResponseForbidden('主题已被锁定，无法回复')
 
-    if request.method == 'POST':
-        form = ReplyForm(request.POST)
-        if form.is_valid():
-            reply = form.save(commit=False)
-            reply.topic = topic
-            reply.author = request.user
+        if request.method == 'POST':
+            form = ReplyForm(request.POST)
+            if form.is_valid():
+                reply = form.save(commit=False)
+                reply.topic = topic
+                reply.author = request.user
 
-            # 先保存为 pending 状态
-            reply.review_status = 'pending'
-            reply.save()
+                # 先保存为 pending 状态
+                reply.review_status = 'pending'
+                reply.save()
 
-            # 智能审核：敏感词 + AI 双重检测
-            status, message = smart_moderate_instance(reply)
+                # 智能审核：敏感词 + AI 双重检测
+                status, message = smart_moderate_instance(reply)
 
-            # 更新主题回复数和最后回复时间
-            topic.update_reply_count()
+                # 更新主题回复数和最后回复时间
+                topic.update_reply_count()
 
-            # 根据审核结果显示提示
-            if status == 'approved':
-                messages.success(request, '回复已发布')
-            elif status == 'rejected':
-                messages.warning(request, f'回复未通过审核：{message}')
+                # 根据审核结果显示提示
+                if status == 'approved':
+                    messages.success(request, '回复已发布')
+                elif status == 'rejected':
+                    messages.warning(request, f'回复未通过审核：{message}')
+                else:
+                    messages.success(request, '回复已提交，等待审核后显示')
+
+                return redirect(topic.get_absolute_url())
             else:
-                messages.success(request, '回复已提交，等待审核后显示')
+                # 表单验证失败，显示错误信息
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, error)
 
+        return redirect(topic.get_absolute_url())
+    except Exception as e:
+        logger.error(f'创建回复失败: {e}', exc_info=True)
+        messages.error(request, '创建回复失败，请稍后重试')
+        try:
+            topic = get_object_or_404(Topic, id=topic_id, board__slug=board_slug)
             return redirect(topic.get_absolute_url())
-
-    return redirect(topic.get_absolute_url())
+        except:
+            return redirect('forum:board_list')
 
 
 @login_required
 def like_reply_view(request, reply_id):
     """点赞回复视图"""
-    reply = get_object_or_404(Reply, id=reply_id)
+    try:
+        reply = get_object_or_404(Reply, id=reply_id)
 
-    # 检查回复是否已审核通过
-    if reply.review_status != 'approved':
+        # 检查回复是否已审核通过
+        if reply.review_status != 'approved':
+            return JsonResponse({
+                'success': False,
+                'message': '只能对已审核通过的回复点赞'
+            })
+
+        # 检查用户是否已经点赞
+        like, created = ReplyLike.objects.get_or_create(user=request.user, reply=reply)
+
+        if not created:
+            # 已经点赞，取消点赞
+            like.delete()
+            liked = False
+        else:
+            # 新点赞
+            liked = True
+
+        # 更新回复点赞数
+        reply.update_like_count()
+
+        return JsonResponse({
+            'success': True,
+            'liked': liked,
+            'like_count': reply.like_count,
+            'message': '操作成功'
+        })
+    except Exception as e:
+        logger.error(f'点赞回复失败: {e}', exc_info=True)
         return JsonResponse({
             'success': False,
-            'message': '只能对已审核通过的回复点赞'
-        })
-
-    # 检查用户是否已经点赞
-    like, created = ReplyLike.objects.get_or_create(user=request.user, reply=reply)
-
-    if not created:
-        # 已经点赞，取消点赞
-        like.delete()
-        liked = False
-    else:
-        # 新点赞
-        liked = True
-
-    # 更新回复点赞数
-    reply.update_like_count()
-
-    return JsonResponse({
-        'success': True,
-        'liked': liked,
-        'like_count': reply.like_count,
-        'message': '操作成功'
-    })
+            'message': '操作失败，请稍后重试'
+        }, status=500)

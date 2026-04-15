@@ -1,6 +1,13 @@
 from django import forms
 from .models import Comment, Post, Category, Tag
 
+# 常量定义
+MIN_COMMENT_LENGTH = 5
+MAX_COMMENT_LENGTH = 2000
+MIN_POST_TITLE_LENGTH = 5
+MAX_POST_TITLE_LENGTH = 200
+MIN_POST_CONTENT_LENGTH = 10
+
 
 class CommentForm(forms.ModelForm):
     """评论表单"""
@@ -28,6 +35,16 @@ class CommentForm(forms.ModelForm):
             # 游客评论，姓名和邮箱必填
             self.fields['name'].required = True
             self.fields['email'].required = True
+
+    def clean_content(self):
+        """验证评论内容"""
+        content = self.cleaned_data.get('content', '').strip()
+        if len(content) < MIN_COMMENT_LENGTH:
+            raise forms.ValidationError(f'评论内容至少需要 {MIN_COMMENT_LENGTH} 个字符')
+        if len(content) > MAX_COMMENT_LENGTH:
+            raise forms.ValidationError(f'评论内容不能超过 {MAX_COMMENT_LENGTH} 个字符')
+        # 可以在这里添加敏感词过滤
+        return content
 
 
 class PostForm(forms.ModelForm):
@@ -78,3 +95,20 @@ class PostForm(forms.ModelForm):
         self.fields['summary'].required = False
         self.fields['category'].required = False
         self.fields['tags'].required = False
+
+    def clean_title(self):
+        """验证文章标题"""
+        title = self.cleaned_data.get('title', '').strip()
+        if len(title) < MIN_POST_TITLE_LENGTH:
+            raise forms.ValidationError(f'文章标题至少需要 {MIN_POST_TITLE_LENGTH} 个字符')
+        if len(title) > MAX_POST_TITLE_LENGTH:
+            raise forms.ValidationError(f'文章标题不能超过 {MAX_POST_TITLE_LENGTH} 个字符')
+        return title
+
+    def clean_content(self):
+        """验证文章内容"""
+        content = self.cleaned_data.get('content', '').strip()
+        if len(content) < MIN_POST_CONTENT_LENGTH:
+            raise forms.ValidationError(f'文章内容至少需要 {MIN_POST_CONTENT_LENGTH} 个字符')
+        # 可以在这里添加敏感词过滤
+        return content

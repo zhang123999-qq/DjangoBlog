@@ -1,7 +1,13 @@
+import os
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm
 from .models import User, Profile
 from .captcha import validate_captcha
+
+# 常量定义
+MAX_AVATAR_SIZE = 1024 * 1024  # 1MB
+ALLOWED_AVATAR_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/gif']
+ALLOWED_AVATAR_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif']
 
 
 class CustomLoginForm(AuthenticationForm):
@@ -87,6 +93,16 @@ class ProfileUpdateForm(forms.ModelForm):
         """验证头像上传限制"""
         avatar = self.cleaned_data.get('avatar')
         if avatar:
-            if avatar.size > 1024 * 1024:  # 限制 1MB
-                raise forms.ValidationError('头像大小不能超过 1MB')
+            # 大小限制
+            if avatar.size > MAX_AVATAR_SIZE:
+                raise forms.ValidationError(f'头像大小不能超过 {MAX_AVATAR_SIZE // 1024 // 1024}MB')
+            
+            # 文件类型白名单
+            if hasattr(avatar, 'content_type') and avatar.content_type not in ALLOWED_AVATAR_CONTENT_TYPES:
+                raise forms.ValidationError('仅支持 JPG、PNG、GIF 格式的图片')
+            
+            # 文件扩展名验证
+            ext = os.path.splitext(avatar.name)[1].lower()
+            if ext not in ALLOWED_AVATAR_EXTENSIONS:
+                raise forms.ValidationError('不支持的文件格式，请上传 JPG、PNG 或 GIF 图片')
         return avatar

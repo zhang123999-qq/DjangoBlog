@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static compress %}
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -17,9 +17,11 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- 自定义 CSS -->
+    {% compress css %}
     <link href="{% static 'css/site.css' %}" rel="stylesheet">
     <link href="{% static 'css/ui-modern.css' %}" rel="stylesheet">
     <link href="{% static 'css/tools-modern.css' %}" rel="stylesheet">
+    {% endcompress %}
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -37,7 +39,9 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <!-- 自定义 JS -->
+    {% compress js %}
     <script src="{% static 'js/site.js' %}"></script>
+    {% endcompress %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

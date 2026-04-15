@@ -16,6 +16,11 @@ from django.db import connection
 
 logger = logging.getLogger(__name__)
 
+# 常量定义
+MS_CONVERSION_FACTOR = 1000  # 毫秒转换因子
+DEFAULT_BATCH_SIZE = 1000    # 默认批量创建大小
+DEFAULT_EXAMPLE_COUNT = 10000  # 默认示例数量
+
 
 class CacheStats:
     """缓存统计工具"""
@@ -100,7 +105,7 @@ def slow_query_log(threshold_ms=100):
             result = func(*args, **kwargs)
 
             # 计算执行时间
-            duration_ms = (time.time() - start_time) * 1000
+            duration_ms = (time.time() - start_time) * MS_CONVERSION_FACTOR
 
             # 记录执行后的查询数
             queries_after = len(connection.queries)
@@ -187,12 +192,12 @@ def optimize_queryset(queryset, select_related=None, prefetch_related=None, only
     return queryset
 
 
-def bulk_create_optimized(model, objects, batch_size=1000):
+def bulk_create_optimized(model, objects, batch_size=DEFAULT_BATCH_SIZE):
     """
     批量创建优化
 
     用法:
-        posts = [Post(title=f'Post {i}') for i in range(10000)]
+        posts = [Post(title=f'Post {i}') for i in range(DEFAULT_EXAMPLE_COUNT)]
         bulk_create_optimized(Post, posts, batch_size=500)
     """
     created_count = 0
