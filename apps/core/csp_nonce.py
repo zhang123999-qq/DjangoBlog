@@ -69,13 +69,13 @@ class CSPNonceMiddleware:
         """构建带 nonce 的 CSP 策略"""
         directives = [
             # 默认策略
-            f"default-src 'self'",
+            "default-src 'self'",
             # 脚本：允许 self 和 nonce
             f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net",
             # 样式：允许 self、nonce 和内联样式（兼容性）
             f"style-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://fonts.googleapis.com",
             # 图片：允许 self、data: 和 https
-            f"img-src 'self' data: https: blob:",
+            "img-src 'self' data: https: blob:",
             # 字体：允许 self、data: 和 Google Fonts
             f"font-src 'self' data: https://fonts.gstatic.com",
             # 连接：允许 self

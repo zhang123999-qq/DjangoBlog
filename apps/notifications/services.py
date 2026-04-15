@@ -287,7 +287,7 @@ def notify_moderation_result(content, approved: bool, reason: str = ""):
         NotificationService.send_to_user(
             user_id=user.id,
             title="审核通过" if approved else "审核未通过",
-            content=f"你的内容已通过审核" if approved else f"你的内容未通过审核：{reason}",
+            content="你的内容已通过审核" if approved else f"你的内容未通过审核：{reason}",
             notification_type=(
                 NotificationType.MODERATION_APPROVED if approved else NotificationType.MODERATION_REJECTED
             ),
