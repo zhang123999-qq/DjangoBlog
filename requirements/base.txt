@@ -25,7 +25,7 @@ hiredis>=2.0.0              # Redis 高性能解析器
 
 # REST API
 djangorestframework>=3.14.0
-django-filter>=23.0
+django-filter>=23.0,<25.0
 drf-spectacular>=0.27.0
 
 # 用户认证
