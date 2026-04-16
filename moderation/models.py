@@ -91,7 +91,8 @@ class ModerationReminder(models.Model):
         unique_together = ["target_type", "target_id"]  # 确保每个内容只生成一条提醒
 
     def __str__(self):
-        return f'{self.get_target_type_display()} {self.target_id} 提醒给 {self.assigned_admin.username if self.assigned_admin else "超级管理员"}'
+        admin_name = self.assigned_admin.username if self.assigned_admin else "超级管理员"
+        return f'{self.get_target_type_display()} {self.target_id} 提醒给 {admin_name}'
 
 
 class ModerationLog(models.Model):

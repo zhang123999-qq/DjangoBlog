@@ -1,0 +1,18 @@
+[flake8]
+max-line-length = 120
+exclude =
+    .git,
+    __pycache__,
+    migrations,
+    *.pyc,
+    .venv,
+    venv
+ignore =
+    # 忽略测试文件中使用 _ 前缀的未使用变量（Python 惯例）
+    # 但 flake8 不支持按文件类型忽略，所以我们在配置中保留 F841
+    # 实际上这些 _ 前缀变量是故意不使用的，是测试代码的标准做法
+per-file-ignores =
+    # 测试文件中使用 _ 前缀的未使用变量是标准做法
+    */tests/*:F841
+    test_*.py:F841
+    *_test.py:F841

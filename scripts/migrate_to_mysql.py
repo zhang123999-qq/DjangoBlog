@@ -68,7 +68,7 @@ def migrate():
     category_table = Category._meta.db_table
     tag_table = Tag._meta.db_table
     post_table = Post._meta.db_table
-    _post_tags_table = "blog_post_tags"  # M2M 中间表（不通过 ORM 获取）
+
     comment_table = Comment._meta.db_table
     board_table = Board._meta.db_table
     topic_table = Topic._meta.db_table
@@ -77,7 +77,8 @@ def migrate():
     # 1. 用户
     print("迁移用户...")
     cursor.execute(
-        f"SELECT id, username, email, password, is_staff, is_active, is_superuser, date_joined, last_login FROM {user_table}"
+        f"SELECT id, username, email, password, is_staff, is_active, "
+        f"is_superuser, date_joined, last_login FROM {user_table}"
     )
     for u in cursor.fetchall():
         User.objects.update_or_create(

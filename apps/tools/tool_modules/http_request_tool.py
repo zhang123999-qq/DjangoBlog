@@ -240,7 +240,10 @@ class HTTPRequestTool(BaseTool):
         elif method == "DELETE":
             return session.delete(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
         elif method == "PATCH":
-            return session.patch(url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+            return session.patch(
+                url, data=data, headers=headers_dict,
+                timeout=timeout, allow_redirects=follow_redirects
+            )
         elif method == "HEAD":
             return session.head(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
         elif method == "OPTIONS":
@@ -284,7 +287,7 @@ class HTTPRequestTool(BaseTool):
     def _handle_request_error(self, e):
         """处理请求错误"""
         import requests
-        
+
         if isinstance(e, requests.Timeout):
             return {"error": "请求超时"}
         elif isinstance(e, requests.ConnectionError):
