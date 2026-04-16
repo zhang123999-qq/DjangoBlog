@@ -206,7 +206,7 @@ jobs:
           DB_NAME: djangoblog_test
           DB_USER: testuser
           DB_PASSWORD: testpass
-          USE_REDIS: "True"
+          USE_REDIS: ${{ matrix.db == 'mysql' && 'True' || 'False' }}
           REDIS_URL: redis://127.0.0.1:6379/1
         run: uv run python manage.py makemigrations --check --dry-run
 
@@ -221,7 +221,7 @@ jobs:
           DB_NAME: djangoblog_test
           DB_USER: testuser
           DB_PASSWORD: testpass
-          USE_REDIS: "True"
+          USE_REDIS: ${{ matrix.db == 'mysql' && 'True' || 'False' }}
           REDIS_URL: redis://127.0.0.1:6379/1
         run: uv run python manage.py migrate
 
@@ -236,7 +236,7 @@ jobs:
           DB_NAME: djangoblog_test
           DB_USER: testuser
           DB_PASSWORD: testpass
-          USE_REDIS: "True"
+          USE_REDIS: ${{ matrix.db == 'mysql' && 'True' || 'False' }}
           REDIS_URL: redis://127.0.0.1:6379/1
         run: |
           uv run pytest apps/ \
