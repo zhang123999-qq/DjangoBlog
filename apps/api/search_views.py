@@ -127,6 +127,25 @@ class PostSearchView(APIView):
                 default=20,
             ),
         ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "code": {"type": "integer"},
+                    "message": {"type": "string"},
+                    "success": {"type": "boolean"},
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "hits": {"type": "array", "items": {"type": "object"}},
+                            "total": {"type": "integer"},
+                            "page": {"type": "integer"},
+                            "page_size": {"type": "integer"},
+                        },
+                    },
+                },
+            }
+        },
     )
     def get(self, request):
         """文章搜索"""
@@ -192,6 +211,25 @@ class TopicSearchView(APIView):
                 default=20,
             ),
         ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "code": {"type": "integer"},
+                    "message": {"type": "string"},
+                    "success": {"type": "boolean"},
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "hits": {"type": "array", "items": {"type": "object"}},
+                            "total": {"type": "integer"},
+                            "page": {"type": "integer"},
+                            "page_size": {"type": "integer"},
+                        },
+                    },
+                },
+            }
+        },
     )
     def get(self, request):
         """主题搜索"""
@@ -229,6 +267,20 @@ class SearchHealthView(APIView):
 
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        operation_id="search_health",
+        summary="搜索服务健康检查",
+        description="检查搜索服务是否正常运行",
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "enum": ["healthy", "unhealthy"]},
+                    "backend": {"type": "string"},
+                },
+            }
+        },
+    )
     def get(self, request):
         """健康检查"""
         is_healthy = SearchService.health_check()
