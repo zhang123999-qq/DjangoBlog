@@ -173,47 +173,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function copyToClipboard() {
-    const code = document.getElementById('gitignore-code');
-    if (code) {
-        navigator.clipboard.writeText(code.textContent).then(function() {
-            showToast('已复制到剪贴板', 'success');
-        });
-    }
-}
-
-function downloadFile() {
-    const code = document.getElementById('gitignore-code');
-    if (code) {
-        const blob = new Blob([code.textContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '.gitignore';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-}
-
-function showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-    toast.style.zIndex = '9999';
-    toast.innerHTML = `
-        <div class="toast show" role="alert">
-            <div class="toast-header bg-${type === 'success' ? 'success' : 'danger'} text-white">
-                <i class="bi bi-check-circle me-2"></i>
-                <strong class="me-auto">提示</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" onclick="this.closest('.toast-container').remove()"></button>
-            </div>
-            <div class="toast-body">${message}</div>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-</script>
+<script src="{% static 'js/gitignore-generator.js' %}"></script>
 {% endblock %}
 
 {% block extra_css %}

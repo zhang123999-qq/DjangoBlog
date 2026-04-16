@@ -1,32 +1,5 @@
 {% extends "admin/change_form.html" %}
 {% block admin_change_form_document_ready %}
 {{ block.super }}
-<script>
-(function() {
-  // 公安联网备案 - 一键生成按钮
-  const gonganField = document.getElementById('id_site_gongan_beian');
-  if (!gonganField) return;
-
-  // 创建按钮容器
-  const wrapper = document.createElement('div');
-  wrapper.style.marginTop = '8px';
-  wrapper.innerHTML = `
-    <button type="button" id="btn-fill-gongan"
-      style="background:#3b82f6;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:13px;">
-      🛡️ 自动生成公安联网备案号格式
-    </button>
-    <span id="gongan-hint" style="margin-left:12px;color:#666;font-size:12px;display:none;">
-      ✅ 请修改数字部分后保存
-    </span>
-  `;
-  gonganField.parentNode.appendChild(wrapper);
-
-  document.getElementById('btn-fill-gongan').addEventListener('click', function() {
-    gonganField.value = '京公网安备 11010502030001号';
-    gonganField.focus();
-    gonganField.select();
-    document.getElementById('gongan-hint').style.display = 'inline';
-  });
-})();
-</script>
+<script src="{% static 'js/admin-gongan-beian.js' %}"></script>
 {% endblock %}

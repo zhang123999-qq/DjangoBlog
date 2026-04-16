@@ -81,7 +81,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitButton = this.querySelector('button[type="submit"]');
             if (submitButton) {
                 submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...';
+                // 使用 textContent 和 DOM API 替代 innerHTML，防止 XSS
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                
+                submitButton.textContent = '';
+                submitButton.appendChild(spinner);
+                submitButton.appendChild(document.createTextNode(' 提交中...'));
             }
         });
     });

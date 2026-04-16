@@ -220,38 +220,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-// 自动提交表单
-{% if not result %}
-document.getElementById('auto-form').submit();
-{% endif %}
-
-// 复制IP
-function copyIP() {
-    const ip = document.getElementById('ip-display').textContent;
-    navigator.clipboard.writeText(ip).then(function() {
-        showToast('IP地址已复制到剪贴板');
-    });
-}
-
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'position-fixed bottom-0 end-0 p-3';
-    toast.style.zIndex = '9999';
-    toast.innerHTML = `
-        <div class="toast show" role="alert">
-            <div class="toast-header bg-success text-white">
-                <i class="bi bi-check-circle me-2"></i>
-                <strong class="me-auto">成功</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" onclick="this.closest('.position-fixed').remove()"></button>
-            </div>
-            <div class="toast-body">${message}</div>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-</script>
+<script src="{% static 'js/ip-detector.js' %}"></script>
 {% endblock %}
 
 {% block extra_css %}

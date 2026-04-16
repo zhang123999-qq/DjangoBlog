@@ -32,7 +32,7 @@ class ColorTool(BaseTool):
     def hex_to_rgb(self, hex_color):
         """HEX转RGB"""
         hex_color = hex_color.lstrip("#")
-        return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+        return tuple(int(hex_color[i: i + 2], 16) for i in (0, 2, 4))
 
     def rgb_to_hex(self, r, g, b):
         """RGB转HEX"""

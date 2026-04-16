@@ -11,6 +11,21 @@
     --admin-text-secondary: #64748b;
     --admin-radius: 12px;
     --admin-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* 状态颜色 */
+    --admin-success: #10b981;
+    --admin-success-2: #059669;
+    --admin-warn: #f59e0b;
+    --admin-warn-2: #d97706;
+    --admin-danger: #ef4444;
+    --admin-danger-2: #dc2626;
+    --admin-violet: #8b5cf6;
+    --admin-violet-2: #7c3aed;
+    --admin-cyan: #06b6d4;
+    --admin-cyan-2: #0891b2;
+    --admin-pink: #ec4899;
+    --admin-pink-2: #db2777;
+    --admin-orange: #f97316;
+    --admin-orange-2: #ea580c;
 }
 
 /* 仪表盘统计卡片网格 */
@@ -47,13 +62,13 @@
     opacity: 0.7;
 }
 
-.stat-card.is-success { background: linear-gradient(135deg, #10b981, #059669); }
-.stat-card.is-warn    { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.stat-card.is-danger   { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.stat-card.is-violet   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.stat-card.is-cyan     { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.stat-card.is-pink     { background: linear-gradient(135deg, #ec4899, #db2777); }
-.stat-card.is-orange   { background: linear-gradient(135deg, #f97316, #ea580c); }
+.stat-card.is-success { background: linear-gradient(135deg, var(--admin-success), var(--admin-success-2)); }
+.stat-card.is-warn    { background: linear-gradient(135deg, var(--admin-warn), var(--admin-warn-2)); }
+.stat-card.is-danger   { background: linear-gradient(135deg, var(--admin-danger), var(--admin-danger-2)); }
+.stat-card.is-violet   { background: linear-gradient(135deg, var(--admin-violet), var(--admin-violet-2)); }
+.stat-card.is-cyan     { background: linear-gradient(135deg, var(--admin-cyan), var(--admin-cyan-2)); }
+.stat-card.is-pink     { background: linear-gradient(135deg, var(--admin-pink), var(--admin-pink-2)); }
+.stat-card.is-orange   { background: linear-gradient(135deg, var(--admin-orange), var(--admin-orange-2)); }
 
 .stat-small { padding: 0.9rem; }
 .stat-small h3 { margin: 0 0 0.25rem; font-size: 1.4rem; font-weight: 600; }

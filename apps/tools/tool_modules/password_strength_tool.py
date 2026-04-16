@@ -120,7 +120,7 @@ class PasswordStrengthTool(BaseTool):
         password_lower = password.lower()
         for seq in sequences:
             for i in range(len(seq) - 2):
-                if seq[i : i + 3] in password_lower or seq[i : i + 3][::-1] in password_lower:
+                if seq[i: i + 3] in password_lower or seq[i: i + 3][::-1] in password_lower:
                     return True
         return False
 

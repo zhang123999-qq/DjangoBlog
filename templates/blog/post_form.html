@@ -123,32 +123,5 @@
 {% block extra_js %}
 <!-- 编辑器初始化脚本 -->
 <script src="{% static 'js/editor-init.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 初始化 TinyMCE 编辑器
-    TinyMCEditor.create('id_content', {
-        height: 500,
-        menubar: true
-    }).then(editor => {
-        console.log('TinyMCE 编辑器已初始化');
-        
-        // 快捷键保存
-        editor.on('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                document.getElementById('post-form').submit();
-            }
-        });
-    });
-    
-    // 表单提交前同步编辑器内容
-    const form = document.getElementById('post-form');
-    form.addEventListener('submit', function() {
-        const editor = tinymce.get('id_content');
-        if (editor) {
-            editor.save();
-        }
-    });
-});
-</script>
+<script src="{% static 'js/post-editor.js' %}"></script>
 {% endblock %}

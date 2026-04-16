@@ -2,8 +2,10 @@
 哈希文件校验工具
 """
 
-from ..categories import ToolCategory
 from django import forms
+from django.core.validators import FileExtensionValidator
+from apps.core.validators import validate_any_file_extension, validate_file_size
+from ..categories import ToolCategory
 from apps.tools.base_tool import BaseTool
 import hashlib
 
@@ -11,7 +13,32 @@ import hashlib
 class FileHashForm(forms.Form):
     """哈希文件校验表单"""
 
-    file = forms.FileField(label="上传文件", widget=forms.FileInput(attrs={"class": "form-control"}))
+    file = forms.FileField(
+        label="上传文件",
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=[
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "xls",
+                    "xlsx",
+                    "ppt",
+                    "pptx",
+                    "txt",
+                    "jpg",
+                    "jpeg",
+                    "png",
+                    "zip",
+                    "rar",
+                    "7z",
+                ]
+            ),
+            validate_any_file_extension,
+            lambda f: validate_file_size(f, max_size_mb=100),
+        ],
+        widget=forms.FileInput(attrs={"class": "form-control"}),
+    )
     algorithm = forms.ChoiceField(
         label="哈希算法",
         choices=[

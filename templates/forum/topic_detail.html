@@ -51,6 +51,7 @@
                                     <button 
                                         class="btn btn-sm btn-outline-primary like-btn" 
                                         data-reply-id="{{ reply.id }}"
+                                        data-like-url="{% url 'forum:reply_like' topic.board.slug topic.id reply.id %}"
                                         {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
                                     >
                                         <span class="like-icon">❤️</span>
@@ -91,48 +92,5 @@
         {% endif %}
     </div>
     
-    <script>
-        // 点赞功能
-        document.querySelectorAll('.like-btn').forEach(button => {
-            button.addEventListener('click', async function() {
-                const replyId = this.dataset.replyId;
-                const likeCountElement = this.querySelector('.like-count');
-                const likeIconElement = this.querySelector('.like-icon');
-                
-                try {
-                    const response = await fetch(`/forum/reply/${replyId}/like/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        },
-                        credentials: 'same-origin'
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                            likeCountElement.textContent = data.like_count;
-                            if (data.liked) {
-                                likeIconElement.textContent = '❤️';
-                                this.classList.remove('btn-outline-primary');
-                                this.classList.add('btn-primary');
-                            } else {
-                                likeIconElement.textContent = '🤍';
-                                this.classList.remove('btn-primary');
-                                this.classList.add('btn-outline-primary');
-                            }
-                        } else {
-                            alert(data.message);
-                        }
-                    } else {
-                        alert('点赞失败，请重试');
-                    }
-                } catch (error) {
-                    console.error('点赞请求失败:', error);
-                    alert('点赞失败，请重试');
-                }
-            });
-        });
-    </script>
+    <script src="{% static 'js/reply-like.js' %}"></script>
 {% endblock %}

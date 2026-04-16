@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from apps.core.validators import validate_image_upload
 
 
 class User(AbstractUser):
@@ -15,7 +16,14 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        max_length=255,
+        validators=[validate_image_upload],
+        blank=True,
+        null=True,
+        verbose_name="头像",
+    )
     bio = models.TextField(blank=True, null=True, verbose_name="个人简介")
     website = models.URLField(blank=True, null=True, verbose_name="个人网站")
     created_at = models.DateTimeField(auto_now_add=True)

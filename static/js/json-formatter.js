@@ -8,11 +8,32 @@ function mountToast(message, type='success') {
   toast.style.bottom = '20px';
   toast.style.right = '20px';
   toast.style.zIndex = '9999';
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body"><i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>${message}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>`;
+  
+  // 使用 DOM API 替代 innerHTML，防止 XSS
+  const flexDiv = document.createElement('div');
+  flexDiv.className = 'd-flex';
+  
+  const bodyDiv = document.createElement('div');
+  bodyDiv.className = 'toast-body';
+  
+  const icon = document.createElement('i');
+  icon.className = `bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`;
+  
+  const textSpan = document.createElement('span');
+  textSpan.textContent = message;
+  
+  bodyDiv.appendChild(icon);
+  bodyDiv.appendChild(textSpan);
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'btn-close btn-close-white me-2 m-auto';
+  closeBtn.setAttribute('data-bs-dismiss', 'toast');
+  
+  flexDiv.appendChild(bodyDiv);
+  flexDiv.appendChild(closeBtn);
+  toast.appendChild(flexDiv);
+  
   document.body.appendChild(toast);
   const bsToast = new bootstrap.Toast(toast, { delay: 2600 });
   bsToast.show();

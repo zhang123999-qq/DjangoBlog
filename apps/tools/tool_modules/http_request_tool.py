@@ -164,6 +164,8 @@ class HTTPRequestTool(BaseTool):
     form_class = HTTPRequestForm
 
     def handle(self, request, form):
+        """处理 HTTP 请求"""
+        # 提取表单数据
         url = form.cleaned_data["url"]
         method = form.cleaned_data["method"]
         headers = form.cleaned_data["headers"]
@@ -181,102 +183,117 @@ class HTTPRequestTool(BaseTool):
         if not _check_http_request_rate_limit(request):
             return {"error": "请求过于频繁，请稍后再试（每分钟最多 20 次）"}
 
+        # 解析请求头
+        headers_dict, error = self._parse_headers(headers, content_type, method, data)
+        if error:
+            return {"error": error}
+
+        # 发送请求
+        try:
+            response = self._send_request(
+                method, url, headers_dict, data, content_type, timeout, follow_redirects
+            )
+        except Exception as e:
+            return self._handle_request_error(e)
+
+        # 解析响应
+        return self._parse_response(response, method)
+
+    def _parse_headers(self, headers, content_type, method, data):
+        """解析请求头"""
+        headers_dict = {}
+        if headers:
+            try:
+                headers_dict = json.loads(headers)
+            except json.JSONDecodeError as e:
+                return None, f"请求头JSON解析错误: {str(e)}"
+
+        # 添加Content-Type
+        if method in ["POST", "PUT", "PATCH"] and data:
+            headers_dict["Content-Type"] = content_type
+
+        return headers_dict, None
+
+    def _send_request(self, method, url, headers_dict, data, content_type, timeout, follow_redirects):
+        """发送 HTTP 请求"""
         try:
             import requests
         except ImportError:
-            return {"error": "请安装 requests: pip install requests"}
+            raise ImportError("请安装 requests: pip install requests")
 
-        try:
-            # 解析请求头
-            headers_dict = {}
-            if headers:
-                try:
-                    headers_dict = json.loads(headers)
-                except json.JSONDecodeError as e:
-                    return {"error": f"请求头JSON解析错误: {str(e)}"}
+        session = requests.Session()
 
-            # 添加Content-Type
-            if method in ["POST", "PUT", "PATCH"] and data:
-                headers_dict["Content-Type"] = content_type
+        # 准备请求数据
+        if method in ["POST", "PUT", "PATCH"] and data and content_type == "application/json":
+            try:
+                data = json.loads(data)
+            except Exception:
+                pass
 
-            # 发送请求
-            session = requests.Session()
+        # 发送请求
+        if method == "GET":
+            return session.get(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        elif method == "POST":
+            return session.post(url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        elif method == "PUT":
+            return session.put(url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        elif method == "DELETE":
+            return session.delete(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        elif method == "PATCH":
+            return session.patch(url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        elif method == "HEAD":
+            return session.head(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        elif method == "OPTIONS":
+            return session.options(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+        else:
+            raise ValueError(f"不支持的 HTTP 方法: {method}")
 
-            if method == "GET":
-                response = session.get(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-            elif method == "POST":
-                if content_type == "application/json" and data:
-                    try:
-                        data = json.loads(data)
-                    except Exception:
-                        pass
-                response = session.post(
-                    url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects
-                )
-            elif method == "PUT":
-                if content_type == "application/json" and data:
-                    try:
-                        data = json.loads(data)
-                    except Exception:
-                        pass
-                response = session.put(
-                    url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects
-                )
-            elif method == "DELETE":
-                response = session.delete(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-            elif method == "PATCH":
-                if content_type == "application/json" and data:
-                    try:
-                        data = json.loads(data)
-                    except Exception:
-                        pass
-                response = session.patch(
-                    url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects
-                )
-            elif method == "HEAD":
-                response = session.head(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-            elif method == "OPTIONS":
-                response = session.options(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
+    def _parse_response(self, response, method):
+        """解析响应"""
+        result = {
+            "url": response.url,
+            "method": method,
+            "status_code": response.status_code,
+            "status_text": response.reason,
+            "headers": dict(response.headers),
+        }
 
-            # 解析响应
-            result = {
-                "url": response.url,
-                "method": method,
-                "status_code": response.status_code,
-                "status_text": response.reason,
-                "headers": dict(response.headers),
-            }
+        # 响应时间
+        result["response_time"] = f"{response.elapsed.total_seconds() * 1000:.2f}ms"
 
-            # 响应时间
-            result["response_time"] = f"{response.elapsed.total_seconds() * 1000:.2f}ms"
+        # 响应内容
+        if method != "HEAD":
+            try:
+                # 尝试解析为JSON
+                result["content"] = response.json()
+                result["content_type"] = "json"
+            except Exception:
+                # 返回文本
+                result["content"] = response.text[:5000] if len(response.text) > 5000 else response.text
+                result["content_type"] = "text"
 
-            # 响应内容
-            if method != "HEAD":
-                try:
-                    # 尝试解析为JSON
-                    result["content"] = response.json()
-                    result["content_type"] = "json"
-                except Exception:
-                    # 返回文本
-                    result["content"] = response.text[:5000] if len(response.text) > 5000 else response.text
-                    result["content_type"] = "text"
+            # 内容编码
+            result["encoding"] = response.encoding
 
-                # 内容编码
-                result["encoding"] = response.encoding
+        # Cookies
+        if response.cookies:
+            result["cookies"] = dict(response.cookies)
 
-            # Cookies
-            if response.cookies:
-                result["cookies"] = dict(response.cookies)
+        return result
 
-            return result
-
-        except requests.Timeout:
+    def _handle_request_error(self, e):
+        """处理请求错误"""
+        import requests
+        
+        if isinstance(e, requests.Timeout):
             return {"error": "请求超时"}
-        except requests.ConnectionError as e:
+        elif isinstance(e, requests.ConnectionError):
             return {"error": f"连接错误: {str(e)}"}
-        except requests.RequestException as e:
+        elif isinstance(e, requests.RequestException):
             return {"error": f"请求错误: {str(e)}"}
-        except json.JSONDecodeError as e:
+        elif isinstance(e, json.JSONDecodeError):
             return {"error": f"请求体JSON解析错误: {str(e)}"}
-        except Exception as e:
+        elif isinstance(e, ImportError):
+            return {"error": str(e)}
+        else:
             return {"error": str(e)}

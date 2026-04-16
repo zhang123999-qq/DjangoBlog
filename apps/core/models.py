@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.cache import cache
+from apps.core.validators import validate_image_upload
 
 
 class SiteConfig(models.Model):
@@ -9,7 +10,14 @@ class SiteConfig(models.Model):
     site_icp = models.CharField(max_length=128, default="", blank=True, verbose_name="ICP备案号")
     site_gongan_beian = models.CharField(max_length=128, default="", blank=True, verbose_name="公安联网备案号")
     site_author = models.CharField(max_length=128, default="", blank=True, verbose_name="网站作者")
-    logo = models.ImageField(upload_to="logos/", null=True, blank=True)
+    logo = models.ImageField(
+        upload_to="logos/",
+        max_length=255,
+        validators=[validate_image_upload],
+        null=True,
+        blank=True,
+        verbose_name="网站Logo",
+    )
     is_installed = models.BooleanField(default=False)
     allow_registration = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

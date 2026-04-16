@@ -3,9 +3,11 @@
 支持 PNG/JPG/WEBP/GIF/BMP/TIFF 互转
 """
 
-from ..categories import ToolCategory
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from apps.core.validators import validate_image_extension, validate_file_size
+from ..categories import ToolCategory
 from apps.tools.base_tool import BaseTool
 from PIL import Image
 import io
@@ -17,6 +19,11 @@ class ImageFormatConvertForm(forms.Form):
 
     image = forms.ImageField(
         label="上传图片",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff"]),
+            validate_image_extension,
+            lambda f: validate_file_size(f, max_size_mb=20),
+        ],
         widget=forms.FileInput(attrs={"class": "form-control-file", "accept": "image/*"}),
         required=True,
     )
@@ -108,6 +115,8 @@ class ImageFormatConvertTool(BaseTool):
         return None
 
     def handle(self, request, form):
+        """处理图片格式转换"""
+        # 提取表单数据
         image_file = form.cleaned_data["image"]
         output_format = form.cleaned_data["output_format"]
         quality = form.cleaned_data.get("quality", 95)
@@ -126,68 +135,25 @@ class ImageFormatConvertTool(BaseTool):
             original_mode = img.mode
 
             # 处理尺寸调整
-            new_width, new_height = original_width, original_height
-
-            if resize_option == "percent" and resize_percent:
-                scale = resize_percent / 100
-                new_width = int(original_width * scale)
-                new_height = int(original_height * scale)
-            elif resize_option == "custom":
-                if custom_width and custom_height and not maintain_aspect:
-                    new_width = custom_width
-                    new_height = custom_height
-                elif custom_width:
-                    new_width = custom_width
-                    new_height = int(original_height * (custom_width / original_width))
-                elif custom_height:
-                    new_height = custom_height
-                    new_width = int(original_width * (custom_height / original_height))
-
-            # 调整尺寸
-            if (new_width, new_height) != (original_width, original_height):
-                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            resize_options = {
+                'resize_option': resize_option,
+                'resize_percent': resize_percent,
+                'custom_width': custom_width,
+                'custom_height': custom_height,
+                'maintain_aspect': maintain_aspect,
+            }
+            img, new_width, new_height = self._resize_image(
+                img, original_width, original_height, resize_options
+            )
 
             # 处理颜色模式转换
-            if output_format == "JPEG":
-                # JPEG不支持透明通道
-                if img.mode in ("RGBA", "P"):
-                    # 创建白色背景
-                    background = Image.new("RGB", img.size, (255, 255, 255))
-                    if img.mode == "P":
-                        img = img.convert("RGBA")
-                    background.paste(img, mask=img.split()[-1] if img.mode == "RGBA" else None)
-                    img = background
-                elif img.mode != "RGB":
-                    img = img.convert("RGB")
-            elif output_format == "BMP":
-                if img.mode not in ("RGB", "L"):
-                    img = img.convert("RGB")
+            img = self._convert_color_mode(img, output_format)
 
             # 转换格式
-            output = io.BytesIO()
-            save_kwargs = {"format": output_format}
-
-            if output_format == "JPEG":
-                save_kwargs["quality"] = quality
-                save_kwargs["optimize"] = True
-            elif output_format == "WEBP":
-                save_kwargs["quality"] = quality
-            elif output_format == "PNG":
-                save_kwargs["optimize"] = True
-            elif output_format == "TIFF":
-                save_kwargs["compression"] = "tiff_lzw"
-
-            img.save(output, **save_kwargs)
-            converted_size = output.tell()
-            output.seek(0)
+            output, converted_size = self._convert_format(img, output_format, quality)
 
             # 生成预览
-            preview_img = img.copy()
-            preview_img.thumbnail((400, 400), Image.Resampling.LANCZOS)
-            preview = io.BytesIO()
-            preview_format = "PNG" if output_format in ("PNG", "GIF", "BMP", "TIFF") else "JPEG"
-            preview_img.save(preview, format=preview_format, quality=85)
-            preview_base64 = base64.b64encode(preview.getvalue()).decode()
+            preview_base64, preview_format = self._generate_preview(img, output_format)
 
             # 生成下载链接
             download_base64 = base64.b64encode(output.getvalue()).decode()
@@ -221,6 +187,103 @@ class ImageFormatConvertTool(BaseTool):
 
         except Exception as e:
             return {"error": f"转换失败: {str(e)}"}
+
+    def _resize_image(self, img, original_width, original_height, resize_options):
+        """调整图片尺寸
+
+        Args:
+            img: PIL Image 对象
+            original_width: 原始宽度
+            original_height: 原始高度
+            resize_options: 包含尺寸调整选项的字典
+                - resize_option: 调整方式 ('percent', 'custom')
+                - resize_percent: 缩放百分比
+                - custom_width: 自定义宽度
+                - custom_height: 自定义高度
+                - maintain_aspect: 是否保持宽高比
+
+        Returns:
+            tuple: (调整后的图片, 新宽度, 新高度)
+        """
+        new_width, new_height = original_width, original_height
+
+        resize_option = resize_options.get('resize_option')
+        resize_percent = resize_options.get('resize_percent')
+        custom_width = resize_options.get('custom_width')
+        custom_height = resize_options.get('custom_height')
+        maintain_aspect = resize_options.get('maintain_aspect', True)
+
+        if resize_option == "percent" and resize_percent:
+            scale = resize_percent / 100
+            new_width = int(original_width * scale)
+            new_height = int(original_height * scale)
+        elif resize_option == "custom":
+            if custom_width and custom_height and not maintain_aspect:
+                new_width = custom_width
+                new_height = custom_height
+            elif custom_width:
+                new_width = custom_width
+                new_height = int(original_height * (custom_width / original_width))
+            elif custom_height:
+                new_height = custom_height
+                new_width = int(original_width * (custom_height / original_height))
+
+        # 调整尺寸
+        if (new_width, new_height) != (original_width, original_height):
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        return img, new_width, new_height
+
+    def _convert_color_mode(self, img, output_format):
+        """转换颜色模式"""
+        if output_format == "JPEG":
+            # JPEG不支持透明通道
+            if img.mode in ("RGBA", "P"):
+                # 创建白色背景
+                background = Image.new("RGB", img.size, (255, 255, 255))
+                if img.mode == "P":
+                    img = img.convert("RGBA")
+                background.paste(img, mask=img.split()[-1] if img.mode == "RGBA" else None)
+                img = background
+            elif img.mode != "RGB":
+                img = img.convert("RGB")
+        elif output_format == "BMP":
+            if img.mode not in ("RGB", "L"):
+                img = img.convert("RGB")
+
+        return img
+
+    def _convert_format(self, img, output_format, quality):
+        """转换图片格式"""
+        output = io.BytesIO()
+        save_kwargs = {"format": output_format}
+
+        if output_format == "JPEG":
+            save_kwargs["quality"] = quality
+            save_kwargs["optimize"] = True
+        elif output_format == "WEBP":
+            save_kwargs["quality"] = quality
+        elif output_format == "PNG":
+            save_kwargs["optimize"] = True
+        elif output_format == "TIFF":
+            save_kwargs["compression"] = "tiff_lzw"
+
+        img.save(output, **save_kwargs)
+        converted_size = output.tell()
+        output.seek(0)
+
+        return output, converted_size
+
+    def _generate_preview(self, img, output_format):
+        """生成预览图"""
+        preview_img = img.copy()
+        preview_img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+        preview = io.BytesIO()
+        preview_format = "PNG" if output_format in ("PNG", "GIF", "BMP", "TIFF") else "JPEG"
+        preview_img.save(preview, format=preview_format, quality=85)
+        preview_base64 = base64.b64encode(preview.getvalue()).decode()
+
+        return preview_base64, preview_format
 
     def _format_size(self, bytes_size):
         """格式化文件大小"""

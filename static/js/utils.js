@@ -89,30 +89,38 @@ function getErrorMessage(error) {
  * @returns {Promise<any>} 解析后的响应
  */
 async function requestJson(url, options = {}) {
-    const headers = new Headers(options.headers || {});
-    headers.set('Content-Type', 'application/json');
-    headers.set('Accept', 'application/json');
-    setCSRFHeaders(headers);
-    
-    const response = await fetch(url, {
-        ...options,
-        headers: headers,
-    });
-    
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-        const text = await response.text();
-        throw new Error(`Expected JSON response, got: ${text.substring(0, 200)}`);
+    try {
+        const headers = new Headers(options.headers || {});
+        headers.set('Content-Type', 'application/json');
+        headers.set('Accept', 'application/json');
+        setCSRFHeaders(headers);
+        
+        const response = await fetch(url, {
+            ...options,
+            headers: headers,
+        });
+        
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Expected JSON response, got: ${text.substring(0, 200)}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            const errorMessage = getErrorMessage(data);
+            throw new Error(`API Error ${response.status}: ${errorMessage}`);
+        }
+        
+        return data;
+    } catch (error) {
+        // 捕获网络错误、JSON 解析错误等
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            throw new Error('网络连接失败，请检查网络设置');
+        }
+        throw error;
     }
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-        const errorMessage = getErrorMessage(data);
-        throw new Error(`API Error ${response.status}: ${errorMessage}`);
-    }
-    
-    return data;
 }
 
 // ============================================================

@@ -2,9 +2,11 @@
 图片压缩工具
 """
 
-from ..categories import ToolCategory
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from apps.core.validators import validate_image_extension, validate_file_size
+from ..categories import ToolCategory
 from apps.tools.base_tool import BaseTool
 from PIL import Image
 import io
@@ -15,6 +17,11 @@ class ImageCompressForm(forms.Form):
 
     image = forms.ImageField(
         label="上传图片",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "gif", "bmp", "webp"]),
+            validate_image_extension,
+            lambda f: validate_file_size(f, max_size_mb=10),
+        ],
         widget=forms.FileInput(attrs={"class": "form-control-file", "accept": "image/*"}),
         required=True,
     )

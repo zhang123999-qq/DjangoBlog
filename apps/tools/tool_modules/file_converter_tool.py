@@ -2,8 +2,10 @@
 文件格式转换工具
 """
 
-from ..categories import ToolCategory
 from django import forms
+from django.core.validators import FileExtensionValidator
+from apps.core.validators import validate_any_file_extension, validate_file_size
+from ..categories import ToolCategory
 from apps.tools.base_tool import BaseTool
 import os
 import tempfile
@@ -13,7 +15,16 @@ class FileConverterForm(forms.Form):
     """文件格式转换表单"""
 
     file = forms.FileField(
-        label="上传文件", widget=forms.FileInput(attrs={"class": "form-control-file"}), required=True
+        label="上传文件",
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "jpg", "jpeg", "png"]
+            ),
+            validate_any_file_extension,
+            lambda f: validate_file_size(f, max_size_mb=50),
+        ],
+        widget=forms.FileInput(attrs={"class": "form-control-file"}),
+        required=True,
     )
     output_format = forms.ChoiceField(
         label="输出格式",

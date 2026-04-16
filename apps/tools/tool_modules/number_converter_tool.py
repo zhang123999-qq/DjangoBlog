@@ -97,7 +97,7 @@ def format_with_separators(number, base, separator="_", group_size=None):
         s = "0" * (group_size - len(s) % group_size) + s
 
     # Add separators
-    groups = [s[i : i + group_size] for i in range(0, len(s), group_size)]
+    groups = [s[i: i + group_size] for i in range(0, len(s), group_size)]
     return separator.join(groups)
 
 

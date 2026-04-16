@@ -311,7 +311,7 @@ class DatabaseSearchBackend(SearchBackend):
             limit = kwargs.get("limit", 20)
             offset = kwargs.get("offset", 0)
 
-            results = queryset[offset : offset + limit]
+            results = queryset[offset: offset + limit]
 
             hits = []
             for obj in results:

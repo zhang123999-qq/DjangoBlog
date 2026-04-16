@@ -19,6 +19,7 @@
             <button 
                 class="like-btn btn btn-sm btn-outline-primary" 
                 data-comment-id="{{ comment.id }}"
+                data-like-url="{% url 'blog:like_comment' comment.id %}"
                 {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
             >
                 <i class="bi bi-hand-thumbs-up"></i> 

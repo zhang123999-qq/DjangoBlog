@@ -1,0 +1,1939 @@
+openapi: 3.0.3
+info:
+  title: DjangoBlog API
+  version: 1.0.0
+  description: 博客论坛系统 REST API
+paths:
+  /api/boards/:
+    get:
+      operationId: boards_list
+      description: 版块 API
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 用于排序结果的字段。
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: 搜索关键词。
+        schema:
+          type: string
+      tags:
+      - boards
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBoardList'
+          description: ''
+  /api/boards/{id}/:
+    get:
+      operationId: boards_retrieve
+      description: 版块 API
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 版块 的 唯一整数值。
+        required: true
+      tags:
+      - boards
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+          description: ''
+  /api/boards/{id}/topics/:
+    get:
+      operationId: boards_topics_retrieve
+      description: 获取版块下的主题（分页）
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 版块 的 唯一整数值。
+        required: true
+      tags:
+      - boards
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: 分类 API
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 用于排序结果的字段。
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: 搜索关键词。
+        schema:
+          type: string
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+  /api/categories/{slug}/:
+    get:
+      operationId: categories_retrieve
+      description: 分类 API
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/categories/{slug}/posts/:
+    get:
+      operationId: categories_posts_retrieve
+      description: 获取分类下的文章（分页）
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/moderation/approve/{content_type}/{content_id}/:
+    post:
+      operationId: api_moderation_approve
+      summary: 审核通过（JSON API）
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: content_type
+        schema:
+          type: string
+        required: true
+      tags:
+      - moderation
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationApproveSuccess'
+          description: 审核通过成功
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                InvalidType:
+                  value:
+                    error_code: MODERATION_INVALID_CONTENT_TYPE
+                    error: 不支持的审核内容类型
+                    message: 不支持的审核内容类型
+                  summary: Invalid type
+          description: 内容类型错误
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                PermissionDenied:
+                  value:
+                    error_code: MODERATION_PERMISSION_DENIED
+                    error: 无审核权限
+                    message: 无审核权限
+                  summary: Permission denied
+          description: 权限不足
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                ContentNotFound:
+                  value:
+                    error_code: MODERATION_CONTENT_NOT_FOUND
+                    error: 审核对象不存在
+                    message: 审核对象不存在
+                  summary: Content not found
+          description: 对象不存在
+        '429':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                RateLimited:
+                  value:
+                    error_code: MODERATION_API_RATE_LIMITED
+                    error: 审核请求过于频繁，请稍后再试
+                    message: 审核请求过于频繁，请稍后再试
+                  summary: Rate limited
+                ConcurrencyLimited:
+                  value:
+                    error_code: MODERATION_API_CONCURRENCY_LIMITED
+                    error: 审核服务繁忙，请稍后再试
+                    message: 审核服务繁忙，请稍后再试
+                  summary: Concurrency limited
+          description: 限流/并发保护触发
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                ApproveFailed:
+                  value:
+                    error_code: MODERATION_APPROVE_FAILED
+                    error: 审核通过操作失败，请稍后重试
+                    message: 审核通过操作失败，请稍后重试
+                  summary: Approve failed
+          description: 审核失败
+  /api/moderation/metrics/:
+    get:
+      operationId: api_moderation_metrics
+      summary: 审核保护指标（最近 N 分钟）
+      parameters:
+      - in: query
+        name: minutes
+        schema:
+          type: integer
+        description: 统计窗口分钟数，1-120，默认10
+      tags:
+      - moderation
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationMetricsResponse'
+          description: 获取成功
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                PermissionDenied:
+                  value:
+                    error_code: MODERATION_PERMISSION_DENIED
+                    error: 无审核权限
+                    message: 无审核权限
+                  summary: Permission denied
+          description: 权限不足
+  /api/moderation/reject/{content_type}/{content_id}/:
+    post:
+      operationId: api_moderation_reject
+      summary: 审核拒绝（JSON API）
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: content_type
+        schema:
+          type: string
+        required: true
+      tags:
+      - moderation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModerationRejectRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ModerationRejectRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ModerationRejectRequest'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationRejectSuccess'
+          description: 审核拒绝成功
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                InvalidType:
+                  value:
+                    error_code: MODERATION_INVALID_CONTENT_TYPE
+                    error: 不支持的审核内容类型
+                    message: 不支持的审核内容类型
+                  summary: Invalid type
+          description: 内容类型错误
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                PermissionDenied:
+                  value:
+                    error_code: MODERATION_PERMISSION_DENIED
+                    error: 无审核权限
+                    message: 无审核权限
+                  summary: Permission denied
+          description: 权限不足
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                ContentNotFound:
+                  value:
+                    error_code: MODERATION_CONTENT_NOT_FOUND
+                    error: 审核对象不存在
+                    message: 审核对象不存在
+                  summary: Content not found
+          description: 对象不存在
+        '429':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                RateLimited:
+                  value:
+                    error_code: MODERATION_API_RATE_LIMITED
+                    error: 审核请求过于频繁，请稍后再试
+                    message: 审核请求过于频繁，请稍后再试
+                  summary: Rate limited
+                ConcurrencyLimited:
+                  value:
+                    error_code: MODERATION_API_CONCURRENCY_LIMITED
+                    error: 审核服务繁忙，请稍后再试
+                    message: 审核服务繁忙，请稍后再试
+                  summary: Concurrency limited
+          description: 限流/并发保护触发
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                RejectFailed:
+                  value:
+                    error_code: MODERATION_REJECT_FAILED
+                    error: 审核拒绝操作失败，请稍后重试
+                    message: 审核拒绝操作失败，请稍后重试
+                  summary: Reject failed
+          description: 审核拒绝失败
+  /api/notifications/:
+    get:
+      operationId: get_notifications
+      description: 获取通知列表
+      summary: 获取通知列表
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 用于排序结果的字段。
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: 搜索关键词。
+        schema:
+          type: string
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/notifications/{id}/:
+    get:
+      operationId: notifications_retrieve
+      description: |-
+        通知 API
+
+        list: 获取通知列表
+        retrieve: 获取通知详情
+        mark_read: 标记为已读
+        mark_all_read: 标记所有已读
+        unread_count: 获取未读数量
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/{id}/mark_read/:
+    post:
+      operationId: mark_notification_read
+      description: 标记单个通知为已读
+      summary: 标记通知为已读
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/clear_read/:
+    post:
+      operationId: clear_read_notifications
+      description: 清除已读通知
+      summary: 清除已读通知
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/mark_all_read/:
+    post:
+      operationId: mark_all_notifications_read
+      description: 标记所有通知为已读
+      summary: 标记所有通知为已读
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/unread_count/:
+    get:
+      operationId: get_unread_notification_count
+      description: 获取未读通知数量
+      summary: 获取未读通知数量
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/posts/:
+    get:
+      operationId: posts_list
+      description: 文章 API
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: 用于排序结果的字段。
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: 搜索关键词。
+        schema:
+          type: string
+      - in: query
+        name: tags
+        schema:
+          type: string
+      tags:
+      - posts
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostListList'
+          description: ''
+  /api/posts/{slug}/:
+    get:
+      operationId: posts_retrieve
+      description: 文章 API
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - posts
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
+  /api/posts/{slug}/comments/:
+    get:
+      operationId: posts_comments_retrieve
+      description: 获取文章评论（分页）
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - posts
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
+  /api/search/:
+    get:
+      operationId: global_search
+      description: 同时搜索文章和论坛主题
+      summary: 全局搜索
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 10
+        description: 每个类型返回的最大结果数
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: 搜索关键词
+        required: true
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      posts:
+                        type: object
+                      topics:
+                        type: object
+                      total:
+                        type: integer
+              examples:
+                搜索示例:
+                  value:
+                    code: 200
+                    message: success
+                    success: true
+                    data:
+                      posts:
+                        hits:
+                        - id: '1'
+                          title: Django 入门教程
+                          content: '...'
+                        total: 5
+                      topics:
+                        hits: []
+                        total: 0
+                      total: 5
+          description: ''
+  /api/search/health/:
+    get:
+      operationId: search_health_retrieve
+      description: 健康检查
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/search/posts/:
+    get:
+      operationId: search_posts
+      description: 搜索博客文章
+      summary: 文章搜索
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        description: 页码
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          default: 20
+        description: 每页数量
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: 搜索关键词
+        required: true
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/search/topics/:
+    get:
+      operationId: search_topics
+      description: 搜索论坛主题
+      summary: 主题搜索
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        description: 页码
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          default: 20
+        description: 每页数量
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: 搜索关键词
+        required: true
+      tags:
+      - search
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/tags/:
+    get:
+      operationId: tags_list
+      description: 标签 API
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 用于排序结果的字段。
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: 搜索关键词。
+        schema:
+          type: string
+      tags:
+      - tags
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTagList'
+          description: ''
+  /api/tags/{slug}/:
+    get:
+      operationId: tags_retrieve
+      description: 标签 API
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - tags
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/topics/:
+    get:
+      operationId: topics_list
+      description: 主题 API
+      parameters:
+      - in: query
+        name: author
+        schema:
+          type: integer
+      - in: query
+        name: board
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: 用于排序结果的字段。
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: 分页结果集中的页码。
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: 搜索关键词。
+        schema:
+          type: string
+      tags:
+      - topics
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTopicListList'
+          description: ''
+  /api/topics/{id}/:
+    get:
+      operationId: topics_retrieve
+      description: 主题 API
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 主题 的 唯一整数值。
+        required: true
+      tags:
+      - topics
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/topics/{id}/replies/:
+    get:
+      operationId: topics_replies_retrieve
+      description: 获取主题回复（分页）
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: 标识此 主题 的 唯一整数值。
+        required: true
+      tags:
+      - topics
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/upload/file/:
+    post:
+      operationId: upload_file
+      summary: 上传通用文件（同步/异步）
+      tags:
+      - upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadFileRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: string
+                  filename:
+                    type: string
+                  size:
+                    type: integer
+          description: 同步上传成功
+        '202':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: pending
+                  upload_id:
+                    type: string
+                  task_id:
+                    type: string
+                  status_path:
+                    type: string
+          description: 异步处理已入队
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                NoFile:
+                  value:
+                    error_code: UPLOAD_NO_FILE
+                    error: 没有上传文件
+                    message: 没有上传文件
+                  summary: No file
+                FileTooLarge:
+                  value:
+                    error_code: UPLOAD_FILE_TOO_LARGE
+                    error: 文件大小不能超过10MB
+                    message: 文件大小不能超过10MB
+                  summary: File too large
+                FileTypeDenied:
+                  value:
+                    error_code: UPLOAD_FILE_TYPE_DENIED
+                    error: 不允许上传该类型文件
+                    message: 不允许上传该类型文件
+                  summary: File type denied
+                FileExtNotAllowed:
+                  value:
+                    error_code: UPLOAD_FILE_EXT_NOT_ALLOWED
+                    error: 文件类型不在允许列表
+                    message: 文件类型不在允许列表
+                  summary: File ext not allowed
+                DangerousMagic:
+                  value:
+                    error_code: UPLOAD_FILE_MAGIC_DENIED
+                    error: 检测到危险文件头，上传被拒绝
+                    message: 检测到危险文件头，上传被拒绝
+                  summary: Dangerous magic
+                ScanRejected:
+                  value:
+                    error_code: UPLOAD_SECURITY_SCAN_REJECTED
+                    error: 文件安全扫描未通过
+                    message: 文件安全扫描未通过
+                  summary: Scan rejected
+          description: 上传参数错误或安全校验失败
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                UploadSaveFailed:
+                  value:
+                    error_code: UPLOAD_SAVE_FAILED
+                    error: 上传失败，请稍后重试
+                    message: 上传失败，请稍后重试
+                  summary: Upload save failed
+          description: 上传保存失败
+  /api/upload/image/:
+    post:
+      operationId: upload_image
+      summary: 上传图片（同步）
+      tags:
+      - upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadImageRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: string
+                required:
+                - location
+          description: 上传成功
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                NoFile:
+                  value:
+                    error_code: UPLOAD_NO_FILE
+                    error: 没有上传文件
+                    message: 没有上传文件
+                  summary: No file
+                ImageTooLarge:
+                  value:
+                    error_code: UPLOAD_IMAGE_TOO_LARGE
+                    error: 文件大小不能超过5MB
+                    message: 文件大小不能超过5MB
+                  summary: Image too large
+                ImageTypeNotAllowed:
+                  value:
+                    error_code: UPLOAD_IMAGE_TYPE_NOT_ALLOWED
+                    error: 不支持的图片类型
+                    message: 不支持的图片类型
+                  summary: Image type not allowed
+                ImageMagicInvalid:
+                  value:
+                    error_code: UPLOAD_IMAGE_MAGIC_INVALID
+                    error: 图片文件头校验失败
+                    message: 图片文件头校验失败
+                  summary: Image magic invalid
+                ScanRejected:
+                  value:
+                    error_code: UPLOAD_SECURITY_SCAN_REJECTED
+                    error: 文件安全扫描未通过
+                    message: 文件安全扫描未通过
+                  summary: Scan rejected
+          description: 上传参数错误
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                UploadSaveFailed:
+                  value:
+                    error_code: UPLOAD_SAVE_FAILED
+                    error: 上传失败，请稍后重试
+                    message: 上传失败，请稍后重试
+                  summary: Upload save failed
+          description: 上传保存失败
+  /api/upload/status/{upload_id}/:
+    get:
+      operationId: upload_status
+      summary: 查询异步上传状态
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - upload
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  upload_id:
+                    type: string
+                  location:
+                    type: string
+                  reason:
+                    type: string
+          description: 上传状态
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: string
+                  error:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - error_code
+                - error
+                - message
+              examples:
+                TaskNotFound:
+                  value:
+                    error_code: UPLOAD_TASK_NOT_FOUND
+                    error: 上传任务不存在或已过期
+                    message: 上传任务不存在或已过期
+                  summary: Task not found
+          description: 任务不存在
+components:
+  schemas:
+    Board:
+      type: object
+      description: 版块序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        topic_count:
+          type: integer
+          readOnly: true
+        reply_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - reply_count
+      - topic_count
+    Category:
+      type: object
+      description: 分类序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 分类名称
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        post_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - post_count
+    ModerationApproveSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: string
+        id:
+          type: integer
+      required:
+      - id
+      - status
+      - success
+    ModerationMetricsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        window_minutes:
+          type: integer
+        totals: {}
+        peak_concurrency:
+          type: integer
+        series:
+          type: array
+          items: {}
+        hotspots:
+          type: array
+          items: {}
+        thresholds: {}
+      required:
+      - hotspots
+      - peak_concurrency
+      - series
+      - success
+      - thresholds
+      - totals
+      - window_minutes
+    ModerationRejectRequest:
+      type: object
+      properties:
+        review_note:
+          type: string
+    ModerationRejectSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: string
+        id:
+          type: integer
+      required:
+      - id
+      - status
+      - success
+    Notification:
+      type: object
+      description: 通知序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: 标题
+          maxLength: 200
+        content:
+          type: string
+          title: 内容
+        notification_type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          title: 通知类型
+        link:
+          type: string
+          format: uri
+          title: 跳转链接
+          maxLength: 200
+        is_read:
+          type: boolean
+          title: 是否已读
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content
+      - created_at
+      - id
+      - title
+    NotificationTypeEnum:
+      enum:
+      - comment
+      - reply
+      - like
+      - system
+      - moderation
+      type: string
+      description: |-
+        * `comment` - 评论
+        * `reply` - 回复
+        * `like` - 点赞
+        * `system` - 系统通知
+        * `moderation` - 审核通知
+    PaginatedBoardList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Board'
+    PaginatedCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedPostListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostList'
+    PaginatedTagList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+    PaginatedTopicListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopicList'
+    Post:
+      type: object
+      description: 文章序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: 标题
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 200
+          pattern: ^[-a-zA-Z0-9_]+$
+        summary:
+          type: string
+          title: 摘要
+          maxLength: 500
+        content:
+          type: string
+          title: 内容
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: 状态
+        views_count:
+          type: integer
+          title: 浏览量
+        allow_comments:
+          type: boolean
+          title: 允许评论
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 发布时间
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        category:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+      required:
+      - author
+      - category
+      - content
+      - created_at
+      - id
+      - tags
+      - title
+    PostList:
+      type: object
+      description: 文章列表序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: 标题
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 200
+          pattern: ^[-a-zA-Z0-9_]+$
+        summary:
+          type: string
+          title: 摘要
+          maxLength: 500
+        views_count:
+          type: integer
+          title: 浏览量
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 发布时间
+        author:
+          type: string
+          readOnly: true
+        category_name:
+          type: string
+          readOnly: true
+      required:
+      - author
+      - category_name
+      - id
+      - title
+    StatusEnum:
+      enum:
+      - draft
+      - published
+      - archived
+      type: string
+      description: |-
+        * `draft` - 草稿
+        * `published` - 发布
+        * `archived` - 归档
+    Tag:
+      type: object
+      description: 标签序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 标签名称
+          maxLength: 50
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        post_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - post_count
+    Topic:
+      type: object
+      description: 主题序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+        views_count:
+          type: integer
+        reply_count:
+          type: integer
+        is_pinned:
+          type: boolean
+        is_locked:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        board:
+          allOf:
+          - $ref: '#/components/schemas/Board'
+          readOnly: true
+      required:
+      - author
+      - board
+      - content
+      - created_at
+      - id
+      - title
+    TopicList:
+      type: object
+      description: 主题列表序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        views_count:
+          type: integer
+        reply_count:
+          type: integer
+        is_pinned:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        board_name:
+          type: string
+          readOnly: true
+      required:
+      - author
+      - board_name
+      - created_at
+      - id
+      - title
+    UploadFileRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+    UploadImageRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+    User:
+      type: object
+      description: 用户序列化器
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: 用户名
+          description: 必填；长度为150个字符或以下；只能包含字母、数字、特殊字符“@”、“.”、“-”和“_”。
+        email:
+          type: string
+          format: email
+          readOnly: true
+        avatar:
+          type: string
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+        website:
+          type: string
+          readOnly: true
+      required:
+      - avatar
+      - bio
+      - email
+      - id
+      - username
+      - website
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

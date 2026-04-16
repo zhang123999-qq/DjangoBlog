@@ -3,8 +3,10 @@ Image to Base64 Converter Tool
 Convert image to Base64 string and vice versa
 """
 
-from ..categories import ToolCategory
 from django import forms
+from django.core.validators import FileExtensionValidator
+from apps.core.validators import validate_image_extension, validate_file_size
+from ..categories import ToolCategory
 import base64
 from apps.tools.base_tool import BaseTool
 
@@ -39,7 +41,16 @@ class ImageBase64Form(forms.Form):
     ]
 
     mode = forms.ChoiceField(choices=MODE_CHOICES, initial="image_to_base64", label="Mode")
-    image_file = forms.ImageField(required=False, label="Image File", help_text="Upload image (max 2MB)")
+    image_file = forms.ImageField(
+        required=False,
+        label="Image File",
+        help_text="Upload image (max 2MB)",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "gif", "bmp", "webp"]),
+            validate_image_extension,
+            lambda f: validate_file_size(f, max_size_mb=2),
+        ],
+    )
     base64_input = forms.CharField(
         widget=forms.Textarea(attrs={"rows": 5, "class": "form-control"}),
         required=False,

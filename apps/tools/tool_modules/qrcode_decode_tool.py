@@ -2,15 +2,25 @@
 二维码识别/解码工具
 """
 
-from ..categories import ToolCategory
 from django import forms
+from django.core.validators import FileExtensionValidator
+from apps.core.validators import validate_image_extension, validate_file_size
+from ..categories import ToolCategory
 from apps.tools.base_tool import BaseTool
 
 
 class QRCodeDecodeForm(forms.Form):
     """二维码识别/解码表单"""
 
-    file = forms.FileField(label="上传二维码图片", widget=forms.FileInput(attrs={"class": "form-control"}))
+    file = forms.FileField(
+        label="上传二维码图片",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "gif", "bmp", "webp"]),
+            validate_image_extension,
+            lambda f: validate_file_size(f, max_size_mb=5),
+        ],
+        widget=forms.FileInput(attrs={"class": "form-control"}),
+    )
 
 
 class QRCodeDecodeTool(BaseTool):

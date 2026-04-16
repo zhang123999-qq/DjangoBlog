@@ -8,14 +8,18 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D)
 ![License](https://img.shields.io/badge/License-MIT-black)
-![Tests](https://img.shields.io/badge/Tests-185%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-263%20passed-brightgreen)
+![Security](https://img.shields.io/badge/Security-Audited-brightgreen)
+![Code Quality](https://img.shields.io/badge/Code%20Quality-9.5%2F10-brightgreen)
 ![Deploy](https://img.shields.io/badge/Deploy-ready-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/zhang123999-qq/DjangoBlog?style=social)
 
 一个面向生产部署的 Django 综合站点：**博客 + 论坛 + 工具箱 + API**。  
 强调「可用性、可维护性、可部署性」，适合个人站点、中小团队内容平台与教学演示。
 
-[在线演示](#) · [快速开始](#-快速开始) · [API 文档](./docs/API.md) · [贡献指南](./CONTRIBUTING.md)
+**🔒 安全审计通过** | **📊 代码质量 9.5/10** | **🚀 生产就绪**
+
+[在线演示](#) · [快速开始](#-快速开始) · [API 文档](./docs/API.md) · [贡献指南](./CONTRIBUTING.md) · [审计报告](./docs/PROJECT_AUDIT_2026.md)
 
 </div>
 

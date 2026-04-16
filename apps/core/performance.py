@@ -147,7 +147,7 @@ class QueryCounter:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.queries_after = len(connection.queries)
         self.count = self.queries_after - self.queries_before
-        self.queries = connection.queries[self.queries_before : self.queries_after]
+        self.queries = connection.queries[self.queries_before: self.queries_after]
         return False
 
 
@@ -203,7 +203,7 @@ def bulk_create_optimized(model, objects, batch_size=DEFAULT_BATCH_SIZE):
     created_count = 0
 
     for i in range(0, len(objects), batch_size):
-        batch = objects[i : i + batch_size]
+        batch = objects[i: i + batch_size]
         created = model.objects.bulk_create(batch)
         created_count += len(created)
 
