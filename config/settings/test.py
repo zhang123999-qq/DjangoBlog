@@ -3,8 +3,10 @@
 目标：完全隔离外部依赖（MySQL/Redis），确保 CI 与本地测试稳定。
 """
 
+import os
+
 from .base import BASE_DIR
-from .development import *  # noqa
+from .development import *  # noqa: F401,F403,E402
 
 # 测试环境标识
 ENVIRONMENT = "test"
@@ -12,10 +14,7 @@ TESTING = True  # 用于跳过验证码等验证
 # 根据环境变量设置 DEBUG，默认为 True
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
-# 强制使用 SQLite，避免继承宿主机 DB_ENGINE=MySQL 等环境变量
 # 根据环境变量选择数据库引擎
-import os
-
 db_engine = os.environ.get("DB_ENGINE", "sqlite").lower()
 
 if db_engine == "mysql":
