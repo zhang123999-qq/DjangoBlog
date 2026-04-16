@@ -210,6 +210,21 @@ jobs:
           REDIS_URL: redis://127.0.0.1:6379/1
         run: uv run python manage.py makemigrations --check --dry-run
 
+      - name: Run migrations
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          SECRET_KEY: ci-test-secret-key
+          DEBUG: "False"
+          DB_ENGINE: ${{ matrix.db }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: djangoblog_test
+          DB_USER: testuser
+          DB_PASSWORD: testpass
+          USE_REDIS: "True"
+          REDIS_URL: redis://127.0.0.1:6379/1
+        run: uv run python manage.py migrate
+
       - name: Run tests with coverage
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
