@@ -285,3 +285,17 @@ class TestHealthCheckViews:
         # 检查checks字段
         assert 'database' in data['checks']
         assert 'cache' in data['checks']
+
+
+@pytest.mark.django_db
+class TestFooterTemplate:
+    def test_footer_has_static_independent_fallback(self):
+        response = Client().get(reverse("core:home"))
+        content = response.content.decode()
+
+        assert response.status_code == 200
+        assert 'class="site-footer bg-dark text-light mt-5"' in content
+        assert 'style="background:#111827;color:rgba(255,255,255,.82);"' in content
+        assert "text-gray-400" not in content
+        assert "border-gray-700" not in content
+        assert "hover:text-white" not in content

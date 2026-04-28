@@ -140,17 +140,15 @@ body {
 }
 
 /* 页脚样式 */
-footer {
-    background: var(--footer-bg);
+.site-footer {
+    background: var(--footer-bg) !important;
     color: var(--footer-text);
-    padding: 3rem 0;
-    margin-top: 3rem;
     position: relative;
     overflow: hidden;
     z-index: 1;
 }
 
-footer::before {
+.site-footer::before {
     content: '';
     position: absolute;
     top: 0;
@@ -160,31 +158,45 @@ footer::before {
     background: var(--primary-gradient);
 }
 
-footer .container {
+.site-footer .container {
     position: relative;
     z-index: 1;
 }
 
-footer h4,
-footer .text-white {
+.site-footer h2,
+.site-footer .text-white {
     color: var(--footer-text-strong) !important;
 }
 
-footer .text-gray-400 {
+.site-footer__muted,
+.site-footer .text-white-50 {
     color: var(--footer-text) !important;
 }
 
-footer a {
-    color: var(--footer-text);
+.site-footer a {
+    color: var(--footer-text-strong);
+    opacity: 0.78;
     transition: var(--transition);
 }
 
-footer a:hover {
+.site-footer a:hover {
     color: var(--footer-text-strong);
+    opacity: 1;
     text-decoration: none;
 }
 
-footer .border-gray-700 {
+.site-footer__links li + li {
+    margin-top: 0.5rem;
+}
+
+.site-footer__social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.site-footer .border-light {
     border-color: rgba(255, 255, 255, 0.14) !important;
     opacity: 1;
 }
@@ -327,30 +339,6 @@ main {
 .tool-card:hover .tool-icon {
     transform: scale(1.1);
     box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
-}
-
-/* 文本颜色类 */
-.text-gray-400 {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.text-white {
-    color: white;
-}
-
-/* 边框颜色类 */
-.border-gray-700 {
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* 过渡效果类 */
-.transition-all {
-    transition: var(--transition);
-}
-
-/* 悬停效果类 */
-.hover\:text-white:hover {
-    color: white;
 }
 
 /* 输入框组样式 */

@@ -1,90 +1,90 @@
-<footer>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <h4 class="text-white mb-4">关于我们</h4>
-                <p class="text-gray-400">
+<footer class="site-footer bg-dark text-light mt-5" style="background:#111827;color:rgba(255,255,255,.82);">
+    <div class="container py-5">
+        <div class="row g-4">
+            <section class="col-md-4" aria-labelledby="footer-about-title">
+                <h2 id="footer-about-title" class="h5 text-white mb-3">关于我们</h2>
+                <p class="site-footer__muted mb-0">
                     这是一个基于 Django 4.2 LTS 的综合网站项目，包含博客、论坛、工具栏等功能。
                     我们致力于提供现代化、科技感的用户体验，为用户提供优质的内容和服务。
                 </p>
-                <div class="mt-4">
-                    <a href="https://github.com/zhang123999-qq/DjangoBlog" class="text-gray-400 me-4" style="font-size: 1.2rem;" target="_blank" rel="noopener noreferrer">
+                <div class="site-footer__socials mt-4">
+                    <a href="https://github.com/zhang123999-qq/DjangoBlog" class="site-footer__social link-light text-decoration-none me-3" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                         <i class="bi bi-github"></i>
                     </a>
-                    <a href="#" class="text-gray-400 me-4" style="font-size: 1.2rem;">
+                    <a href="#" class="site-footer__social link-light text-decoration-none me-3" aria-label="Twitter">
                         <i class="bi bi-twitter"></i>
                     </a>
-                    <a href="#" class="text-gray-400" style="font-size: 1.2rem;">
+                    <a href="#" class="site-footer__social link-light text-decoration-none" aria-label="LinkedIn">
                         <i class="bi bi-linkedin"></i>
                     </a>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <h4 class="text-white mb-4">快速链接</h4>
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <a href="/" class="text-gray-400 hover:text-white transition-all">
-                            <i class="bi bi-house-door me-2"></i> 首页
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{% url 'blog:post_list' %}" class="text-gray-400 hover:text-white transition-all">
-                            <i class="bi bi-file-text me-2"></i> 博客
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{% url 'forum:board_list' %}" class="text-gray-400 hover:text-white transition-all">
-                            <i class="bi bi-chat-dots me-2"></i> 论坛
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{% url 'tools:tool_list' %}" class="text-gray-400 hover:text-white transition-all">
-                            <i class="bi bi-tools me-2"></i> 工具栏
+            </section>
+
+            <nav class="col-md-4" aria-labelledby="footer-links-title">
+                <h2 id="footer-links-title" class="h5 text-white mb-3">快速链接</h2>
+                <ul class="site-footer__links list-unstyled mb-0">
+                    <li>
+                        <a href="/" class="link-light text-decoration-none">
+                            <i class="bi bi-house-door me-2"></i>首页
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'core:contact' %}" class="text-gray-400 hover:text-white transition-all">
-                            <i class="bi bi-envelope me-2"></i> 联系我们
+                        <a href="{% url 'blog:post_list' %}" class="link-light text-decoration-none">
+                            <i class="bi bi-file-text me-2"></i>博客
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'forum:board_list' %}" class="link-light text-decoration-none">
+                            <i class="bi bi-chat-dots me-2"></i>论坛
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'tools:tool_list' %}" class="link-light text-decoration-none">
+                            <i class="bi bi-tools me-2"></i>工具栏
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'core:contact' %}" class="link-light text-decoration-none">
+                            <i class="bi bi-envelope me-2"></i>联系我们
                         </a>
                     </li>
                 </ul>
-            </div>
-            <div class="col-md-4">
-                <h4 class="text-white mb-4">订阅更新</h4>
-                <p class="text-gray-400 mb-3">
-                    订阅我们的新闻通讯，获取最新的内容和更新。
-                </p>
-                <form class="mb-4">
+            </nav>
+
+            <section class="col-md-4" aria-labelledby="footer-subscribe-title">
+                <h2 id="footer-subscribe-title" class="h5 text-white mb-3">订阅更新</h2>
+                <p class="site-footer__muted mb-3">订阅我们的新闻通讯，获取最新的内容和更新。</p>
+                <form class="mb-3" action="#" method="get">
                     <div class="input-group">
-                        <input type="email" class="form-control" placeholder="您的邮箱地址" required>
-                        <button type="submit" class="btn btn-primary">
+                        <input type="email" class="form-control" placeholder="您的邮箱地址" aria-label="您的邮箱地址">
+                        <button type="submit" class="btn btn-primary" aria-label="订阅">
                             <i class="bi bi-paper-plane"></i>
                         </button>
                     </div>
                 </form>
-                <p class="text-gray-400">
-                    <i class="bi bi-shield-check"></i> 我们尊重您的隐私，不会向第三方分享您的信息。
+                <p class="site-footer__muted mb-0">
+                    <i class="bi bi-shield-check me-1"></i>我们尊重您的隐私，不会向第三方分享您的信息。
                 </p>
-            </div>
+            </section>
         </div>
-        <hr class="border-gray-700 my-6">
-        <div class="row">
-            <div class="col-12">
-                <p class="text-gray-400 mb-1">
-                    {% if site_config and site_config.site_author %}{{ site_config.site_author }} | {% endif %}&copy; {% now "Y" %} {% if site_config %}{{ site_config.site_name }}{% else %}Django 综合网站{% endif %}
-                </p>
-                <!-- BEIAN_BLOCK:BEGIN -->
-                <p class="text-gray-400 mb-0">
-                    {% if site_config and site_config.site_icp %}
-                    ICP 备案：<a href="https://beian.miit.gov.cn/" class="text-gray-400 hover:text-white transition-all" target="_blank" rel="noopener noreferrer">{{ site_config.site_icp }}</a>
-                    {% endif %}
-                    {% if site_config and site_config.site_icp and site_config.site_gongan_beian %}&nbsp;&nbsp;|&nbsp;&nbsp;{% endif %}
-                    {% if site_config and site_config.site_gongan_beian %}
-                    🛡️ 公安联网备案：<a href="{{ site_config.gongan_beian_link }}" class="text-gray-400 hover:text-white transition-all" target="_blank" rel="noopener noreferrer">{{ site_config.site_gongan_beian }}</a>
-                    {% endif %}
-                </p>
-                <!-- BEIAN_BLOCK:END -->
-            </div>
+
+        <hr class="border-light opacity-25 my-4">
+
+        <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-md-center">
+            <p class="site-footer__muted mb-0">
+                {% if site_config and site_config.site_author %}{{ site_config.site_author }} | {% endif %}&copy; {% now "Y" %} {% if site_config %}{{ site_config.site_name }}{% else %}Django 综合网站{% endif %}
+            </p>
+            <!-- BEIAN_BLOCK:BEGIN -->
+            <p class="site-footer__muted mb-0">
+                {% if site_config and site_config.site_icp %}
+                <span>ICP 备案：<a href="https://beian.miit.gov.cn/" class="link-light text-decoration-none" target="_blank" rel="noopener noreferrer">{{ site_config.site_icp }}</a></span>
+                {% endif %}
+                {% if site_config and site_config.site_icp and site_config.site_gongan_beian %}<span class="mx-2">|</span>{% endif %}
+                {% if site_config and site_config.site_gongan_beian %}
+                <span><i class="bi bi-shield-check me-1"></i>公安联网备案：<a href="{{ site_config.gongan_beian_link|default:'#' }}" class="link-light text-decoration-none" target="_blank" rel="noopener noreferrer">{{ site_config.site_gongan_beian }}</a></span>
+                {% endif %}
+            </p>
+            <!-- BEIAN_BLOCK:END -->
         </div>
     </div>
 </footer>

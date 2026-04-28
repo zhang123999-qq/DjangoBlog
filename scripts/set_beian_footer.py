@@ -39,18 +39,16 @@ def build_beian_block(number: str, url: str) -> str:
     url_escaped = html.escape(url, quote=True)
 
     link_html = (
-        f'<a href="{url_escaped}" class="text-gray-400 hover:text-white transition-all" '
+        f'<a href="{url_escaped}" class="link-light text-decoration-none" '
         f'target="_blank" rel="noopener noreferrer">{number_escaped}</a>'
     )
 
     return (
-        f"\n{BEGIN_MARKER}\n"
-        f'<div class="row mt-2">\n'
-        f'    <div class="col-12">\n'
-        f'        <p class="text-gray-400 mb-0">备案号：{link_html}</p>\n'
-        f"    </div>\n"
-        f"</div>\n"
-        f"{END_MARKER}\n"
+        f"{BEGIN_MARKER}\n"
+        f'            <p class="site-footer__muted mb-0">\n'
+        f"                <span>备案号：{link_html}</span>\n"
+        f"            </p>\n"
+        f"            {END_MARKER}"
     )
 
 
@@ -64,15 +62,20 @@ def remove_existing_block(content: str) -> tuple[str, bool]:
 
 
 def upsert_beian(content: str, block: str) -> tuple[str, str]:
-    # 先移除旧块，保证幂等
-    cleaned, existed = remove_existing_block(content)
+    pattern = re.compile(
+        rf"{re.escape(BEGIN_MARKER)}.*?{re.escape(END_MARKER)}",
+        flags=re.DOTALL,
+    )
+    new_content, n = pattern.subn(block, content, count=1)
+    if n:
+        return new_content, "updated"
 
-    insert_point = cleaned.rfind("</footer>")
+    insert_point = content.rfind("</footer>")
     if insert_point == -1:
         raise ValueError("未找到 </footer>，无法插入备案信息")
 
-    new_content = cleaned[:insert_point] + block + cleaned[insert_point:]
-    return new_content, "updated" if existed else "inserted"
+    new_content = content[:insert_point] + f"\n{block}\n" + content[insert_point:]
+    return new_content, "inserted"
 
 
 def backup_file(path: Path) -> Path:
