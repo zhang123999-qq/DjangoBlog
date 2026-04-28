@@ -2,6 +2,10 @@
 :root {
     --primary-color: #007bff;
     --primary-gradient: linear-gradient(135deg, #007bff, #0056b3);
+    --dark-color: #111827;
+    --footer-bg: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+    --footer-text: rgba(255, 255, 255, 0.78);
+    --footer-text-strong: #ffffff;
     --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --card-shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.15);
     --transition: all 0.3s ease;
@@ -137,12 +141,13 @@ body {
 
 /* 页脚样式 */
 footer {
-    background: var(--dark-color);
-    color: white;
+    background: var(--footer-bg);
+    color: var(--footer-text);
     padding: 3rem 0;
     margin-top: 3rem;
     position: relative;
     overflow: hidden;
+    z-index: 1;
 }
 
 footer::before {
@@ -155,14 +160,33 @@ footer::before {
     background: var(--primary-gradient);
 }
 
+footer .container {
+    position: relative;
+    z-index: 1;
+}
+
+footer h4,
+footer .text-white {
+    color: var(--footer-text-strong) !important;
+}
+
+footer .text-gray-400 {
+    color: var(--footer-text) !important;
+}
+
 footer a {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--footer-text);
     transition: var(--transition);
 }
 
 footer a:hover {
-    color: white;
+    color: var(--footer-text-strong);
     text-decoration: none;
+}
+
+footer .border-gray-700 {
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    opacity: 1;
 }
 
 /* 响应式调整 */
