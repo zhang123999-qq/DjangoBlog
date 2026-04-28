@@ -73,7 +73,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv venv
+          uv venv --python ${{ env.PYTHON_VERSION }}
+          uv run python --version
           uv pip install -r requirements/development.txt
 
       - name: Python syntax check
@@ -191,8 +192,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv venv
+          uv venv --python ${{ matrix.python-version }}
+          uv run python --version
           uv pip install -r requirements/development.txt
+
+      - name: Grant MySQL test database privileges
+        if: matrix.db == 'mysql'
+        run: |
+          docker exec ${{ job.services.mysql.id }} mysql -uroot -proot -e "GRANT ALL PRIVILEGES ON \`test\\_%\`.* TO 'testuser'@'%'; FLUSH PRIVILEGES;"
 
       - name: Run migrations check
         env:
@@ -274,7 +281,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv venv
+          uv venv --python ${{ env.PYTHON_VERSION }}
+          uv run python --version
           uv pip install -r requirements/production.txt
           uv pip install bandit safety pip-audit
 

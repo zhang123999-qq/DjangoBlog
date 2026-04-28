@@ -77,6 +77,10 @@ PASSWORD_HASHERS = [
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# 测试渲染模板时不依赖 CI/本地是否已生成 django-compressor 离线清单。
+COMPRESS_ENABLED = False
+COMPRESS_OFFLINE = False
+
 # 加速测试中的静态文件处理
 STORAGES = {
     "default": {

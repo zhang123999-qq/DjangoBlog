@@ -7,21 +7,22 @@
     function initGonganBeian() {
         const gonganField = document.getElementById('id_site_gongan_beian');
         if (!gonganField) return;
+        if (document.getElementById('btn-fill-gongan')) return;
 
-        // 创建按钮容器
         const wrapper = document.createElement('div');
-        wrapper.style.marginTop = '8px';
+        wrapper.className = 'admin-inline-action';
         
         const button = document.createElement('button');
         button.type = 'button';
         button.id = 'btn-fill-gongan';
-        button.style.cssText = 'background:#3b82f6;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:13px;';
-        button.textContent = '🛡️ 自动生成公安联网备案号格式';
+        button.className = 'admin-inline-button';
+        button.textContent = '补全公安备案格式';
         
         const hint = document.createElement('span');
         hint.id = 'gongan-hint';
-        hint.style.cssText = 'margin-left:12px;color:#666;font-size:12px;display:none;';
-        hint.textContent = '✅ 请修改数字部分后保存';
+        hint.className = 'admin-inline-hint';
+        hint.hidden = true;
+        hint.textContent = '请替换为真实备案编号后保存';
         
         wrapper.appendChild(button);
         wrapper.appendChild(hint);
@@ -31,7 +32,7 @@
             gonganField.value = '京公网安备 11010502030001号';
             gonganField.focus();
             gonganField.select();
-            hint.style.display = 'inline';
+            hint.hidden = false;
         });
     }
     

@@ -82,7 +82,7 @@
                 <i class="fas fa-users-cog"></i>
                 <span>用户管理</span>
             </a>
-            <a href="{% url 'tools:tool_list' %}" class="quick-action-btn" target="_blank">
+            <a href="{% url 'tools:tool_list' %}" class="quick-action-btn" target="_blank" rel="noopener">
                 <i class="fas fa-wrench"></i>
                 <span>在线工具</span>
             </a>
@@ -91,7 +91,7 @@
 
     <!-- 工具管理入口 -->
     <div class="dashboard-card">
-        <h3><i class="fas fa-tools"></i> 工具管理 ({{ tools_count }}个工具)</h3>
+        <h3><i class="fas fa-tools"></i> 工具管理 ({{ tool_count }}个工具)</h3>
         <div class="tools-grid">
             {% for tool in tools_list %}
             <div class="tool-item">
@@ -103,8 +103,8 @@
             {% endfor %}
         </div>
         <div class="text-center mt-3">
-            <a href="{% url 'tools:tool_list' %}" class="button" target="_blank">
-                <i class="fas fa-external-link-alt"></i> 查看全部 {{ tools_count }} 个工具
+            <a href="{% url 'tools:tool_list' %}" class="button" target="_blank" rel="noopener">
+                <i class="fas fa-external-link-alt"></i> 查看全部 {{ tool_count }} 个工具
             </a>
         </div>
     </div>
