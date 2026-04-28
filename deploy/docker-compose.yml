@@ -103,7 +103,8 @@ services:
       sh -c "
         python manage.py migrate --noinput &&
         python manage.py collectstatic --noinput &&
-        echo 'Migrations and collectstatic complete.'
+        python manage.py compress --force &&
+        echo 'Migrations, collectstatic and static compression complete.'
       "
 
   # ========================================

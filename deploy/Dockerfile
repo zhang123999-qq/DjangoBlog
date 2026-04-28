@@ -84,7 +84,10 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs \
 # 构建时执行 collectstatic，生成 WhiteNoise 清单
 RUN DJANGO_SETTINGS_MODULE=config.settings.production \
     SECRET_KEY=build-placeholder-key-for-collectstatic \
-    python manage.py collectstatic --noinput 2>/dev/null || true
+    DB_ENGINE=sqlite \
+    USE_REDIS=False \
+    python manage.py collectstatic --noinput \
+    && python manage.py compress --force
 
 EXPOSE 8000
 

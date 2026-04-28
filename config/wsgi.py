@@ -4,7 +4,8 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-# 将 production 改为 development
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+# Default to production settings for WSGI deployments.
+# Local development can still override this with DJANGO_SETTINGS_MODULE.
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
 
 application = get_wsgi_application()
