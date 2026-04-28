@@ -69,30 +69,50 @@ dependencies = [
     "django-mptt>=0.16.0",
 
     "baidu-aip>=4.16",
-    "gevent>=24.0",  # Gunicorn 异步 worker 必需
 ]
 
 [project.optional-dependencies]
 dev = [
+    "django-debug-toolbar>=6.3",
+    "django-extensions>=3.2",
     "pytest>=8.3",
     "pytest-django>=4.10",
+    "pytest-cov>=7.1",
     "pytest-playwright>=0.7",
+    "pytest-html>=4.2",
+    "pytest-xdist>=3.6",
+    "pytest-asyncio>=1.3",
     "playwright>=1.40",
     "black>=25.1",
     "flake8>=7.1",
+    "isort>=8.0",
     "mypy>=1.15",
+    "django-stubs>=6.0",
     "types-requests>=2.32.0",
     "types-Markdown>=3.7.0",
     "types-bleach>=6.2.0",
     "types-croniter>=6.0.0",
     "types-PyMySQL>=1.1.0",
+    "colorlog>=6.0",
+    "allure-pytest>=2.13",
+    "Sphinx<8.2; python_version < '3.11'",
+    "Sphinx>=8.2; python_version >= '3.11'",
+    "sphinx-rtd-theme>=3.0",
+    "watchfiles>=1.0",
+    "uvloop>=0.22; sys_platform != 'win32'",
     "flower>=2.0",
 ]
 prod = [
     "gunicorn>=23.0",
+    "gevent>=24.0",
+    "setproctitle>=1.3",
     "uvicorn[standard]>=0.34",
     "whitenoise>=6.9",
     "sentry-sdk>=2.22",
+    "django-prometheus>=2.3",
+    "django-ratelimit>=4.1",
+    "orjson>=3.10",
+    "psutil>=6.0",
     "flower>=2.0",
 ]
 

@@ -21,8 +21,7 @@ help: ## 显示帮助信息
 install: ## 安装开发依赖
 	pip install uv
 	uv venv
-	uv pip install -r requirements/development.txt
-	uv pip install pre-commit pytest-cov
+	uv pip install -r requirements/development.lock
 	pre-commit install
 
 setup: install ## 完整设置（安装 + pre-commit）

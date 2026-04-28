@@ -37,9 +37,9 @@ source .venv/bin/activate
 ### 3. 安装依赖
 ```bash
 # 生产环境依赖
-pip install -r requirements/production.txt
+pip install -r requirements/production.lock
 
-# 或者使用 pyproject.toml
+# 或者使用 pyproject.toml（适合开发/打包验证）
 pip install -e ".[prod]"
 ```
 

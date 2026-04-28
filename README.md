@@ -34,6 +34,7 @@
 - [快速开始](#-快速开始)
   - [一键自动部署（推荐）](#一键自动部署推荐)
   - [手动分步部署](#手动分步部署)
+- [依赖管理](#-依赖管理)
 - [本地开发](#-本地开发非-docker)
 - [生产安全配置](#-生产安全配置)
 - [运维命令速查](#-运维命令速查)
@@ -116,6 +117,31 @@
 | flake8 | 代码规范 |
 | pre-commit | Git 钩子 |
 | GitHub Actions | CI/CD 流水线 |
+
+---
+
+## 📦 依赖管理
+
+项目使用分层依赖文件，`*.txt` 作为人工维护的依赖入口，`*.lock` 作为 CI、Docker 和生产部署使用的可复现锁文件。
+
+| 文件 | 用途 |
+|------|------|
+| `requirements/base.txt` | 应用公共依赖入口 |
+| `requirements/development.txt` | 本地开发、测试、文档工具入口 |
+| `requirements/production.txt` | 生产环境额外依赖入口 |
+| `requirements/base.lock` | 公共依赖锁定版本 |
+| `requirements/development.lock` | CI/开发环境锁定版本 |
+| `requirements/production.lock` | Docker/生产环境锁定版本 |
+| `uv.lock` | `pyproject.toml` 对应的完整解析锁 |
+
+常用更新命令：
+
+```bash
+uv pip compile requirements/base.txt -o requirements/base.lock --upgrade --universal
+uv pip compile requirements/production.txt -o requirements/production.lock --upgrade --universal
+uv pip compile requirements/development.txt -o requirements/development.lock --upgrade --universal
+uv lock --upgrade
+```
 
 ---
 
@@ -246,7 +272,7 @@ uv venv
 source .venv/bin/activate  # Linux/macOS
 # 或 .venv\Scripts\activate  # Windows
 
-uv pip install -r requirements/development.txt
+uv pip install -r requirements/development.lock
 ```
 
 ### 3) 初始化数据库

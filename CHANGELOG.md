@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+### 🔧 依赖与构建
+- 新增 `requirements/development.lock`，CI 开发测试环境改为使用锁文件安装。
+- 刷新 `base.lock` / `production.lock` / `uv.lock`，修正 `django-filter` 锁定版本与 Django 4.2 LTS 的兼容约束。
+- Docker 构建改为安装 `requirements/production.lock`，提升生产镜像依赖可复现性。
+- CI 依赖检查任务改为使用 `uv pip compile` 维护现有 `requirements/*.txt/*.lock` 结构。
+
+### 📝 文档更新
+- 更新 README 与部署文档，说明 `*.txt` 为依赖入口、`*.lock` 为 CI/Docker/生产部署锁文件。
+- 更新 Dockerfile 文档，记录 Debian apt 源按基础镜像版本自动匹配。
+
 ### 🚀 新功能预览
 - WebSocket 实时通知系统完善
 - 全文搜索性能优化

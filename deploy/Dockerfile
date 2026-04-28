@@ -37,7 +37,7 @@ COPY requirements/ /app/requirements/
 RUN pip install --no-cache-dir \
     --timeout 120 \
     --retries 5 \
-    -r /app/requirements/production.txt
+    -r /app/requirements/production.lock
 
 # ---- Final stage ----
 FROM docker.1ms.run/library/python:3.13-slim

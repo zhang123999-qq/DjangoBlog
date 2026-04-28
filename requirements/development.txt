@@ -1,7 +1,12 @@
+# ============================================
+# 开发环境额外依赖
+# ⚠️ 注意：CI 和可复现开发环境请使用 .lock 文件
+#   uv pip install -r requirements/development.lock
+# ============================================
+
 # 基础依赖
 -r base.txt
-
-# 调试工具 (Python 3.13+)
+# 调试工具
 django-debug-toolbar==6.3.0
 django-extensions==3.2.3
 ipython==8.32.0

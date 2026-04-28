@@ -53,8 +53,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 pip install -U pip wheel setuptools
-pip install -r requirements/production.txt
+pip install -r requirements/production.lock
 ```
+
+> `requirements/production.txt` 是人工维护的生产依赖入口；生产服务器建议安装 `requirements/production.lock`，确保版本与 CI/Docker 构建一致。
 
 ---
 
@@ -287,7 +289,7 @@ cd /www/wwwroot/DjangoBlog
 source .venv/bin/activate
 
 git pull --ff-only origin main
-pip install -r requirements/production.txt
+pip install -r requirements/production.lock
 python manage.py migrate
 python manage.py collectstatic --noinput
 systemctl restart djangoblog

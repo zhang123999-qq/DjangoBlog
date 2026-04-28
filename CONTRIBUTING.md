@@ -65,7 +65,7 @@ source .venv/bin/activate  # Linux/macOS
 .venv\Scripts\activate     # Windows
 
 # 安装开发依赖
-uv pip install -r requirements/development.txt
+uv pip install -r requirements/development.lock
 ```
 
 ### 3. 配置环境变量

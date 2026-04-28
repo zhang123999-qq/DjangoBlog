@@ -98,6 +98,8 @@ memory/
 
 # uv/lock
 *.lock
+!uv.lock
+!requirements/*.lock
 # 添加垃圾文件忽略规则
 =*
 *.egg-info/
