@@ -10,14 +10,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# 替换 apt 源：删除 deb822 格式，改清华源（传统 sources.list 格式最稳定）
-# 注意：suites 和 components 用空格分隔，不能用斜杠
+# 替换 apt 源：自动匹配基础镜像的 Debian 版本，避免 bookworm/trixie 混装依赖。
 RUN rm -f /etc/apt/sources.list.d/debian.sources \
     && rm -f /etc/apt/sources.list.d/debian-security.sources \
+    && . /etc/os-release \
     && { \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ ${VERSION_CODENAME} main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ ${VERSION_CODENAME}-updates main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security ${VERSION_CODENAME}-security main"; \
     } > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -48,13 +48,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# 运行时依赖（同清华源）
+# 运行时依赖（同清华源，版本与基础镜像一致）
 RUN rm -f /etc/apt/sources.list.d/debian.sources \
     && rm -f /etc/apt/sources.list.d/debian-security.sources \
+    && . /etc/os-release \
     && { \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main"; \
-        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security bookworm-security main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ ${VERSION_CODENAME} main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ ${VERSION_CODENAME}-updates main"; \
+        echo "deb https://mirrors.tuna.tsinghua.edu.cn/debian-security ${VERSION_CODENAME}-security main"; \
     } > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
