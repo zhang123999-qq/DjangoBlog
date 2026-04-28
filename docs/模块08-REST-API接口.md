@@ -14,13 +14,13 @@
 
 | 文件 | 内容 | 说明 |
 |------|------|------|
-| `views.py` | CategoryViewSet、TagViewSet、PostViewSet、BoardViewSet、TopicViewSet | 5个 ReadOnlyModelViewSet |
+| `views.py` | CategoryViewSet、TagViewSet、PostViewSet、BoardViewSet、TopicViewSet | 5 个 ReadOnlyModelViewSet |
+| `search_views.py` | GlobalSearchView、PostSearchView、TopicSearchView、SearchHealthView | 搜索 API 与健康检查 |
 | `moderation_views.py` | moderation_metrics_api、moderation_approve_api、moderation_reject_api | 🆕 审核 API（19.6KB，限流+并发防护）|
-| `serializers.py` | 8个序列化器：UserSerializer、CategorySerializer、TagSerializer、PostSerializer、PostListSerializer、CommentSerializer、BoardSerializer、TopicSerializer、TopicListSerializer、ReplySerializer | 序列化层 |
+| `serializers.py` | 10 个序列化器：UserSerializer、CategorySerializer、TagSerializer、PostSerializer、PostListSerializer、CommentSerializer、BoardSerializer、TopicSerializer、TopicListSerializer、ReplySerializer | 序列化层 |
 | `urls.py` | 路由配置（DRF Router + 手动路由）| 路由层 |
-| `filters.py` | PostFilter | 自定义过滤器 |
 | `apps.py` | API 应用配置 | 应用注册 |
-| `tests/test_endpoints.py` | API 端点测试 | 测试模块 |
+| `tests/test_endpoints.py` / `tests/test_views.py` | API 端点与视图测试 | 测试模块 |
 
 ---
 
@@ -31,10 +31,10 @@
 | 方法 | 端点 | 说明 | 权限 |
 |------|------|------|------|
 | `GET` | `/api/categories/` | 分类列表（含 `post_count`） | `AllowAny` |
-| `GET` | `/api/categories/{id}/` | 分类详情 | `AllowAny` |
-| `GET` | `/api/categories/{id}/posts/` | 分类下的文章（分页） | `AllowAny` |
+| `GET` | `/api/categories/{slug}/` | 分类详情 | `AllowAny` |
+| `GET` | `/api/categories/{slug}/posts/` | 分类下的文章（分页） | `AllowAny` |
 | `GET` | `/api/tags/` | 标签列表（含 `post_count`） | `AllowAny` |
-| `GET` | `/api/tags/{id}/` | 标签详情 | `AllowAny` |
+| `GET` | `/api/tags/{slug}/` | 标签详情 | `AllowAny` |
 | `GET` | `/api/posts/` | 文章列表（仅已发布） | `AllowAny` |
 | `GET` | `/api/posts/{slug}/` | 文章详情（slug 查找） | `AllowAny` |
 | `GET` | `/api/posts/{slug}/comments/` | 文章评论列表（分页） | `AllowAny` |
@@ -44,6 +44,17 @@
 | `GET` | `/api/topics/` | 主题列表（仅已审核通过） | `IsAuthenticatedOrReadOnly` |
 | `GET` | `/api/topics/{id}/` | 主题详情 | `IsAuthenticatedOrReadOnly` |
 | `GET` | `/api/topics/{id}/replies/` | 主题回复列表（分页） | `IsAuthenticatedOrReadOnly` |
+
+### 搜索 API 路由
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| `GET` | `/api/search/` | 全局搜索（文章 + 主题） | `AllowAny` |
+| `GET` | `/api/search/posts/` | 文章搜索（分页） | `AllowAny` |
+| `GET` | `/api/search/topics/` | 主题搜索（分页，仅返回已审核通过主题） | `AllowAny` |
+| `GET` | `/api/search/health/` | 搜索后端健康检查 | `AllowAny` |
+
+> **参数校验**: `limit`、`page`、`page_size` 现在都会做正整数校验；非法值会返回 `400 Bad Request`，而不是 `500`。
 
 ### 审核 API 路由（手动注册）
 
@@ -82,8 +93,8 @@ PUBLISHED_POST_COUNT_FILTER = (
 | 端点 | 说明 |
 |------|------|
 | `GET /api/categories/` | 分类列表（含 `post_count` 字段，使用 `PUBLISHED_POST_COUNT_FILTER`） |
-| `GET /api/categories/{id}/` | 分类详情 |
-| `GET /api/categories/{id}/posts/` | 分类下文章列表（分页，仅已发布）|
+| `GET /api/categories/{slug}/` | 分类详情 |
+| `GET /api/categories/{slug}/posts/` | 分类下文章列表（分页，仅已发布）|
 
 **查询集**:
 ```python
@@ -107,7 +118,7 @@ Post.objects.filter(category=category, status="published")
 | 端点 | 说明 |
 |------|------|
 | `GET /api/tags/` | 标签列表（含 `post_count`）|
-| `GET /api/tags/{id}/` | 标签详情 |
+| `GET /api/tags/{slug}/` | 标签详情 |
 
 **查询集**:
 ```python
@@ -124,7 +135,7 @@ Tag.objects.annotate(
 |------|------|
 | `GET /api/posts/` | 文章列表（仅 `status="published"`）|
 | `GET /api/posts/{slug}/` | 文章详情（按 slug 查找，非 pk）|
-| `POST /api/posts/{slug}/comments/` | 获取文章评论列表（分页，仅 `review_status="approved"`）|
+| `GET /api/posts/{slug}/comments/` | 获取文章评论列表（分页，仅 `review_status="approved"`）|
 
 **查找字段**: `lookup_field = 'slug'`（非默认 pk）
 
@@ -218,18 +229,18 @@ instance.increase_views()
 
 ## 序列化器详解
 
-### UserSerializer — 户序列化器
+### UserSerializer — 用户序列化器
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | IntegerField | 用户 ID |
 | username | CharField | 用户名 |
-| email | EmailField | 邮箱 |
 | avatar | CharField | 头像 URL（从 `profile.avatar` 获取）|
 | bio | CharField | 个人简介（从 `profile.bio` 获取）|
 | website | CharField | 网站（从 `profile.website` 获取）|
 
-> **只读字段**: `id`, `username`, `email`
+> **只读字段**: `id`, `username`
+> **隐私说明**: 为避免公开 API 暴露账号邮箱，`UserSerializer` 已移除 `email` 字段。
 > **嵌套来源**: `profile` 关联表
 
 ### CategorySerializer — 分类序列化器
@@ -287,9 +298,10 @@ instance.increase_views()
 | content | TextField | 评论内容 |
 | user | UserSerializer | 用户详情（嵌套）|
 | name | CharField | 匿名用户名称 |
-| email | EmailField | 匿名用户邮箱 |
 | like_count | IntegerField | 点赞数 |
 | created_at | DateTimeField | 创建时间 |
+
+> **隐私说明**: 匿名评论邮箱仅保存在服务端模型中，公开评论 API 不再返回 `email` 字段。
 
 ### BoardSerializer — 版块序列化器
 

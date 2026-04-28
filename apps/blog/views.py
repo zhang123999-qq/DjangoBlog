@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
 from moderation.services import smart_moderate_instance
 from apps.core.rate_limit import rate_limit, rate_limit_by_user
 from django.views.decorators.cache import cache_page
@@ -147,24 +148,28 @@ class PostDetailView(DetailView):
         - select_related: author, category
         - prefetch_related: tags, comments
         """
-        return Post.objects.select_related("author", "category").prefetch_related(
-            Prefetch("tags", queryset=Tag.objects.only("name", "slug")),
-            Prefetch(
-                "comments",
-                queryset=Comment.objects.filter(review_status="approved")
-                .select_related("user")
-                .only(
-                    "id",
-                    "content",
-                    "name",
-                    "email",
-                    "like_count",
-                    "created_at",
-                    "user__id",
-                    "user__username",
-                    "user__nickname",
+        return (
+            Post.objects.filter(status="published")
+            .select_related("author", "category")
+            .prefetch_related(
+                Prefetch("tags", queryset=Tag.objects.only("name", "slug")),
+                Prefetch(
+                    "comments",
+                    queryset=Comment.objects.filter(review_status="approved")
+                    .select_related("user")
+                    .only(
+                        "id",
+                        "content",
+                        "name",
+                        "email",
+                        "like_count",
+                        "created_at",
+                        "user__id",
+                        "user__username",
+                        "user__nickname",
+                    ),
                 ),
-            ),
+            )
         )
 
     def get_object(self, queryset=None):
@@ -243,6 +248,7 @@ def comment_create_view(request, post_slug):
 
 
 @login_required
+@require_POST
 @rate_limit("like", rate=LIKE_RATE_LIMIT, method="POST")
 def like_comment_view(request, comment_id):
     """

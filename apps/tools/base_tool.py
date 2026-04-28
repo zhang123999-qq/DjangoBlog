@@ -16,6 +16,14 @@ class BaseTool:
     template_name: ClassVar[str] = "tools/tool_detail.html"
     form_class: ClassVar[type[forms.Form] | None] = None
 
+    def __eq__(self, other):
+        if not isinstance(other, BaseTool):
+            return NotImplemented
+        return self.slug == other.slug and self.__class__ is other.__class__
+
+    def __hash__(self):
+        return hash((self.__class__, self.slug))
+
     def get_form(self, data=None, files=None):
         """获取表单实例"""
         if self.form_class:

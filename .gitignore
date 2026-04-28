@@ -60,8 +60,8 @@ coverage.xml
 *.bak
 *.backup
 
-# Tests (do not track test directory)
-tests/
+# Tests (only ignore the repo-root tests directory)
+/tests/
 
 # Test outputs (kept for backward compatibility)
 tests/logs/

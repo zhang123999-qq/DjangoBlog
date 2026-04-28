@@ -14,6 +14,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='profile',
             name='avatar',
-            field=models.ImageField(blank=True, max_length=255, null=True, upload_to='avatars/', validators=[apps.core.validators.validate_image_upload], verbose_name='头像'),
+            field=models.ImageField(
+                blank=True,
+                max_length=255,
+                null=True,
+                upload_to='avatars/',
+                validators=[apps.core.validators.validate_image_upload],
+                verbose_name='头像',
+            ),
         ),
     ]

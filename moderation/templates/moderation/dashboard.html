@@ -73,7 +73,10 @@
                                 <p class="mb-2 text-muted">评论于: <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a></p>
                                 <p class="mb-3">{{ comment.content|truncatechars:100 }}</p>
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'moderation:approve' 'comment' comment.id %}" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="comment" data-content-id="{{ comment.id }}">通过</a>
+                                    <form method="post" action="{% url 'moderation:approve' 'comment' comment.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="comment" data-content-id="{{ comment.id }}">通过</button>
+                                    </form>
                                     <a href="{% url 'moderation:reject' 'comment' comment.id %}" class="btn btn-danger btn-sm js-moderation-action" data-action="reject" data-content-type="comment" data-content-id="{{ comment.id }}">拒绝</a>
                                 </div>
                             </div>
@@ -102,7 +105,10 @@
                                 <p class="mb-2 text-muted">作者: {{ topic.author.username }} | 版块: <a href="{{ topic.board.get_absolute_url }}">{{ topic.board.name }}</a></p>
                                 <p class="mb-3">{{ topic.content|truncatechars:100 }}</p>
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'moderation:approve' 'topic' topic.id %}" class="btn btn-success btn-sm">通过</a>
+                                    <form method="post" action="{% url 'moderation:approve' 'topic' topic.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="topic" data-content-id="{{ topic.id }}">通过</button>
+                                    </form>
                                     <a href="{% url 'moderation:reject' 'topic' topic.id %}" class="btn btn-danger btn-sm">拒绝</a>
                                 </div>
                             </div>
@@ -131,7 +137,10 @@
                                 <p class="mb-2 text-muted">回复于: <a href="{{ reply.topic.get_absolute_url }}">{{ reply.topic.title }}</a></p>
                                 <p class="mb-3">{{ reply.content|truncatechars:100 }}</p>
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'moderation:approve' 'reply' reply.id %}" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="reply" data-content-id="{{ reply.id }}">通过</a>
+                                    <form method="post" action="{% url 'moderation:approve' 'reply' reply.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm js-moderation-action" data-action="approve" data-content-type="reply" data-content-id="{{ reply.id }}">通过</button>
+                                    </form>
                                     <a href="{% url 'moderation:reject' 'reply' reply.id %}" class="btn btn-danger btn-sm js-moderation-action" data-action="reject" data-content-type="reply" data-content-id="{{ reply.id }}">拒绝</a>
                                 </div>
                             </div>

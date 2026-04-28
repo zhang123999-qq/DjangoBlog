@@ -41,6 +41,7 @@ def moderation_dashboard(request):
     return render(request, "moderation/dashboard.html", context)
 
 
+@require_POST
 @user_passes_test(is_moderator, login_url="accounts:login")
 def approve_content(request, content_type, content_id):
     """页面模式：通过审核。"""

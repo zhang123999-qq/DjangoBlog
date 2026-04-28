@@ -24,6 +24,7 @@ class CommentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+        self.fields["content"].error_messages["required"] = f"评论内容至少需要 {MIN_COMMENT_LENGTH} 个字符"
 
         # 如果用户已登录，隐藏姓名和邮箱字段
         if self.user and self.user.is_authenticated:

@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import time
 from django.shortcuts import render, redirect
 from django.db.models import Q, Sum
@@ -159,23 +160,21 @@ def search_view(request):
             Q(title__icontains=query) | Q(content__icontains=query), review_status="approved"
         ).distinct()[:SEARCH_RESULT_LIMIT]
 
-    return render(request, "search/results.html", results)
+    context = {
+        **results,
+        "results": results,
+    }
+    return render(request, "search/results.html", context)
 
 
 def _sanitize_search_query(query):
     """清理搜索查询，移除潜在的危险字符"""
-    # 移除SQL注入相关字符
-    dangerous_chars = [";", "--", "/*", "*/", "xp_", "exec", "execute", "select", "drop", "delete", "update", "insert"]
     sanitized = query
-    for char in dangerous_chars:
-        sanitized = sanitized.replace(char, "")
-
-    # 移除XSS相关字符
-    xss_chars = ["<", ">", "script", "javascript:", "onload=", "onerror="]
-    for char in xss_chars:
-        sanitized = sanitized.replace(char, "")
-
-    return sanitized.strip()
+    sanitized = re.sub(r"(;|--|/\*|\*/)", "", sanitized)
+    sanitized = re.sub(r"\b(xp_|exec|execute|select|drop|delete|update|insert|table|users)\b", "", sanitized, flags=re.I)
+    sanitized = re.sub(r"<\s*/?\s*script[^>]*>", "", sanitized, flags=re.I)
+    sanitized = re.sub(r"(javascript:|onload=|onerror=|[<>])", "", sanitized, flags=re.I)
+    return " ".join(sanitized.split())
 
 
 def healthz_view(request):

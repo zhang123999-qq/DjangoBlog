@@ -4,6 +4,7 @@ Pytest 配置文件
 """
 
 import pytest
+from django.core.cache import cache
 from django.test import Client
 
 
@@ -25,6 +26,42 @@ def pytest_configure(config):
 def client():
     """测试客户端"""
     return Client()
+
+
+@pytest.fixture(autouse=True)
+def isolated_cache():
+    """Keep cached view/tool/login state from leaking between tests."""
+    cache.clear()
+    yield
+    cache.clear()
+
+
+@pytest.fixture(autouse=True)
+def unique_missing_user_email(monkeypatch):
+    """Give test users a unique email when a test omits it."""
+    from uuid import uuid4
+
+    from django.contrib.auth import get_user_model
+
+    user_model = get_user_model()
+    original_create_user = user_model.objects.create_user
+
+    def create_user(*args, **kwargs):
+        args = list(args)
+        email = kwargs.get("email")
+        if email is None and len(args) >= 2:
+            email = args[1]
+
+        if not email:
+            email = f"test-{uuid4().hex}@example.test"
+            if len(args) >= 2:
+                args[1] = email
+            else:
+                kwargs["email"] = email
+
+        return original_create_user(*args, **kwargs)
+
+    monkeypatch.setattr(user_model.objects, "create_user", create_user)
 
 
 @pytest.fixture

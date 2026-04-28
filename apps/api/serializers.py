@@ -15,8 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "avatar", "bio", "website"]
-        read_only_fields = ["id", "username", "email"]
+        fields = ["id", "username", "avatar", "bio", "website"]
+        read_only_fields = ["id", "username"]
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -83,7 +83,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ["id", "content", "user", "name", "email", "like_count", "created_at"]
+        fields = ["id", "content", "user", "name", "like_count", "created_at"]
 
 
 class BoardSerializer(serializers.ModelSerializer):

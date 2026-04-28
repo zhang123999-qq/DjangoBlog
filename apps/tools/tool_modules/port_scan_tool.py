@@ -52,6 +52,35 @@ def _check_port_scan_rate_limit(request):
     return True
 
 
+def _resolve_public_target(host):
+    """Resolve a hostname once and return a pinned public IPv4 target."""
+    ip_int = _ip_to_int(host)
+    if ip_int is not None:
+        if _is_private_or_internal(host):
+            return None, "安全限制：禁止扫描内网地址"
+        return host, None
+
+    try:
+        infos = socket.getaddrinfo(host, None, socket.AF_INET, socket.SOCK_STREAM)
+    except socket.gaierror:
+        return None, f"无法解析域名: {host}"
+
+    addresses = []
+    for info in infos:
+        ip_address = info[4][0]
+        if ip_address not in addresses:
+            addresses.append(ip_address)
+
+    if not addresses:
+        return None, f"无法解析域名: {host}"
+
+    for ip_address in addresses:
+        if _is_private_or_internal(ip_address):
+            return None, f"安全限制：域名 {host} 解析到内网地址，禁止扫描"
+
+    return addresses[0], None
+
+
 # 常用端口列表
 COMMON_PORTS = {
     "Web服务": [80, 443, 8080, 8443],
@@ -127,19 +156,9 @@ class PortScanTool(BaseTool):
         scan_type = form.cleaned_data["scan_type"]
         timeout = form.cleaned_data["timeout"]
 
-        # 安全校验：禁止扫描内网地址
-        ip_int = _ip_to_int(host)
-        if ip_int is not None:
-            if _is_private_or_internal(host):
-                return {"error": "安全限制：禁止扫描内网地址"}
-        else:
-            # 域名解析后检查
-            try:
-                resolved_ip = socket.gethostbyname(host)
-                if _is_private_or_internal(resolved_ip):
-                    return {"error": f"安全限制：域名 {host} 解析到内网地址，禁止扫描"}
-            except socket.gaierror:
-                return {"error": f"无法解析域名: {host}"}
+        target_host, error_message = _resolve_public_target(host)
+        if error_message is not None:
+            return {"error": error_message}
 
         # 速率限制
         if not _check_port_scan_rate_limit(request):
@@ -181,7 +200,7 @@ class PortScanTool(BaseTool):
         closed_count = 0
 
         for port in ports:
-            status, message = self._scan_port(host, port, timeout)
+            status, message = self._scan_port(target_host, port, timeout)
             result = {"port": port, "status": status, "message": message, "service": self._get_service_name(port)}
             results.append(result)
             if status == "开放":
@@ -191,6 +210,7 @@ class PortScanTool(BaseTool):
 
         return {
             "host": host,
+            "resolved_ip": target_host,
             "total_ports": len(ports),
             "open_count": len(open_ports),
             "open_ports": open_ports,

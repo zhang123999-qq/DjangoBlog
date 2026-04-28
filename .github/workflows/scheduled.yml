@@ -8,6 +8,11 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
 jobs:
   security-scan:
     name: Weekly Security Scan
@@ -23,18 +28,23 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install security tools
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies and security tools
         run: |
-          pip install safety pip-audit bandit
+          uv venv
+          uv pip install -r requirements/production.txt
+          uv pip install safety pip-audit bandit
 
       - name: Run Safety check
-        run: safety check --full-report --output json > safety-report.json || true
+        run: uv run safety check --full-report --output json > safety-report.json || true
 
       - name: Run pip-audit
-        run: pip-audit --format json > pip-audit-report.json || true
+        run: uv run pip-audit --format json > pip-audit-report.json || true
 
       - name: Run Bandit
-        run: bandit -r apps/ -f json -o bandit-report.json || true
+        run: uv run bandit -r apps/ -f json -o bandit-report.json || true
 
       - name: Create security issue
         uses: actions/github-script@v7
@@ -95,14 +105,20 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install pip-tools
-        run: pip install pip-tools
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements/development.txt
+          uv pip install pip-tools
 
       - name: Check for outdated dependencies
         run: |
-          pip list --outdated --format=json > outdated.json || true
+          uv pip list --outdated --format=json > outdated.json || true
 
-          if [ -s outdated.json ]; then
+          if python -c "import json; raise SystemExit(0 if json.load(open('outdated.json')) else 1)"; then
             echo "OUTDATED_DEPS<<EOF" >> $GITHUB_ENV
             cat outdated.json >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV

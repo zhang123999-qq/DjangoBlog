@@ -161,12 +161,7 @@ def rate_limit(key_prefix, rate="10/m", method="POST"):
 
             # 生成缓存 key
             ip = request.META.get("REMOTE_ADDR", "unknown")
-            user_id = request.user.id if hasattr(request, "user") and request.user.is_authenticated else None
-
-            if user_id:
-                cache_key = f"ratelimit:{key_prefix}:user:{user_id}"
-            else:
-                cache_key = f"ratelimit:{key_prefix}:ip:{ip}"
+            cache_key = f"ratelimit:{key_prefix}:ip:{ip}"
 
             # 原子执行速率限制检查
             current, ttl, is_limited = _execute_rate_limit_script(cache_key, limit, window)

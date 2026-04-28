@@ -306,6 +306,8 @@ class DatabaseSearchBackend(SearchBackend):
             # 添加过滤条件
             if index == "posts":
                 queryset = queryset.filter(status="published")
+            elif index == "topics":
+                queryset = queryset.filter(review_status="approved")
 
             total = queryset.count()
             limit = kwargs.get("limit", 20)

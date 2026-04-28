@@ -52,7 +52,7 @@
                                     <button 
                                         class="btn btn-sm btn-outline-primary like-btn" 
                                         data-reply-id="{{ reply.id }}"
-                                        data-like-url="{% url 'forum:reply_like' topic.board.slug topic.id reply.id %}"
+                                        data-like-url="{% url 'forum:like_reply' reply.id %}"
                                         {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
                                     >
                                         <span class="like-icon">❤️</span>

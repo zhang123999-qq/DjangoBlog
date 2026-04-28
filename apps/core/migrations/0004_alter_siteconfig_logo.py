@@ -14,6 +14,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='siteconfig',
             name='logo',
-            field=models.ImageField(blank=True, max_length=255, null=True, upload_to='logos/', validators=[apps.core.validators.validate_image_upload], verbose_name='网站Logo'),
+            field=models.ImageField(
+                blank=True,
+                max_length=255,
+                null=True,
+                upload_to='logos/',
+                validators=[apps.core.validators.validate_image_upload],
+                verbose_name='网站Logo',
+            ),
         ),
     ]

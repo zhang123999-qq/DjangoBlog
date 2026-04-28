@@ -98,7 +98,7 @@ def tool_detail(request, tool_slug):
 @login_required
 def my_ip_json(request):
     """返回访问者 IP（供 NAT 工具前端回退获取公网 IP）。"""
-    tool = registry.get_tool("my-ip")
+    tool = registry.get_tool("ip-query")
     if not tool:
         return JsonResponse({"ok": False, "error": "my-ip tool not found"}, status=404)
 

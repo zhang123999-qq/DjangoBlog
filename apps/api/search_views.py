@@ -13,6 +13,33 @@ from apps.core.search import SearchService
 from apps.api.response import APIResponse
 
 
+SEARCH_LIMIT_DEFAULT = 10
+SEARCH_LIMIT_MAX = 50
+SEARCH_PAGE_DEFAULT = 1
+SEARCH_PAGE_SIZE_DEFAULT = 20
+SEARCH_PAGE_SIZE_MAX = 100
+
+
+def _parse_positive_int_param(request, name, default, *, min_value=1, max_value=None):
+    """Parse and validate integer query params for public search APIs."""
+    raw_value = request.query_params.get(name)
+    if raw_value in (None, ""):
+        return default, None
+
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        return None, APIResponse.bad_request(f"Invalid `{name}` parameter.")
+
+    if value < min_value:
+        return None, APIResponse.bad_request(f"`{name}` must be >= {min_value}.")
+
+    if max_value is not None and value > max_value:
+        return None, APIResponse.bad_request(f"`{name}` must be <= {max_value}.")
+
+    return value, None
+
+
 class GlobalSearchView(APIView):
     """
     全局搜索 API
@@ -78,7 +105,15 @@ class GlobalSearchView(APIView):
     def get(self, request):
         """全局搜索"""
         query = request.query_params.get("q", "").strip()
-        limit = int(request.query_params.get("limit", 10))
+        limit, error_response = _parse_positive_int_param(
+            request,
+            "limit",
+            SEARCH_LIMIT_DEFAULT,
+            min_value=1,
+            max_value=SEARCH_LIMIT_MAX,
+        )
+        if error_response is not None:
+            return error_response
 
         if not query:
             return APIResponse.bad_request("请提供搜索关键词")
@@ -150,8 +185,24 @@ class PostSearchView(APIView):
     def get(self, request):
         """文章搜索"""
         query = request.query_params.get("q", "").strip()
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
+        page, error_response = _parse_positive_int_param(
+            request,
+            "page",
+            SEARCH_PAGE_DEFAULT,
+            min_value=1,
+        )
+        if error_response is not None:
+            return error_response
+
+        page_size, error_response = _parse_positive_int_param(
+            request,
+            "page_size",
+            SEARCH_PAGE_SIZE_DEFAULT,
+            min_value=1,
+            max_value=SEARCH_PAGE_SIZE_MAX,
+        )
+        if error_response is not None:
+            return error_response
 
         if not query:
             return APIResponse.bad_request("请提供搜索关键词")
@@ -234,8 +285,24 @@ class TopicSearchView(APIView):
     def get(self, request):
         """主题搜索"""
         query = request.query_params.get("q", "").strip()
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
+        page, error_response = _parse_positive_int_param(
+            request,
+            "page",
+            SEARCH_PAGE_DEFAULT,
+            min_value=1,
+        )
+        if error_response is not None:
+            return error_response
+
+        page_size, error_response = _parse_positive_int_param(
+            request,
+            "page_size",
+            SEARCH_PAGE_SIZE_DEFAULT,
+            min_value=1,
+            max_value=SEARCH_PAGE_SIZE_MAX,
+        )
+        if error_response is not None:
+            return error_response
 
         if not query:
             return APIResponse.bad_request("请提供搜索关键词")

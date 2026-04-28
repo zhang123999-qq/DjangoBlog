@@ -3,6 +3,8 @@
 import logging
 from typing import cast
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *
 
 # =============================================================================
@@ -29,23 +31,21 @@ if "django.middleware.security.SecurityMiddleware" not in MIDDLEWARE:
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
-# ⚠️ 安全配置与 HTTPS 状态联动：避免纯 HTTP 部署时登录和 CSRF 失效
-# 当使用反向代理 HTTPS（USE_X_FORWARDED_PROTO=True）时启用安全 cookie
-_use_https = env.bool("USE_X_FORWARDED_PROTO", default=False)
+# Production defaults should prefer HTTPS. Deployments that intentionally allow
+# plain HTTP can still opt out explicitly via environment variables.
+USE_X_FORWARDED_PROTO = env.bool("USE_X_FORWARDED_PROTO", default=False)
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+_https_security_enabled = USE_X_FORWARDED_PROTO or SECURE_SSL_REDIRECT
 
-SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=False)
-# ⚠️ 修复: 安全 cookie 必须与 HTTPS 状态联动
-# 纯 HTTP 部署时如果强制 Secure=True，会导致 cookie 无法写入，登录和 CSRF 完全失效
-SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=_use_https)
-CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=_use_https)
-# HSTS 仅在 HTTPS 时启用
-SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0 if not _use_https else 31536000)
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=_use_https)
-SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=_use_https)
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=_https_security_enabled)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=_https_security_enabled)
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000 if _https_security_enabled else 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=_https_security_enabled)
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=_https_security_enabled)
 SECURE_REFERRER_POLICY = env("SECURE_REFERRER_POLICY", default="same-origin")
 
 # 反向代理 HTTPS 头（Nginx/Ingress）
-if _use_https:
+if USE_X_FORWARDED_PROTO:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # =============================================================================
@@ -238,14 +238,10 @@ if SENTRY_DSN:
 # =============================================================================
 
 # 确保关键配置已设置
-if not SECRET_KEY or SECRET_KEY == "your-secret-key-here":  # nosec B105 - 仅用于检测占位符
-    import warnings
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["localhost"]:
+    raise ImproperlyConfigured("ALLOWED_HOSTS must be explicitly configured in production.")
 
-    warnings.warn("警告: SECRET_KEY 未设置或使用了默认值，请在 .env 文件中设置安全的密钥！")
-
-if DEBUG:
-    import warnings
-
-    warnings.warn("警告: 生产环境 DEBUG 设置为 True，建议设置为 False！")
+if not SECRET_KEY or SECRET_KEY == "your-secret-key-here" or SECRET_KEY.startswith("django-insecure-"):  # nosec B105
+    raise ImproperlyConfigured("A strong SECRET_KEY must be configured for production.")
 
 logger.info("[SETTINGS] 使用生产环境配置 (MySQL + Redis)")

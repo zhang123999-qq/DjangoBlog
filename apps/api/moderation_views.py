@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db import DatabaseError
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import permissions, serializers, status
@@ -418,7 +419,7 @@ def moderation_approve_api(request, content_type: str, content_id: int):
         approve_instance(content, request.user, note="")
         _metric_incr("approve_success")
         return Response({"success": True, "status": "approved", "id": content_id}, status=status.HTTP_200_OK)
-    except Exception:
+    except DatabaseError:
         _metric_incr("approve_failed")
         logger.exception("moderation_approve_failed user=%s type=%s id=%s", user_id, content_type, content_id)
         return Response(
@@ -520,7 +521,7 @@ def moderation_reject_api(request, content_type: str, content_id: int):
         reject_instance(content, request.user, note=review_note)
         _metric_incr("reject_success")
         return Response({"success": True, "status": "rejected", "id": content_id}, status=status.HTTP_200_OK)
-    except Exception:
+    except DatabaseError:
         _metric_incr("reject_failed")
         logger.exception("moderation_reject_failed user=%s type=%s id=%s", user_id, content_type, content_id)
         return Response(

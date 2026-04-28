@@ -6,11 +6,14 @@ from ..categories import ToolCategory
 from django import forms
 from django.core.cache import cache
 from apps.tools.base_tool import BaseTool
+from http.cookies import SimpleCookie
 import json
 import socket
 import struct
 import time
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse, urlunparse
+
+import urllib3
 
 
 def _ip_to_int(ip_str):
@@ -50,29 +53,61 @@ def _is_private_or_internal(ip_str):
     return False
 
 
-def _validate_url_for_ssrf(url_str):
-    """验证 URL 目标地址，防止 SSRF"""
-    parsed = urlparse(url_str)
-    hostname = parsed.hostname
-
-    if not hostname:
-        return False, "无法解析 URL 主机名"
-
-    # 先检查是否是 IP 直连
-    ip_int = _ip_to_int(hostname)
-    if ip_int is not None:
+def _resolve_public_ipv4_addresses(hostname):
+    """Resolve a hostname to stable public IPv4 addresses only."""
+    if _ip_to_int(hostname) is not None:
         if _is_private_or_internal(hostname):
-            return False, "禁止访问内网地址"
-    else:
-        # 域名解析并检查
-        try:
-            resolved_ip = socket.gethostbyname(hostname)
-            if _is_private_or_internal(resolved_ip):
-                return False, f"域名 {hostname} 解析到内网地址 {resolved_ip}，禁止访问"
-        except socket.gaierror:
-            return False, f"无法解析域名: {hostname}"
+            return None, "禁止访问内网地址"
+        return [hostname], None
 
-    return True, None
+    try:
+        infos = socket.getaddrinfo(hostname, None, socket.AF_INET, socket.SOCK_STREAM)
+    except socket.gaierror:
+        return None, f"无法解析域名: {hostname}"
+
+    addresses = []
+    for info in infos:
+        ip_address = info[4][0]
+        if ip_address not in addresses:
+            addresses.append(ip_address)
+
+    if not addresses:
+        return None, f"无法解析域名: {hostname}"
+
+    for ip_address in addresses:
+        if _is_private_or_internal(ip_address):
+            return None, f"域名 {hostname} 解析到内网地址 {ip_address}，禁止访问"
+
+    return addresses, None
+
+
+def _prepare_pinned_request_target(url_str):
+    """Resolve and pin an HTTP request target to a validated public IP."""
+    parsed = urlparse(url_str)
+
+    if parsed.scheme not in {"http", "https"}:
+        return None, None, None, None, "只支持 HTTP 和 HTTPS 请求"
+
+    if parsed.username or parsed.password:
+        return None, None, None, None, "URL 中不支持内嵌账号密码，请使用请求头"
+
+    hostname = parsed.hostname
+    if not hostname:
+        return None, None, None, None, "无法解析 URL 主机名"
+
+    addresses, error_msg = _resolve_public_ipv4_addresses(hostname)
+    if error_msg is not None:
+        return None, None, None, None, error_msg
+
+    resolved_ip = addresses[0]
+    default_port = 443 if parsed.scheme == "https" else 80
+    port = parsed.port or default_port
+    host_header = hostname if port == default_port else f"{hostname}:{port}"
+    pinned_netloc = resolved_ip if port == default_port else f"{resolved_ip}:{port}"
+    request_path = parsed.path or "/"
+    pinned_url = urlunparse((parsed.scheme, pinned_netloc, request_path, parsed.params, parsed.query, parsed.fragment))
+
+    return parsed, pinned_url, host_header, resolved_ip, None
 
 
 # 用户级请求频率限制
@@ -174,9 +209,8 @@ class HTTPRequestTool(BaseTool):
         timeout = form.cleaned_data["timeout"]
         follow_redirects = form.cleaned_data["follow_redirects"]
 
-        # SSRF 保护：验证目标地址不是内网
-        is_valid, error_msg = _validate_url_for_ssrf(url)
-        if not is_valid:
+        _, _, _, _, error_msg = _prepare_pinned_request_target(url)
+        if error_msg is not None:
             return {"error": f"安全限制: {error_msg}"}
 
         # 速率限制
@@ -190,14 +224,14 @@ class HTTPRequestTool(BaseTool):
 
         # 发送请求
         try:
-            response = self._send_request(
+            response_meta = self._send_request(
                 method, url, headers_dict, data, content_type, timeout, follow_redirects
             )
         except Exception as e:
             return self._handle_request_error(e)
 
         # 解析响应
-        return self._parse_response(response, method)
+        return self._parse_response(response_meta)
 
     def _parse_headers(self, headers, content_type, method, data):
         """解析请求头"""
@@ -207,6 +241,14 @@ class HTTPRequestTool(BaseTool):
                 headers_dict = json.loads(headers)
             except json.JSONDecodeError as e:
                 return None, f"请求头JSON解析错误: {str(e)}"
+            if not isinstance(headers_dict, dict):
+                return None, "请求头必须是 JSON 对象"
+
+        # 保留这些头由工具自身控制，避免绕过固定解析结果
+        headers_dict.pop("Host", None)
+        headers_dict.pop("host", None)
+        headers_dict.pop("Content-Length", None)
+        headers_dict.pop("content-length", None)
 
         # 添加Content-Type
         if method in ["POST", "PUT", "PATCH"] and data:
@@ -215,88 +257,165 @@ class HTTPRequestTool(BaseTool):
         return headers_dict, None
 
     def _send_request(self, method, url, headers_dict, data, content_type, timeout, follow_redirects):
-        """发送 HTTP 请求"""
-        try:
-            import requests
-        except ImportError:
-            raise ImportError("请安装 requests: pip install requests")
-
-        session = requests.Session()
-
-        # 准备请求数据
-        if method in ["POST", "PUT", "PATCH"] and data and content_type == "application/json":
-            try:
-                data = json.loads(data)
-            except Exception:
-                pass
-
-        # 发送请求
-        if method == "GET":
-            return session.get(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-        elif method == "POST":
-            return session.post(url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-        elif method == "PUT":
-            return session.put(url, data=data, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-        elif method == "DELETE":
-            return session.delete(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-        elif method == "PATCH":
-            return session.patch(
-                url, data=data, headers=headers_dict,
-                timeout=timeout, allow_redirects=follow_redirects
-            )
-        elif method == "HEAD":
-            return session.head(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-        elif method == "OPTIONS":
-            return session.options(url, headers=headers_dict, timeout=timeout, allow_redirects=follow_redirects)
-        else:
+        """发送 HTTP 请求，并将域名固定到已校验的公网 IP。"""
+        if method not in ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
             raise ValueError(f"不支持的 HTTP 方法: {method}")
 
-    def _parse_response(self, response, method):
+        current_method = method
+        current_url = url
+        request_body = self._build_request_body(current_method, data, content_type)
+        request_headers = dict(headers_dict)
+        redirect_count = 0
+        last_resolved_ip = None
+        start_time = time.perf_counter()
+
+        while True:
+            parsed, pinned_url, host_header, resolved_ip, error_msg = _prepare_pinned_request_target(current_url)
+            if error_msg is not None:
+                raise ValueError(error_msg)
+
+            last_resolved_ip = resolved_ip
+            response = self._perform_request(
+                current_method,
+                pinned_url,
+                request_headers,
+                request_body,
+                timeout,
+                parsed.hostname,
+                host_header,
+            )
+
+            location = response.headers.get("Location")
+            if not (follow_redirects and location and response.status in {301, 302, 303, 307, 308}):
+                elapsed_ms = (time.perf_counter() - start_time) * 1000
+                return {
+                    "response": response,
+                    "method": current_method,
+                    "url": current_url,
+                    "elapsed_ms": elapsed_ms,
+                    "resolved_ip": last_resolved_ip,
+                }
+
+            redirect_count += 1
+            if redirect_count > 3:
+                raise ValueError("重定向次数过多")
+
+            current_url = urljoin(current_url, location)
+            if response.status in {301, 302, 303} and current_method not in {"GET", "HEAD"}:
+                current_method = "GET"
+                request_body = None
+                request_headers = {
+                    key: value
+                    for key, value in request_headers.items()
+                    if key.lower() not in {"content-type", "content-length"}
+                }
+
+    def _perform_request(self, method, pinned_url, headers, body, timeout, original_host, host_header):
+        """Execute a pinned outbound HTTP request."""
+        request_headers = dict(headers)
+        request_headers["Host"] = host_header
+
+        manager_kwargs = {}
+        if original_host:
+            manager_kwargs["assert_hostname"] = original_host
+            manager_kwargs["server_hostname"] = original_host
+
+        timeout_config = urllib3.Timeout(connect=timeout, read=timeout)
+        http = urllib3.PoolManager(**manager_kwargs)
+        return http.request(
+            method,
+            pinned_url,
+            body=body,
+            headers=request_headers,
+            timeout=timeout_config,
+            redirect=False,
+            retries=False,
+            preload_content=True,
+            assert_same_host=False,
+        )
+
+    def _build_request_body(self, method, data, content_type):
+        """Prepare the outbound request body."""
+        if method not in {"POST", "PUT", "PATCH"} or not data:
+            return None
+
+        if content_type == "application/json":
+            parsed = json.loads(data)
+            return json.dumps(parsed).encode("utf-8")
+
+        if isinstance(data, bytes):
+            return data
+
+        return str(data).encode("utf-8")
+
+    def _extract_response_encoding(self, headers):
+        """Best-effort charset detection from response headers."""
+        content_type = headers.get("Content-Type", "")
+        for chunk in content_type.split(";")[1:]:
+            name, _, value = chunk.strip().partition("=")
+            if name.lower() == "charset" and value:
+                return value.strip()
+        return "utf-8"
+
+    def _extract_response_cookies(self, headers):
+        """Parse response cookies into a simple dict."""
+        cookies = {}
+        raw_values = headers.getlist("Set-Cookie") if hasattr(headers, "getlist") else []
+        for raw_value in raw_values:
+            parsed = SimpleCookie()
+            parsed.load(raw_value)
+            for key, morsel in parsed.items():
+                cookies[key] = morsel.value
+        return cookies
+
+    def _parse_response(self, response_meta):
         """解析响应"""
+        response = response_meta["response"]
+        method = response_meta["method"]
+        encoding = self._extract_response_encoding(response.headers)
+        response_text = response.data.decode(encoding, errors="replace") if response.data else ""
         result = {
-            "url": response.url,
+            "url": response_meta["url"],
             "method": method,
-            "status_code": response.status_code,
+            "status_code": response.status,
             "status_text": response.reason,
             "headers": dict(response.headers),
+            "resolved_ip": response_meta["resolved_ip"],
         }
 
         # 响应时间
-        result["response_time"] = f"{response.elapsed.total_seconds() * 1000:.2f}ms"
+        result["response_time"] = f"{response_meta['elapsed_ms']:.2f}ms"
 
         # 响应内容
         if method != "HEAD":
             try:
                 # 尝试解析为JSON
-                result["content"] = response.json()
+                result["content"] = json.loads(response_text)
                 result["content_type"] = "json"
             except Exception:
                 # 返回文本
-                result["content"] = response.text[:5000] if len(response.text) > 5000 else response.text
+                result["content"] = response_text[:5000] if len(response_text) > 5000 else response_text
                 result["content_type"] = "text"
 
             # 内容编码
-            result["encoding"] = response.encoding
+            result["encoding"] = encoding
 
         # Cookies
-        if response.cookies:
-            result["cookies"] = dict(response.cookies)
+        cookies = self._extract_response_cookies(response.headers)
+        if cookies:
+            result["cookies"] = cookies
 
         return result
 
     def _handle_request_error(self, e):
         """处理请求错误"""
-        import requests
-
-        if isinstance(e, requests.Timeout):
+        if isinstance(e, (urllib3.exceptions.ConnectTimeoutError, urllib3.exceptions.ReadTimeoutError, TimeoutError)):
             return {"error": "请求超时"}
-        elif isinstance(e, requests.ConnectionError):
+        elif isinstance(e, (urllib3.exceptions.NewConnectionError, urllib3.exceptions.ProtocolError)):
             return {"error": f"连接错误: {str(e)}"}
-        elif isinstance(e, requests.RequestException):
-            return {"error": f"请求错误: {str(e)}"}
+        elif isinstance(e, urllib3.exceptions.SSLError):
+            return {"error": f"TLS 连接错误: {str(e)}"}
         elif isinstance(e, json.JSONDecodeError):
             return {"error": f"请求体JSON解析错误: {str(e)}"}
-        elif isinstance(e, ImportError):
-            return {"error": str(e)}
         else:
             return {"error": str(e)}

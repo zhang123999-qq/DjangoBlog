@@ -1,39 +1,57 @@
+"""Import smoke checks for core project modules.
+
+This file doubles as:
+1. a lightweight unittest module collected by Django's test runner; and
+2. a standalone script that can be run manually with `python test_import.py`.
+"""
+
+from __future__ import annotations
+
+import importlib
 import os
 import sys
+import unittest
 
-# Add the project to Python path
-sys.path.insert(0, "/mnt/f/DjangoBlog")
+import django
+from django.apps import apps as django_apps
 
-# Set Django settings
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "DjangoBlog.settings")
 
-print("=== 测试导入 ===")
-try:
-    import django
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-    print(f"✅ Django version: {django.VERSION}")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.test")
+
+if not django_apps.ready:
     django.setup()
-    print("✅ Django setup successful")
-except Exception as e:
-    print(f"❌ Django setup error: {e}")
-    import traceback
 
-    traceback.print_exc()
 
-try:
-    print("✅ Comment and CommentLike models imported")
-except Exception as e:
-    print(f"❌ Import error: {e}")
-    import traceback
+class ImportSmokeTests(unittest.TestCase):
+    """Basic import checks for frequently used project modules."""
 
-    traceback.print_exc()
+    def test_import_core_modules(self) -> None:
+        module_names = [
+            "apps.accounts.models",
+            "apps.accounts.forms",
+            "apps.blog.models",
+            "apps.blog.forms",
+            "apps.forum.models",
+            "apps.api.serializers",
+            "moderation.services",
+        ]
 
-try:
-    print("✅ CommentForm imported")
-except Exception as e:
-    print(f"❌ Import error: {e}")
-    import traceback
+        for module_name in module_names:
+            with self.subTest(module=module_name):
+                module = importlib.import_module(module_name)
+                self.assertIsNotNone(module)
 
-    traceback.print_exc()
 
-print("\n=== 测试完成 ===")
+def main() -> int:
+    """Run the smoke test suite as a standalone script."""
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(ImportSmokeTests)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    return 0 if result.wasSuccessful() else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
