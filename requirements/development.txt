@@ -9,7 +9,7 @@
 # 调试工具
 django-debug-toolbar==6.3.0
 django-extensions==3.2.3
-ipython==8.32.0
+ipython==8.39.0
 
 # 测试框架
 pytest==8.3.5
