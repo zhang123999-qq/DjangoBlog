@@ -46,7 +46,7 @@ watchfiles==1.0.4
 
 # 类型检查
 mypy==1.15.0
-django-stubs==6.0.2
+django-stubs==6.0.3
 
 # 异步支持
 uvloop==0.22.1; sys_platform != 'win32'
