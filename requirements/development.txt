@@ -42,7 +42,7 @@ Sphinx==8.2.3
 sphinx-rtd-theme==3.0.2
 
 # 热重载
-watchfiles==1.0.4
+watchfiles==1.1.1
 
 # 类型检查
 mypy==1.15.0
