@@ -1,119 +1,122 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_urls static %}
+{% load i18n %}
 
 {% block coltype %}colMS{% endblock %}
 
 {% block bodyclass %}{{ block.super }} dashboard{% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
 
 {% block content %}
-<div id="content-main">
-    <!-- 统计卡片 -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h2>{{ user_count }}</h2>
-            <p><i class="fas fa-users"></i> 注册用户</p>
-            <small>今日新增: +{{ today_users }}</small>
-        </div>
-        <div class="stat-card is-success">
-            <h2>{{ post_count }}</h2>
-            <p><i class="fas fa-file-alt"></i> 博客文章</p>
-            <small>今日新增: +{{ today_posts }}</small>
-        </div>
-        <div class="stat-card is-warn">
-            <h2>{{ topic_count }}</h2>
-            <p><i class="fas fa-comments"></i> 论坛主题</p>
-            <small>今日新增: +{{ today_topics|default:0 }}</small>
-        </div>
-        <div class="stat-card is-danger">
-            <h2>{{ comment_count }}</h2>
-            <p><i class="fas fa-comment-dots"></i> 评论/回复</p>
-            <small>今日新增: +{{ today_comments }}</small>
-        </div>
-    </div>
+<div id="content-main" class="admin-stack">
+    <section class="admin-grid admin-grid--stats" aria-label="核心数据">
+        <article class="admin-stat-card">
+            <strong class="admin-stat-card__value">{{ user_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-users"></i> 注册用户</span>
+            <span class="admin-stat-card__meta">今日新增: +{{ today_users }}</span>
+        </article>
+        <article class="admin-stat-card is-success">
+            <strong class="admin-stat-card__value">{{ post_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-file-alt"></i> 博客文章</span>
+            <span class="admin-stat-card__meta">今日新增: +{{ today_posts }}</span>
+        </article>
+        <article class="admin-stat-card is-warn">
+            <strong class="admin-stat-card__value">{{ topic_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-comments"></i> 论坛主题</span>
+            <span class="admin-stat-card__meta">今日新增: +{{ today_topics|default:0 }}</span>
+        </article>
+        <article class="admin-stat-card is-danger">
+            <strong class="admin-stat-card__value">{{ comment_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-comment-dots"></i> 评论/回复</span>
+            <span class="admin-stat-card__meta">今日新增: +{{ today_comments }}</span>
+        </article>
+    </section>
 
-    <!-- 第二行统计 -->
-    <div class="stats-grid">
-        <div class="stat-card stat-small is-violet">
-            <h3>{{ total_views }}</h3>
-            <p><i class="fas fa-eye"></i> 总浏览量</p>
-        </div>
-        <div class="stat-card stat-small is-cyan">
-            <h3>{{ category_count }}</h3>
-            <p><i class="fas fa-folder"></i> 分类</p>
-        </div>
-        <div class="stat-card stat-small is-pink">
-            <h3>{{ tag_count }}</h3>
-            <p><i class="fas fa-tags"></i> 标签</p>
-        </div>
-        <div class="stat-card stat-small is-teal">
-            <h3>{{ tool_count }}</h3>
-            <p><i class="fas fa-tools"></i> 工具</p>
-        </div>
-        <div class="stat-card stat-small is-orange warning">
-            <h3>{{ pending_comments|add:pending_replies|add:pending_topics }}</h3>
-            <p><i class="fas fa-exclamation-triangle"></i> 待审核</p>
-            <small>评论: {{ pending_comments }} | 回复: {{ pending_replies }}</small>
-        </div>
-    </div>
+    <section class="admin-grid admin-grid--stats admin-grid--compact" aria-label="运营数据">
+        <article class="admin-stat-card is-violet">
+            <strong class="admin-stat-card__value">{{ total_views }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-eye"></i> 总浏览量</span>
+        </article>
+        <article class="admin-stat-card is-cyan">
+            <strong class="admin-stat-card__value">{{ category_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-folder"></i> 分类</span>
+        </article>
+        <article class="admin-stat-card is-pink">
+            <strong class="admin-stat-card__value">{{ tag_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-tags"></i> 标签</span>
+        </article>
+        <article class="admin-stat-card is-teal">
+            <strong class="admin-stat-card__value">{{ tool_count }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-tools"></i> 工具</span>
+        </article>
+        <article class="admin-stat-card is-orange">
+            <strong class="admin-stat-card__value">{{ pending_comments|add:pending_replies|add:pending_topics }}</strong>
+            <span class="admin-stat-card__label"><i class="fas fa-exclamation-triangle"></i> 待审核</span>
+            <span class="admin-stat-card__meta">评论: {{ pending_comments }} | 回复: {{ pending_replies }}</span>
+        </article>
+    </section>
 
-    <!-- 快捷操作 -->
-    <div class="dashboard-card">
-        <h3><i class="fas fa-bolt"></i> 快捷操作</h3>
-        <div class="quick-actions">
-            <a href="{% url 'admin:blog_post_add' %}" class="quick-action-btn">
+    <section class="admin-card">
+        <div class="admin-card__header">
+            <h2 class="admin-card__title"><i class="fas fa-bolt"></i> 快捷操作</h2>
+        </div>
+        <div class="admin-action-grid">
+            <a href="{% url 'admin:blog_post_add' %}" class="admin-action">
                 <i class="fas fa-plus-circle"></i>
                 <span>发布文章</span>
             </a>
-            <a href="{% url 'admin:forum_topic_changelist' %}" class="quick-action-btn">
+            <a href="{% url 'admin:forum_topic_changelist' %}" class="admin-action">
                 <i class="fas fa-list"></i>
                 <span>管理主题</span>
             </a>
-            <a href="{% url 'admin:blog_comment_changelist' %}?review_status=pending" class="quick-action-btn">
+            <a href="{% url 'admin:blog_comment_changelist' %}?review_status=pending" class="admin-action">
                 <i class="fas fa-check-circle"></i>
                 <span>审核评论 ({{ pending_comments }})</span>
             </a>
-            <a href="{% url 'admin:moderation_sensitiveword_changelist' %}" class="quick-action-btn">
+            <a href="{% url 'admin:moderation_sensitiveword_changelist' %}" class="admin-action">
                 <i class="fas fa-shield-alt"></i>
                 <span>敏感词管理</span>
             </a>
-            <a href="{% url 'admin:accounts_user_changelist' %}" class="quick-action-btn">
+            <a href="{% url 'admin:accounts_user_changelist' %}" class="admin-action">
                 <i class="fas fa-users-cog"></i>
                 <span>用户管理</span>
             </a>
-            <a href="{% url 'tools:tool_list' %}" class="quick-action-btn" target="_blank" rel="noopener">
+            <a href="{% url 'tools:tool_list' %}" class="admin-action" target="_blank" rel="noopener">
                 <i class="fas fa-wrench"></i>
                 <span>在线工具</span>
             </a>
         </div>
-    </div>
+    </section>
 
-    <!-- 工具管理入口 -->
-    <div class="dashboard-card">
-        <h3><i class="fas fa-tools"></i> 工具管理 ({{ tool_count }}个工具)</h3>
-        <div class="tools-grid">
+    <section class="admin-card">
+        <div class="admin-card__header">
+            <h2 class="admin-card__title"><i class="fas fa-tools"></i> 工具管理</h2>
+            <span class="admin-card__badge">{{ tool_count }} 个工具</span>
+        </div>
+        <div class="admin-chip-grid">
             {% for tool in tools_list %}
-            <div class="tool-item">
+            <div class="admin-chip">
                 <i class="{{ tool.icon|default:'fas fa-tools' }}"></i>
                 <span>{{ tool.name }}</span>
             </div>
             {% empty %}
-            <p>暂无工具</p>
+            <p class="admin-empty">暂无工具</p>
             {% endfor %}
         </div>
-        <div class="text-center mt-3">
-            <a href="{% url 'tools:tool_list' %}" class="button" target="_blank" rel="noopener">
+        <div class="admin-card__footer admin-card__footer--center">
+            <a href="{% url 'tools:tool_list' %}" class="admin-button admin-button--secondary" target="_blank" rel="noopener">
                 <i class="fas fa-external-link-alt"></i> 查看全部 {{ tool_count }} 个工具
             </a>
         </div>
-    </div>
+    </section>
 
-    <!-- 原始模块 -->
     {% for app in app_list %}
-    <div class="dashboard-card">
-        <h3><i class="fas fa-cubes"></i> {{ app.name }}</h3>
-        <table class="module" id="module-{{ forloop.counter }}">
+    <section class="admin-card admin-card--table">
+        <div class="admin-card__header">
+            <h2 class="admin-card__title"><i class="fas fa-cubes"></i> {{ app.name }}</h2>
+        </div>
+        <table class="admin-table module" id="module-{{ forloop.counter }}">
             <tbody>
                 {% for model in app.models %}
                 <tr>
@@ -126,40 +129,42 @@
                     {% endif %}
 
                     {% if model.add_url %}
-                    <td><a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a></td>
+                    <td class="admin-table__action"><a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a></td>
                     {% else %}
-                    <td></td>
+                    <td class="admin-table__action"></td>
                     {% endif %}
 
                     {% if model.admin_url %}
                     {% if model.view_only %}
-                    <td><a href="{{ model.admin_url }}" class="viewlink">{% trans 'View' %}</a></td>
+                    <td class="admin-table__action"><a href="{{ model.admin_url }}" class="viewlink">{% trans 'View' %}</a></td>
                     {% else %}
-                    <td><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
+                    <td class="admin-table__action"><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
                     {% endif %}
                     {% else %}
-                    <td></td>
+                    <td class="admin-table__action"></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
+    </section>
     {% empty %}
-    <p>{% trans "You don't have permission to view or edit anything." %}</p>
+    <p class="admin-empty">{% trans "You don't have permission to view or edit anything." %}</p>
     {% endfor %}
 </div>
 {% endblock %}
 
 {% block sidebar %}
 <div id="content-related">
-    <div class="module" id="recent-actions-module">
-        <h2>{% trans 'Recent actions' %}</h2>
-        <h3>{% trans 'My actions' %}</h3>
+    <section class="module admin-card admin-recent-actions" id="recent-actions-module">
+        <div class="admin-card__header">
+            <h2 class="admin-card__title"><i class="fas fa-clock-rotate-left"></i> {% trans 'Recent actions' %}</h2>
+        </div>
+        <h3 class="admin-recent-actions__subtitle">{% trans 'My actions' %}</h3>
             {% load log %}
             {% get_admin_log 10 as admin_log for_user user %}
             {% if not admin_log %}
-            <p>{% trans 'None available' %}</p>
+            <p class="admin-empty">{% trans 'None available' %}</p>
             {% else %}
             <ul class="actionlist">
             {% for entry in admin_log %}
@@ -179,7 +184,7 @@
             {% endfor %}
             </ul>
             {% endif %}
-    </div>
+    </section>
 </div>
 {% endblock %}
 
