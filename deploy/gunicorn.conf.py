@@ -4,6 +4,31 @@
 import multiprocessing
 import os
 
+
+def _is_uvicorn_worker(worker):
+    return "uvicorn" in worker.lower()
+
+
+def _default_app_for_worker(worker):
+    if _is_uvicorn_worker(worker):
+        return "config.asgi:application"
+    return "config.wsgi:application"
+
+
+def _validate_worker_app(worker, app_uri):
+    normalized_app = (app_uri or "").lower()
+    if _is_uvicorn_worker(worker) and ".wsgi" in normalized_app:
+        raise RuntimeError(
+            "uvicorn.workers.UvicornWorker is an ASGI worker. "
+            "Use config.asgi:application, or switch GUNICORN_WORKER_CLASS to gevent/sync for config.wsgi:application."
+        )
+    if not _is_uvicorn_worker(worker) and ".asgi" in normalized_app:
+        raise RuntimeError(
+            "config.asgi:application requires an ASGI worker such as uvicorn.workers.UvicornWorker. "
+            "Use config.wsgi:application with gevent/sync workers."
+        )
+
+
 # ============================================
 # 服务器绑定
 # ============================================
@@ -18,6 +43,10 @@ workers = int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2
 
 # 工作模式: sync, gevent, eventlet, tornado
 worker_class = os.environ.get("GUNICORN_WORKER_CLASS", "gevent")
+
+# App entrypoint: WSGI workers -> config.wsgi, ASGI workers -> config.asgi.
+wsgi_app = os.environ.get("GUNICORN_APP", _default_app_for_worker(worker_class))
+_validate_worker_app(worker_class, wsgi_app)
 
 # 每个 worker 的最大并发连接数 (gevent 模式)
 worker_connections = int(os.environ.get("GUNICORN_WORKER_CONNECTIONS", 1000))
@@ -77,9 +106,12 @@ limit_request_field_size = 8190
 
 def on_starting(server):
     """服务器启动时调用"""
+    app_uri = getattr(getattr(server, "app", None), "app_uri", None) or wsgi_app
+    _validate_worker_app(worker_class, app_uri)
     print("DjangoBlog Gunicorn 服务器启动中...")
     print(f"工作进程数: {workers}")
     print(f"工作模式: {worker_class}")
+    print(f"应用入口: {app_uri}")
     print(f"绑定地址: {bind}")
 
 

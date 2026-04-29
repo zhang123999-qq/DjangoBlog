@@ -12,6 +12,7 @@ anyio==4.13.0
     # via watchfiles
 asgiref==3.11.1
     # via
+    #   -r requirements/base.txt
     #   django
     #   django-allauth
     #   django-axes
@@ -72,6 +73,8 @@ cryptography==47.0.0
     # via -r requirements/base.txt
 decorator==5.2.1
     # via ipython
+defusedxml==0.7.1
+    # via -r requirements/base.txt
 django==4.2.30
     # via
     #   -r requirements/base.txt
@@ -376,7 +379,9 @@ tzlocal==5.3.1
 uritemplate==4.2.0
     # via drf-spectacular
 urllib3==2.6.3
-    # via requests
+    # via
+    #   -r requirements/base.txt
+    #   requests
 uvloop==0.22.1 ; sys_platform != 'win32'
     # via -r requirements/development.txt
 vine==5.1.0

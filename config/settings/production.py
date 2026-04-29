@@ -165,6 +165,11 @@ STORAGES = {
 WHITENOISE_MAX_AGE = 31536000  # 1年缓存
 WHITENOISE_COMPRESS = True
 
+# Keep runtime rendering resilient when django-compressor's offline manifest
+# has not been generated during deployment. Set COMPRESS_OFFLINE=True only
+# after a successful `python manage.py compress`.
+COMPRESS_OFFLINE = env.bool('COMPRESS_OFFLINE', default=False)
+
 # =============================================================================
 # 日志配置 - 生产环境
 # =============================================================================

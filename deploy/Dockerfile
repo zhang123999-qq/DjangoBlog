@@ -92,4 +92,4 @@ RUN DJANGO_SETTINGS_MODULE=config.settings.production \
 EXPOSE 8000
 
 # 默认运行 Gunicorn（celery/migrate 会覆盖此命令）
-CMD ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]
+CMD ["gunicorn", "--config", "deploy/gunicorn.conf.py"]
