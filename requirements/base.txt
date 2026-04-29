@@ -8,6 +8,7 @@
 
 # Django 核心
 Django>=4.2,<5.0
+asgiref>=3.8
 django-environ>=0.11.0
 django-axes>=7.0.0
 
@@ -46,9 +47,11 @@ bleach>=6.2.0
 
 # 工具栏依赖
 requests>=2.32.0
+urllib3>=2.0.0
 qrcode>=8.0
 pycryptodome>=3.21.0
 cryptography>=42.0.0
+defusedxml>=0.7.1
 pyzbar>=0.1.9
 jsonpath-ng>=1.6.0
 faker>=20.0.0

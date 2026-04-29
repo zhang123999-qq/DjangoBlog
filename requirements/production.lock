@@ -6,6 +6,9 @@ anyio==4.13.0
     # via watchfiles
 asgiref==3.11.1
     # via
+    #   -r requirements/base.txt
+    #   channels
+    #   channels-redis
     #   django
     #   django-allauth
     #   django-axes
@@ -30,6 +33,12 @@ cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   gevent
+channels==4.3.2
+    # via
+    #   -r requirements/production.txt
+    #   channels-redis
+channels-redis==4.3.0
+    # via -r requirements/production.txt
 charset-normalizer==3.4.7
     # via requests
 click==8.3.3
@@ -54,9 +63,12 @@ croniter==6.2.2
     # via -r requirements/base.txt
 cryptography==47.0.0
     # via -r requirements/base.txt
+defusedxml==0.7.1
+    # via -r requirements/base.txt
 django==4.2.30
     # via
     #   -r requirements/base.txt
+    #   channels
     #   django-allauth
     #   django-appconf
     #   django-axes
@@ -141,6 +153,8 @@ kombu==5.6.2
     # via celery
 markdown==3.10.2
     # via -r requirements/base.txt
+msgpack==1.1.2
+    # via channels-redis
 orjson==3.11.8
     # via -r requirements/production.txt
 packaging==26.2
@@ -186,6 +200,7 @@ rcssmin==1.2.2
 redis==7.4.0
     # via
     #   -r requirements/base.txt
+    #   channels-redis
     #   django-redis
 referencing==0.37.0
     # via
@@ -227,6 +242,7 @@ uritemplate==4.2.0
     # via drf-spectacular
 urllib3==2.6.3
     # via
+    #   -r requirements/base.txt
     #   requests
     #   sentry-sdk
 uvicorn==0.46.0

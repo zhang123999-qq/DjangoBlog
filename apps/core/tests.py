@@ -59,6 +59,13 @@ class GunicornConfigTests(SimpleTestCase):
             config["on_starting"](fake_server)
 
 
+class ProductionSettingsTests(SimpleTestCase):
+    def test_offline_compression_is_disabled_by_default(self):
+        from config.settings import production
+
+        self.assertFalse(production.COMPRESS_OFFLINE)
+
+
 class CoreTestCase(TestCase):
     def test_healthz_view(self):
         """测试健康检查视图返回200和健康检查详情"""
