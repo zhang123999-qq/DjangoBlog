@@ -153,7 +153,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    command: ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]
+    command: ["gunicorn", "--config", "deploy/gunicorn.conf.py"]
 
   # ========================================
   # Celery Worker (异步任务处理)

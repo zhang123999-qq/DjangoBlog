@@ -144,6 +144,19 @@ gunicorn config.wsgi:application \
   --timeout 60
 ```
 
+如果使用 `uvicorn.workers.UvicornWorker`，应用入口必须切换为 ASGI：
+
+```bash
+gunicorn config.asgi:application \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000 \
+  --workers 2 \
+  --timeout 60
+```
+
+不要混用 `config.wsgi:application` 和 `uvicorn.workers.UvicornWorker`，否则会出现
+`WSGIHandler.__call__() missing 1 required positional argument: 'start_response'`。
+
 新开终端检查:
 
 ```bash

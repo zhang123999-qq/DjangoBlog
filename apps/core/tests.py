@@ -1,4 +1,7 @@
+import os
+import runpy
 import socket
+from pathlib import Path
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, TestCase
@@ -9,6 +12,51 @@ from apps.blog.models import Category, Comment, Post
 from apps.forum.models import Board, Reply, Topic
 from apps.tools.tool_modules.http_request_tool import HTTPRequestTool, _prepare_pinned_request_target
 from apps.tools.tool_modules.port_scan_tool import _resolve_public_target
+
+
+class GunicornConfigTests(SimpleTestCase):
+    CONFIG_PATH = Path(__file__).resolve().parents[2] / "deploy" / "gunicorn.conf.py"
+
+    def _load_config(self, **env):
+        keys = {"GUNICORN_WORKER_CLASS", "GUNICORN_APP"}
+        original = {key: os.environ.get(key) for key in keys}
+        try:
+            for key in keys:
+                os.environ.pop(key, None)
+            os.environ.update(env)
+            return runpy.run_path(str(self.CONFIG_PATH))
+        finally:
+            for key, value in original.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+    def test_default_worker_uses_wsgi_application(self):
+        config = self._load_config()
+
+        self.assertEqual(config["worker_class"], "gevent")
+        self.assertEqual(config["wsgi_app"], "config.wsgi:application")
+
+    def test_uvicorn_worker_uses_asgi_application(self):
+        config = self._load_config(GUNICORN_WORKER_CLASS="uvicorn.workers.UvicornWorker")
+
+        self.assertEqual(config["worker_class"], "uvicorn.workers.UvicornWorker")
+        self.assertEqual(config["wsgi_app"], "config.asgi:application")
+
+    def test_wsgi_application_with_uvicorn_worker_fails_fast(self):
+        with self.assertRaisesRegex(RuntimeError, "ASGI worker"):
+            self._load_config(
+                GUNICORN_WORKER_CLASS="uvicorn.workers.UvicornWorker",
+                GUNICORN_APP="config.wsgi:application",
+            )
+
+    def test_positional_wsgi_application_with_uvicorn_worker_fails_fast(self):
+        config = self._load_config(GUNICORN_WORKER_CLASS="uvicorn.workers.UvicornWorker")
+        fake_server = type("FakeServer", (), {"app": type("FakeApp", (), {"app_uri": "config.wsgi:application"})()})()
+
+        with self.assertRaisesRegex(RuntimeError, "ASGI worker"):
+            config["on_starting"](fake_server)
 
 
 class CoreTestCase(TestCase):
