@@ -263,7 +263,7 @@ LOGGING = {
         "simple": {"format": "[%(levelname)s] %(message)s"},
         "verbose": {"format": "%(levelname)s %(asctime)s %(module)s %(message)s"},
         "json": {
-            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "()": "pythonjsonlogger.json.JsonFormatter",
             "format": "%(asctime)s %(levelname)s %(name)s %(message)s %(pathname)s %(lineno)d",
         },
     },

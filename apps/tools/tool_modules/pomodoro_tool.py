@@ -57,7 +57,7 @@ class PomodoroTool(BaseTool):
                     "type": "工作",
                     "duration": duration,
                     "start": f"第{i * (duration + break_duration)}分钟",
-                    "end": f"第{(i+1)*duration + i*break_duration}分钟",
+                    "end": f"第{(i + 1) * duration + i * break_duration}分钟",
                 }
             )
             if i < rounds - 1:
@@ -66,8 +66,8 @@ class PomodoroTool(BaseTool):
                         "round": i + 1,
                         "type": "休息",
                         "duration": break_duration,
-                        "start": f"第{(i+1)*duration + i*break_duration}分钟",
-                        "end": f"第{(i+1)*(duration + break_duration)}分钟",
+                        "start": f"第{(i + 1) * duration + i * break_duration}分钟",
+                        "end": f"第{(i + 1) * (duration + break_duration)}分钟",
                     }
                 )
 

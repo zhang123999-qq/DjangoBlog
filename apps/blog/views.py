@@ -348,9 +348,9 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         post = self.get_object()
         return post.author == self.request.user or self.request.user.is_staff
 
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, "文章已删除！")
-        return super().delete(request, *args, **kwargs)
+    def form_valid(self, form):
+        messages.success(self.request, "文章已删除！")
+        return super().form_valid(form)
 
 
 @login_required
