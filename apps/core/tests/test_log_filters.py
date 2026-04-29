@@ -95,6 +95,57 @@ class TestSensitiveDataFilter:
 
         assert record.msg == original_msg
 
+    def test_preserve_django_server_access_log_args(self, filter_instance):
+        """测试保留 Django 开发服务器访问日志参数"""
+        original_args = ("GET /blog/ HTTP/1.1", "200", "1234")
+        record = logging.LogRecord(
+            name="django.server",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=1,
+            msg='"%s" %s %s',
+            args=original_args,
+            exc_info=None,
+        )
+
+        filter_instance.filter(record)
+
+        assert record.args == original_args
+        assert record.getMessage() == '"GET /blog/ HTTP/1.1" 200 1234'
+
+    def test_preserve_non_sensitive_string_args(self, filter_instance):
+        """测试保留非敏感字符串参数"""
+        record = logging.LogRecord(
+            name="test",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=1,
+            msg="Loaded tool %s from %s",
+            args=("json_formatter", "/tools/json/"),
+            exc_info=None,
+        )
+
+        filter_instance.filter(record)
+
+        assert record.getMessage() == "Loaded tool json_formatter from /tools/json/"
+
+    def test_filter_sensitive_value_in_string_args(self, filter_instance):
+        """测试格式化参数中的敏感值仍会脱敏"""
+        record = logging.LogRecord(
+            name="test",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=1,
+            msg="User login with password=%s",
+            args=("mySecretPass123",),
+            exc_info=None,
+        )
+
+        filter_instance.filter(record)
+
+        assert "mySecretPass123" not in record.getMessage()
+        assert "password=" in record.getMessage()
+
 
 class TestSanitizeLogFilter:
     """简化版过滤器测试"""

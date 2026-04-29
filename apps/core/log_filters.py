@@ -37,10 +37,30 @@ PASS_THROUGH_PATTERNS = [
     re.compile(r"^NotFound:\s+/"),
 ]
 
+PASS_THROUGH_LOGGER_NAMES = {
+    "django.server",
+}
+
 
 def _should_pass_through(message: str) -> bool:
     """判断消息是否是系统日志路径，应放行不脱敏"""
     return any(p.match(message) for p in PASS_THROUGH_PATTERNS)
+
+
+def _record_should_pass_through(record: logging.LogRecord) -> bool:
+    """Return True for framework access logs that should stay readable."""
+    if record.name in PASS_THROUGH_LOGGER_NAMES:
+        return True
+
+    if record.msg and isinstance(record.msg, str) and _should_pass_through(record.msg):
+        return True
+
+    try:
+        message = record.getMessage()
+    except Exception:
+        return False
+
+    return isinstance(message, str) and _should_pass_through(message)
 
 
 class SensitiveDataFilter(logging.Filter):
@@ -148,7 +168,7 @@ class SensitiveDataFilter(logging.Filter):
 
         # 编译字段匹配正则
         key_pattern = "|".join(re.escape(k) for k in self.sensitive_keys)
-        self.sensitive_pattern = re.compile(rf'({key_pattern})["\s:=]+(["\']?)([^\s"\',\]]+)', re.I)
+        self.sensitive_pattern = re.compile(rf'({key_pattern})(["\s:=]+)(["\']?)([^\s"\',\]]+)', re.I)
 
     def filter(self, record: logging.LogRecord) -> bool:
         """
@@ -161,20 +181,26 @@ class SensitiveDataFilter(logging.Filter):
             bool: 总是返回 True（允许记录通过，但会修改内容）
         """
         # 放行系统/请求类日志，不做脱敏
-        if record.msg and isinstance(record.msg, str):
-            if _should_pass_through(record.msg):
+        if _record_should_pass_through(record):
+            return True
+
+        # 先格式化带参数的日志，再只脱敏真正敏感的片段，避免普通字符串参数被整段隐藏。
+        if record.args:
+            try:
+                record.msg = self._mask_sensitive_data(record.getMessage())
+                record.args = ()
                 return True
+            except Exception:
+                if isinstance(record.args, dict):
+                    record.args = self._mask_dict(record.args)
+                elif isinstance(record.args, tuple):
+                    record.args = (
+                        tuple(self._mask_sensitive_data(arg) if isinstance(arg, str) else arg for arg in record.args)
+                    )
 
         # 处理消息
         if record.msg and isinstance(record.msg, str):
             record.msg = self._mask_sensitive_data(record.msg)
-
-        # 处理参数
-        if record.args:
-            if isinstance(record.args, dict):
-                record.args = self._mask_dict(record.args)
-            elif isinstance(record.args, tuple):
-                record.args = tuple(self._mask_value(arg) if isinstance(arg, str) else arg for arg in record.args)
 
         return True
 
@@ -194,7 +220,7 @@ class SensitiveDataFilter(logging.Filter):
 
         # 2. 键值对替换
         message = self.sensitive_pattern.sub(
-            lambda m: f"{m.group(1)}{m.group(2)}{self._mask_value(m.group(3))}", message
+            lambda m: f"{m.group(1)}{m.group(2)}{m.group(3)}{self._mask_value(m.group(4))}", message
         )
 
         return message
