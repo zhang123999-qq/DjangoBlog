@@ -1,0 +1,49 @@
+# Auto detect text files and normalize to LF
+* text=auto eol=lf
+
+# Python files
+*.py text eol=lf
+*.pyx text eol=lf
+*.pyd text eol=lf
+
+# Web files
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Config files
+*.txt text eol=lf
+*.md text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.toml text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Docker
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+*.conf text eol=lf
+
+# Lock files
+*.lock text eol=lf
+
+# Binary files (no normalization)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pyc binary
+*.pyo binary
+*.db binary
+*.sqlite3 binary
