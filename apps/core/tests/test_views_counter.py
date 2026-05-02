@@ -14,8 +14,7 @@ class TestViewsBuffer:
     def test_add_view(self):
         """测试添加浏览记录"""
         buffer = ViewsBuffer()
-        buffer._buffer.clear()
-        buffer._recorded.clear()
+        buffer.reset()  # 使用 reset 方法完整重置
 
         # 添加记录
         result = buffer.add('post', 1, 'user_1')
@@ -26,8 +25,7 @@ class TestViewsBuffer:
     def test_prevent_duplicate(self):
         """测试防重复记录"""
         buffer = ViewsBuffer()
-        buffer._buffer.clear()
-        buffer._recorded.clear()
+        buffer.reset()
 
         # 添加记录
         buffer.add('post', 1, 'user_1')
@@ -40,8 +38,7 @@ class TestViewsBuffer:
     def test_different_users(self):
         """测试不同用户记录"""
         buffer = ViewsBuffer()
-        buffer._buffer.clear()
-        buffer._recorded.clear()
+        buffer.reset()
 
         # 不同用户
         buffer.add('post', 1, 'user_1')
@@ -53,8 +50,7 @@ class TestViewsBuffer:
     def test_get_buffer_stats(self):
         """测试获取统计信息"""
         buffer = ViewsBuffer()
-        buffer._buffer.clear()
-        buffer._recorded.clear()
+        buffer.reset()
 
         buffer.add('post', 1, 'user_1')
         buffer.add('post', 2, 'user_2')
@@ -105,8 +101,7 @@ class TestViewsCounter:
         request.META = {'REMOTE_ADDR': '127.0.0.1'}
 
         # 清空缓冲区
-        ViewsCounter._buffer._buffer.clear()
-        ViewsCounter._buffer._recorded.clear()
+        ViewsCounter._buffer.reset()
 
         result = ViewsCounter.increment('post', post.id, request)
 
@@ -114,8 +109,7 @@ class TestViewsCounter:
 
     def test_increment_with_identifier(self):
         """测试使用自定义标识记录"""
-        ViewsCounter._buffer._buffer.clear()
-        ViewsCounter._buffer._recorded.clear()
+        ViewsCounter._buffer.reset()
 
         result = ViewsCounter.increment('post', 1, identifier='custom_id')
 
@@ -149,7 +143,7 @@ class TestViewsCounter:
     def test_sync_to_db(self, post):
         """测试同步到数据库"""
         # 添加一些浏览量
-        ViewsCounter._buffer._buffer.clear()
+        ViewsCounter._buffer.reset()
         ViewsCounter._buffer.add('post', post.id, 'user_1')
         ViewsCounter._buffer.add('post', post.id, 'user_2')
 

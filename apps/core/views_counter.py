@@ -68,6 +68,14 @@ class ViewsBuffer:
         # 防刷记录时间戳
         self._recorded_timestamp: Dict[str, Dict[int, float]] = defaultdict(dict)
 
+    def reset(self):
+        """重置缓冲区状态（用于测试）"""
+        # 直接重新初始化所有状态，避免死锁
+        self._buffer: Dict[str, Dict[int, int]] = defaultdict(lambda: defaultdict(int))
+        self._recorded: Dict[str, Dict[int, Set[str]]] = defaultdict(lambda: defaultdict(set))
+        self._recorded_timestamp: Dict[str, Dict[int, float]] = defaultdict(dict)
+        self._last_flush = time.time()
+
     def add(self, model_type: str, object_id: int, identifier: str) -> bool:
         """
         添加浏览记录
