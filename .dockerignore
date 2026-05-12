@@ -51,6 +51,9 @@ htmlcov/
 .pytest_cache/
 test_*.py
 tests/
+**/tests/
+**/tests.py
+**/test_*.py
 
 # Docs (not needed in production)
 docs/

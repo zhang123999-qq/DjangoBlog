@@ -78,8 +78,8 @@ COPY --chown=root:root requirements/ /app/requirements/
 COPY --chown=root:root deploy/gunicorn.conf.py /app/deploy/gunicorn.conf.py
 
 # Setup directories
-RUN mkdir -p /app/staticfiles /app/media /app/logs \
-    && chmod 777 /app/staticfiles /app/media /app/logs
+RUN mkdir -p /app/staticfiles /app/media /app/logs /app/beat_schedule \
+    && chmod 777 /app/staticfiles /app/media /app/logs /app/beat_schedule
 
 # 构建时执行 collectstatic，生成 WhiteNoise 清单
 RUN DJANGO_SETTINGS_MODULE=config.settings.production \
