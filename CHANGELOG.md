@@ -9,19 +9,44 @@
 
 ## [Unreleased]
 
+### 🎉 新功能
+- **管理后台数据备份与恢复**：新增 `/admin/backup/` 页面，支持一键下载 gzip 压缩的 JSON 备份文件，以及上传恢复之前下载的备份
+  - 使用 `dumpdata --natural-foreign --natural-primary` 导出，保证跨环境可恢复
+  - 恢复时自动禁用 User→Profile 信号避免冲突，支持安全表清理
+  - 超级用户专属权限，恢复前 JS 二次确认
+  - 10 项测试覆盖权限、下载、完整备份恢复循环
+- **管理后台仪表盘增强**：
+  - 新增 7 天趋势条形图（纯 CSS，文章 + 评论双维度）
+  - 新增系统信息面板（Django、Python、数据库、Redis、操作系统）
+  - 快捷操作增加"审核回复"、"审核主题"、"数据备份"入口
+- **User 模型添加 `natural_key()`**：支持 Django 序列化器的自然键外键引用
+
+### 🐛 Bug 修复
+- **修复 Notification admin 注册错误**：从默认 `admin.site` 改为自定义 `admin_site`，修复管理后台看不到通知管理的问题
+- **修复 Gunicorn 数据库线程共享错误**：`preload_app=True` + gevent worker 导致 `DatabaseWrapper` 跨线程共享报错，改为 `preload_app=False` 并在 `post_fork` 中关闭继承的连接
+- **修复 Docker migrate 容器阻塞**：`compress --force` 的 crispy_forms_tags 警告导致非零退出码，web 容器无法启动。改为 `|| true` 非阻塞执行
+- **修复 Docker web 健康检查启动超时**：`start_period` 从 20s 增加到 60s
+- **修复 Docker 镜像源失效**：部署脚本在 `daemon.json` 已有 `registry-mirrors` 时跳过更新，导致失效镜像源无法刷新。改为始终比对并更新镜像列表
+
 ### 🔧 依赖与构建
 - 新增 `requirements/development.lock`，CI 开发测试环境改为使用锁文件安装。
 - 刷新 `base.lock` / `production.lock` / `uv.lock`，修正 `django-filter` 锁定版本与 Django 4.2 LTS 的兼容约束。
 - Docker 构建改为安装 `requirements/production.lock`，提升生产镜像依赖可复现性。
 - CI 依赖检查任务改为使用 `uv pip compile` 维护现有 `requirements/*.txt/*.lock` 结构。
 
+### 🚀 部署优化
+- 部署脚本镜像源列表更新为 `dockerpull.org` + `docker.1ms.run` + `docker.xuanyuan.me`
+- 部署脚本用 python3 合并已有 `daemon.json`，保留其他配置字段
+- 移除预拉取 `mysql/redis/nginx` 镜像（由 `docker compose up` 统一拉取）
+- Nginx 镜像从 `1.25-alpine` 更新为 `stable-alpine`
+- Celery Beat 添加 `beat_schedule` 命名卷持久化调度状态
+- Web 服务从 `ports` 改为 `expose`，所有流量经 Nginx 反代
+- Celery Worker/Beat 添加健康检查
+- Dockerfile 添加 `beat_schedule` 目录创建
+
 ### 📝 文档更新
 - 更新 README 与部署文档，说明 `*.txt` 为依赖入口、`*.lock` 为 CI/Docker/生产部署锁文件。
 - 更新 Dockerfile 文档，记录 Debian apt 源按基础镜像版本自动匹配。
-
-### 🚀 新功能预览
-- WebSocket 实时通知系统完善
-- 全文搜索性能优化
 
 ---
 

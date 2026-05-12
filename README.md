@@ -8,7 +8,7 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D)
 ![License](https://img.shields.io/badge/License-MIT-black)
-![Tests](https://img.shields.io/badge/Tests-263%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-45%20passed-brightgreen)
 ![Security](https://img.shields.io/badge/Security-Audited-brightgreen)
 ![Code Quality](https://img.shields.io/badge/Code%20Quality-9.5%2F10-brightgreen)
 ![Deploy](https://img.shields.io/badge/Deploy-ready-brightgreen)
@@ -52,13 +52,14 @@
 |------|------|
 | 📰 **内容系统** | 博客文章、分类、评论、点赞、Slug 路由 |
 | 💬 **社区模块** | 论坛主题、回复、互动链路 |
-| 🧰 **工具箱模块** | 72 个实用工具（编码转换、文本处理、加解密、图像类等） |
+| 🧰 **工具箱模块** | 72+ 个实用工具（编码转换、文本处理、加解密、图像类等） |
 | 🔌 **API 能力** | Django REST Framework + OpenAPI 文档支持 |
 | 🔔 **实时通知** | WebSocket 实时推送、未读消息计数 |
 | 🔍 **全文搜索** | Meilisearch/Elasticsearch 毫秒级响应 |
 | 🛡️ **安全增强** | 安全响应头、限流、登录防护（Axes）、内容审核机制、验证码密码学安全 |
 | 🚀 **生产部署友好** | Docker Compose / Nginx / Gunicorn / MySQL / Redis |
-| 🧪 **质量保障** | 185 项测试全覆盖、pre-commit 钩子、CI/CD 流水线 |
+| 🧪 **质量保障** | 测试全覆盖、pre-commit 钩子、CI/CD 流水线 |
+| 💾 **数据备份** | 管理后台一键备份/恢复，gzip 压缩 JSON 导出 |
 
 ---
 
@@ -193,11 +194,11 @@ bash deploy/auto-deploy.sh
 | 步骤 | 功能 |
 |:----:|------|
 | 1 | 自动生成 `.env` 配置文件（含随机 SECRET_KEY） |
-| 2 | 配置 Docker 镜像加速（国内环境自动启用） |
-| 3 | 预拉取基础镜像（python、mysql、redis、nginx） |
-| 4 | 构建应用镜像 |
-| 5 | 启动所有服务（Web、MySQL、Redis、Celery、Nginx） |
-| 6 | 自动执行数据库迁移 |
+| 2 | 配置 Docker 镜像加速（国内环境自动启用，始终刷新失效镜像源） |
+| 3 | 构建 Docker 镜像（多阶段构建，所有服务共享） |
+| 4 | 启动 MySQL + Redis 并等待就绪 |
+| 5 | 自动执行数据库迁移 + 静态文件收集 |
+| 6 | 启动全部服务（Web、Celery、Nginx） |
 | 7 | 交互式创建管理员账户 |
 
 **部署完成后：**
@@ -394,6 +395,8 @@ docker compose -f deploy/docker-compose.yml exec web python manage.py check --de
 - [x] 统一 API 响应格式
 - [x] WebSocket 实时通知
 - [x] 全文搜索（Meilisearch/Elasticsearch）
+- [x] 管理后台数据备份与恢复
+- [x] 管理后台仪表盘（趋势图、系统信息、快捷操作）
 - [ ] 统一 API 权限策略与审计日志
 - [ ] 前端页面体验与主题体系持续优化
 - [ ] 监控告警（Prometheus / Sentry）进一步完善
