@@ -3,10 +3,10 @@
 """
 
 from django.contrib import admin
+from apps.core.admin.admin_site import admin_site
 from .models import Notification
 
 
-@admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
     """通知管理"""
 
@@ -18,3 +18,6 @@ class NotificationAdmin(admin.ModelAdmin):
 
     date_hierarchy = "created_at"
     ordering = ["-created_at"]
+
+
+admin_site.register(Notification, NotificationAdmin)

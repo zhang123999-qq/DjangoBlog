@@ -59,6 +59,27 @@
 
     <section class="admin-card">
         <div class="admin-card__header">
+            <h2 class="admin-card__title"><i class="fas fa-chart-bar"></i> 近 7 天趋势</h2>
+        </div>
+        <div class="admin-trend-chart">
+            {% for day in week_data %}
+            <div class="admin-trend-bar">
+                <div class="admin-trend-bar__cols">
+                    <div class="admin-trend-bar__col admin-trend-bar__col--posts" style="height: {{ day.posts_pct }}%" title="文章: {{ day.posts }}"></div>
+                    <div class="admin-trend-bar__col admin-trend-bar__col--comments" style="height: {{ day.comments_pct }}%" title="评论: {{ day.comments }}"></div>
+                </div>
+                <span class="admin-trend-bar__label">{{ day.date }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="admin-trend-legend">
+            <span class="admin-trend-legend__item"><i class="admin-trend-legend__dot admin-trend-legend__dot--posts"></i> 文章</span>
+            <span class="admin-trend-legend__item"><i class="admin-trend-legend__dot admin-trend-legend__dot--comments"></i> 评论</span>
+        </div>
+    </section>
+
+    <section class="admin-card">
+        <div class="admin-card__header">
             <h2 class="admin-card__title"><i class="fas fa-bolt"></i> 快捷操作</h2>
         </div>
         <div class="admin-action-grid">
@@ -73,6 +94,14 @@
             <a href="{% url 'admin:blog_comment_changelist' %}?review_status=pending" class="admin-action">
                 <i class="fas fa-check-circle"></i>
                 <span>审核评论 ({{ pending_comments }})</span>
+            </a>
+            <a href="{% url 'admin:forum_reply_changelist' %}?review_status=pending" class="admin-action">
+                <i class="fas fa-reply"></i>
+                <span>审核回复 ({{ pending_replies }})</span>
+            </a>
+            <a href="{% url 'admin:forum_topic_changelist' %}?review_status=pending" class="admin-action">
+                <i class="fas fa-comments"></i>
+                <span>审核主题 ({{ pending_topics }})</span>
             </a>
             <a href="{% url 'admin:moderation_sensitiveword_changelist' %}" class="admin-action">
                 <i class="fas fa-shield-alt"></i>
@@ -184,6 +213,34 @@
             {% endfor %}
             </ul>
             {% endif %}
+    </section>
+
+    <section class="admin-card admin-sysinfo">
+        <div class="admin-card__header">
+            <h2 class="admin-card__title"><i class="fas fa-server"></i> 系统信息</h2>
+        </div>
+        <dl class="admin-sysinfo__list">
+            <div class="admin-sysinfo__item">
+                <dt>Django</dt>
+                <dd>{{ django_version_str }}</dd>
+            </div>
+            <div class="admin-sysinfo__item">
+                <dt>Python</dt>
+                <dd>{{ python_version }}</dd>
+            </div>
+            <div class="admin-sysinfo__item">
+                <dt>数据库</dt>
+                <dd>{{ db_engine }}</dd>
+            </div>
+            <div class="admin-sysinfo__item">
+                <dt>Redis</dt>
+                <dd>{{ redis_info }}</dd>
+            </div>
+            <div class="admin-sysinfo__item">
+                <dt>系统</dt>
+                <dd>{{ os_info }}</dd>
+            </div>
+        </dl>
     </section>
 </div>
 {% endblock %}

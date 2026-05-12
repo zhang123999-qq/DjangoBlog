@@ -110,6 +110,14 @@ class DjangoBlogAdminSite(admin.AdminSite):
                     "comments": comments_by_day.get(day, 0),
                 }
             )
+
+        # 归一化趋势数据（百分比，供 CSS 柱状图使用）
+        max_posts = max((d["posts"] for d in week_data), default=1) or 1
+        max_comments = max((d["comments"] for d in week_data), default=1) or 1
+        for d in week_data:
+            d["posts_pct"] = round(d["posts"] / max_posts * 100)
+            d["comments_pct"] = round(d["comments"] / max_comments * 100)
+
         stats["week_data"] = week_data
 
         # ===== 系统信息（不常变，可缓存更久） =====
