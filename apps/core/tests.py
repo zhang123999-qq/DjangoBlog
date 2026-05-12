@@ -1,4 +1,7 @@
+import gzip
+import json
 import socket
+from io import BytesIO
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, TestCase
@@ -261,3 +264,121 @@ class NetworkToolSecurityTests(SimpleTestCase):
 
         self.assertIsNone(resolved_ip)
         self.assertIn("禁止扫描", error)
+
+
+class BackupRestoreTests(TestCase):
+    """备份与恢复功能测试"""
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            username="backupadmin",
+            email="backupadmin@example.com",
+            password="backuppass123",
+        )
+        self.normal_user = User.objects.create_user(
+            username="backupuser",
+            email="backupuser@example.com",
+            password="backuppass123",
+            is_staff=True,
+        )
+        self.category = Category.objects.create(name="backup-cat")
+        self.post = Post.objects.create(
+            title="backup post",
+            content="backup content",
+            author=self.superuser,
+            category=self.category,
+            status="published",
+        )
+
+    def test_backup_page_requires_login(self):
+        response = self.client.get("/admin/backup/")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login", response.headers.get("Location", ""))
+
+    def test_backup_page_requires_superuser(self):
+        self.client.login(username="backupuser", password="backuppass123")
+        response = self.client.get("/admin/backup/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_backup_page_loads_for_superuser(self):
+        self.client.login(username="backupadmin", password="backuppass123")
+        response = self.client.get("/admin/backup/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "数据备份与恢复")
+        self.assertContains(response, "下载备份文件")
+
+    def test_download_backup_returns_gzip(self):
+        self.client.login(username="backupadmin", password="backuppass123")
+        response = self.client.get("/admin/backup/?action=download")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/gzip")
+        self.assertIn("djangoblog_backup_", response["Content-Disposition"])
+        self.assertIn(".json.gz", response["Content-Disposition"])
+
+    def test_download_backup_contains_valid_json(self):
+        self.client.login(username="backupadmin", password="backuppass123")
+        response = self.client.get("/admin/backup/?action=download")
+
+        decompressed = gzip.decompress(response.content)
+        data = json.loads(decompressed)
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
+
+        model_names = {r["model"] for r in data}
+        self.assertIn("accounts.user", model_names)
+        self.assertIn("blog.post", model_names)
+        self.assertIn("blog.category", model_names)
+
+    def test_restore_requires_post(self):
+        self.client.login(username="backupadmin", password="backuppass123")
+        response = self.client.get("/admin/restore/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_restore_requires_file(self):
+        self.client.login(username="backupadmin", password="backuppass123")
+        response = self.client.post("/admin/restore/")
+        self.assertEqual(response.status_code, 302)
+        # Should redirect back with error message
+
+    def test_restore_rejects_non_superuser(self):
+        self.client.login(username="backupuser", password="backuppass123")
+        response = self.client.post("/admin/restore/")
+        self.assertEqual(response.status_code, 403)
+
+    def test_full_backup_and_restore_cycle(self):
+        """完整的备份→恢复流程"""
+        self.client.login(username="backupadmin", password="backuppass123")
+
+        # Step 1: download backup
+        response = self.client.get("/admin/backup/?action=download")
+        backup_data = response.content
+
+        # Step 2: modify data (add new post)
+        Post.objects.create(
+            title="extra post",
+            content="extra content",
+            author=self.superuser,
+            category=self.category,
+            status="published",
+        )
+        self.assertEqual(Post.objects.count(), 2)
+
+        # Step 3: restore original backup
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        backup_file = SimpleUploadedFile(
+            "backup.json.gz",
+            backup_data,
+            content_type="application/gzip",
+        )
+        response = self.client.post("/admin/restore/", {"backup_file": backup_file})
+        self.assertEqual(response.status_code, 302)
+
+        # Step 4: verify data restored (extra post should be gone)
+        self.assertEqual(Post.objects.count(), 1)
+        self.assertTrue(Post.objects.filter(title="backup post").exists())
+        self.assertFalse(Post.objects.filter(title="extra post").exists())
+
+    def test_user_natural_key(self):
+        """测试 User 模型的 natural_key 方法"""
+        key = self.superuser.natural_key()
+        self.assertEqual(key, ("backupadmin",))

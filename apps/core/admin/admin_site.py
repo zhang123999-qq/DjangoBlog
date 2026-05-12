@@ -192,6 +192,16 @@ class DjangoBlogAdminSite(admin.AdminSite):
         except Exception:
             return []
 
+    def get_urls(self):
+        from django.urls import path
+        from apps.core.backup_views import backup_view, restore_view
+
+        custom_urls = [
+            path("backup/", self.admin_view(backup_view), name="backup"),
+            path("restore/", self.admin_view(restore_view), name="restore"),
+        ]
+        return custom_urls + super().get_urls()
+
     def index(self, request, extra_context=None):
         """自定义首页，添加统计数据"""
         from django.utils import timezone

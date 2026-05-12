@@ -9,6 +9,9 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     nickname = models.CharField(max_length=50, blank=True, null=True)
 
+    def natural_key(self):
+        return (self.username,)
+
     class Meta:
         verbose_name = "用户"
         verbose_name_plural = "用户"
@@ -37,9 +40,14 @@ class Profile(models.Model):
         return f"{self.user.username} 的个人资料"
 
 
+_restoring_backup = False
+
+
 @receiver(post_save, sender=User, dispatch_uid="create_user_profile")
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     """在用户创建或更新时自动创建/更新 Profile"""
+    if _restoring_backup:
+        return
     if created:
         # 创建Profile并分配随机头像
         from .avatar_utils import get_random_avatar

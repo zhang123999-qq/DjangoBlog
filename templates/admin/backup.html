@@ -1,0 +1,97 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}数据备份与恢复 | {{ site_title }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; 数据备份与恢复
+</div>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div class="admin-backup-page">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="admin-backup-alert {% if message.tags %}admin-backup-alert--{{ message.tags }}{% endif %}">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="admin-backup-grid">
+        <section class="admin-card admin-backup-card">
+            <div class="admin-card__header">
+                <h2 class="admin-card__title"><i class="fas fa-download"></i> 下载备份</h2>
+            </div>
+            <p class="admin-backup-desc">导出全站数据为 JSON 文件（gzip 压缩），包含所有文章、用户、评论、论坛、配置等数据。</p>
+            <ul class="admin-backup-features">
+                <li><i class="fas fa-check"></i> 使用自然键，跨环境可恢复</li>
+                <li><i class="fas fa-check"></i> gzip 压缩，体积更小</li>
+                <li><i class="fas fa-check"></i> 包含所有应用的数据</li>
+            </ul>
+            <div class="admin-card__footer">
+                <a href="?action=download" class="admin-button">
+                    <i class="fas fa-download"></i> 下载备份文件
+                </a>
+            </div>
+        </section>
+
+        <section class="admin-card admin-backup-card">
+            <div class="admin-card__header">
+                <h2 class="admin-card__title"><i class="fas fa-upload"></i> 恢复备份</h2>
+            </div>
+            <div class="admin-backup-hint">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>警告：</strong>恢复操作会<strong>清空现有数据</strong>后导入备份内容。此操作不可撤销，请确保已下载当前数据的备份。
+                </div>
+            </div>
+            <form method="post" action="{% url 'admin:restore' %}" enctype="multipart/form-data" class="admin-backup-form" id="restore-form">
+                {% csrf_token %}
+                <div class="admin-backup-upload">
+                    <label for="backup-file" class="admin-backup-upload__label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span id="file-name">点击选择备份文件（.json.gz 或 .json）</span>
+                    </label>
+                    <input type="file" name="backup_file" id="backup-file" accept=".json,.json.gz,.gz" required>
+                </div>
+                <div class="admin-card__footer">
+                    <button type="submit" class="admin-button admin-button--danger" id="restore-btn" disabled>
+                        <i class="fas fa-upload"></i> 上传并恢复
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+<script>
+(function() {
+    var fileInput = document.getElementById('backup-file');
+    var fileName = document.getElementById('file-name');
+    var restoreBtn = document.getElementById('restore-btn');
+    var form = document.getElementById('restore-form');
+
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileName.textContent = this.files[0].name;
+            restoreBtn.disabled = false;
+        } else {
+            fileName.textContent = '点击选择备份文件（.json.gz 或 .json）';
+            restoreBtn.disabled = true;
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        if (!confirm('确定要恢复备份吗？这将清空所有现有数据并导入备份内容。此操作不可撤销！')) {
+            e.preventDefault();
+        }
+    });
+})();
+</script>
+{% endblock %}
