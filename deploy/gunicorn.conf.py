@@ -37,7 +37,7 @@ keepalive = int(os.environ.get("GUNICORN_KEEPALIVE", 5))
 # 进程配置
 # ============================================
 proc_name = os.environ.get("GUNICORN_PROC_NAME", "djangoblog")
-preload_app = True
+preload_app = False
 daemon = False
 pidfile = None
 umask = 0o007
@@ -99,6 +99,12 @@ def pre_fork(server, worker):
 
 def post_fork(server, worker):
     """fork 后调用"""
+    # 关闭从 master 继承的数据库连接，避免跨线程共享报错
+    try:
+        from django.db import connections
+        connections.close_all()
+    except Exception:
+        pass
     # 设置进程名
     try:
         import setproctitle
