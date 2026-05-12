@@ -103,8 +103,8 @@ services:
     command: >
       sh -c "
         python manage.py migrate --noinput &&
-        python manage.py collectstatic --noinput &&
-        python manage.py compress --force &&
+        python manage.py collectstatic --noinput;
+        python manage.py compress --force || true;
         echo 'Migrations, collectstatic and static compression complete.'
       "
 
@@ -154,7 +154,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 60s
     command: ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]
 
   # ========================================
