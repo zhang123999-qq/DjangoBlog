@@ -37,6 +37,8 @@ class UserReputation(models.Model):
     # 连续无违规天数
     clean_days = models.IntegerField(default=0, verbose_name="连续无违规天数")
     last_clean_check = models.DateField(auto_now_add=True, verbose_name="上次检查日期")
+    # 最近一次违规时间（用于判断连续无违规天数）
+    last_violation_at = models.DateTimeField(null=True, blank=True, verbose_name="最近违规时间")
 
     # 时间戳
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
@@ -45,6 +47,9 @@ class UserReputation(models.Model):
     class Meta:
         verbose_name = "用户信誉"
         verbose_name_plural = "用户信誉"
+        indexes = [
+            models.Index(fields=["score"], name="idx_reputation_score"),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.score}分 ({self.get_level_display()})"
@@ -81,7 +86,7 @@ class UserReputation(models.Model):
         max_score = getattr(django_settings, "REPUTATION_MAX_SCORE", 100)
 
         self.score = max(min_score, min(max_score, self.score + delta))
-        self.save()
+        self.save(update_fields=["score"])
 
         # 记录日志
         ReputationLog.objects.create(
@@ -102,35 +107,51 @@ class UserReputation(models.Model):
             approved: 是否通过审核
         """
         self.total_posts += 1
+        update_fields = ["total_posts"]
         if approved:
             self.approved_count += 1
+            update_fields.append("approved_count")
         else:
             self.rejected_count += 1
-        self.save()
+            self.last_violation_at = timezone.now()
+            update_fields.extend(["rejected_count", "last_violation_at"])
+        self.save(update_fields=update_fields)
 
     def increment_reports(self):
         """增加被举报次数"""
         self.report_count += 1
-        self.save()
+        self.last_violation_at = timezone.now()
+        self.save(update_fields=["report_count", "last_violation_at"])
 
     def check_clean_days(self):
-        """检查连续无违规天数"""
+        """检查连续无违规天数
+
+        使用 last_violation_at 判断自上次检查以来是否有新违规，
+        而非使用终身累计的 rejected_count/report_count。
+        """
         today = timezone.now().date()
 
-        if self.last_clean_check < today:
-            days_diff = (today - self.last_clean_check).days
+        if self.last_clean_check >= today:
+            return self.clean_days
 
-            # 如果没有新的违规，增加连续天数
-            if self.rejected_count == 0 and self.report_count == 0:
-                self.clean_days += days_diff
-            else:
-                self.clean_days = 0
+        days_diff = (today - self.last_clean_check).days
 
-            self.last_clean_check = today
-            self.save()
+        # 判断上次检查之后是否有新违规
+        has_new_violation = False
+        if self.last_violation_at:
+            last_violation_date = self.last_violation_at.date()
+            has_new_violation = last_violation_date > self.last_clean_check
 
-        # 连续7天无违规，奖励5分
-        if self.clean_days >= 7 and self.clean_days % 7 == 0:
+        if has_new_violation:
+            self.clean_days = 0
+        else:
+            self.clean_days += days_diff
+
+        self.last_clean_check = today
+        self.save(update_fields=["clean_days", "last_clean_check"])
+
+        # 连续7天无违规，奖励5分（仅在恰好满7天倍数时触发一次）
+        if self.clean_days >= 7 and self.clean_days % 7 == 0 and days_diff > 0:
             from django.conf import settings as django_settings
 
             bonus = getattr(django_settings, "REPUTATION_WEEKLY_BONUS", 5)
@@ -172,6 +193,9 @@ class ReputationLog(models.Model):
         verbose_name = "信誉日志"
         verbose_name_plural = "信誉日志"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user_reputation", "-created_at"], name="idx_replog_user_time"),
+        ]
 
     def __str__(self):
         return f"{self.user_reputation.user.username} {self.get_action_display()} {self.old_score}→{self.new_score}"

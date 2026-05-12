@@ -152,13 +152,23 @@ def search_view(request):
     }
 
     if query:
-        results["posts"] = Post.objects.filter(
-            Q(title__icontains=query) | Q(content__icontains=query) | Q(summary__icontains=query), status="published"
-        ).distinct()[:SEARCH_RESULT_LIMIT]
+        results["posts"] = (
+            Post.objects.filter(
+                Q(title__icontains=query) | Q(content__icontains=query) | Q(summary__icontains=query),
+                status="published",
+            )
+            .select_related("author", "category")
+            .distinct()[:SEARCH_RESULT_LIMIT]
+        )
 
-        results["topics"] = Topic.objects.filter(
-            Q(title__icontains=query) | Q(content__icontains=query), review_status="approved"
-        ).distinct()[:SEARCH_RESULT_LIMIT]
+        results["topics"] = (
+            Topic.objects.filter(
+                Q(title__icontains=query) | Q(content__icontains=query),
+                review_status="approved",
+            )
+            .select_related("author", "board")
+            .distinct()[:SEARCH_RESULT_LIMIT]
+        )
 
     context = {
         **results,

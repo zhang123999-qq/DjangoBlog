@@ -173,20 +173,21 @@ def optimize_database():
 
 @shared_task
 def cleanup_expired_cache():
-    """清理过期缓存。"""
+    """清理指定的缓存 key（强制刷新）。"""
     try:
         keys_to_clean = [
             "blog_categories_tags",
             "blog_categories",
             "blog_tags",
+            "site_statistics",
         ]
 
         cleaned = 0
         for key in keys_to_clean:
-            if cache.get(key) is None:
-                cleaned += 1
+            cache.delete(key)
+            cleaned += 1
 
-        logger.info("清理了 %s 个过期缓存", cleaned)
+        logger.info("清理了 %s 个缓存 key", cleaned)
         return cleaned
     except Exception as e:
         _log_task_error("cleanup_expired_cache", e)
@@ -264,7 +265,7 @@ def generate_statistics():
             "posts": Post.objects.filter(status="published").count(),
             "comments": Comment.objects.filter(review_status="approved").count(),
             "topics": Topic.objects.filter(review_status="approved").count(),
-            "replies": Reply.objects.filter(review_status="approved", is_deleted=False).count(),
+            "replies": Reply.objects.filter(review_status="approved").count(),
             "generated_at": timezone.now().isoformat(),
         }
 
@@ -274,14 +275,3 @@ def generate_statistics():
     except (ImportError, DatabaseError) as e:
         _log_task_error("generate_statistics", e)
         return None
-
-
-@shared_task
-def reset_daily_counters():
-    """重置每日计数器。"""
-    try:
-        logger.info("重置每日计数器")
-        return True
-    except Exception as e:
-        _log_task_error("reset_daily_counters", e)
-        return False

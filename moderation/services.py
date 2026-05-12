@@ -32,7 +32,7 @@ def approve_instance(instance, operator, note=""):
                 note=note,
             )
 
-        update_related_counts(instance, target_type)
+            update_related_counts(instance, target_type)
     except DatabaseError as e:
         _log_service_error(
             "approve_instance.database", e, target_type=target_type, target_id=getattr(instance, "id", None)
@@ -59,7 +59,7 @@ def reject_instance(instance, operator, note=""):
                 note=note,
             )
 
-        update_related_counts(instance, target_type)
+            update_related_counts(instance, target_type)
     except DatabaseError as e:
         _log_service_error(
             "reject_instance.database", e, target_type=target_type, target_id=getattr(instance, "id", None)
@@ -86,7 +86,7 @@ def auto_approve_instance(instance, note=""):
                 note=note,
             )
 
-        update_related_counts(instance, target_type)
+            update_related_counts(instance, target_type)
     except DatabaseError as e:
         _log_service_error(
             "auto_approve_instance.database", e, target_type=target_type, target_id=getattr(instance, "id", None)
@@ -118,14 +118,12 @@ def update_related_counts(instance, target_type):
 
 
 def get_assigned_admin(target_type):
-    """获取指定内容类型的审核管理员。"""
+    """获取指定内容类型的审核管理员（优先返回主要负责人）。"""
     User = get_user_model()
     try:
-        moderation_admin = ModerationAdmin.objects.get(target_type=target_type)
-        if moderation_admin.admin:
+        moderation_admin = ModerationAdmin.objects.filter(target_type=target_type).order_by("-is_primary").first()
+        if moderation_admin and moderation_admin.admin:
             return moderation_admin.admin
-    except ModerationAdmin.DoesNotExist:
-        pass
     except DatabaseError as e:
         _log_service_error("get_assigned_admin.database", e, target_type=target_type)
         return None
@@ -162,8 +160,12 @@ def create_moderation_reminder(target_type, target_id):
 
 
 def smart_moderate_instance(instance, content=None):
-    """智能审核实例：敏感词 + AI 双重检测。"""
-    from .baidu_moderation import get_moderation_summary, smart_moderate
+    """智能审核实例：通过统一的 strategy 层进行敏感词 + AI 双重检测。
+
+    统一使用 strategy.py 中的审核逻辑，避免 baidu_moderation.py 和
+    ai_service.py 两套代码路径产生不一致行为。
+    """
+    from .strategy import get_moderation_strategy
 
     if content is None:
         instance_type = instance.__class__.__name__.lower()
@@ -172,13 +174,17 @@ def smart_moderate_instance(instance, content=None):
         else:
             content = getattr(instance, "content", "")
 
-    status, details = smart_moderate(content)
-    summary = get_moderation_summary(status, details)
+    user = getattr(instance, "user", None) or getattr(instance, "author", None)
+    strategy = get_moderation_strategy()
+    result = strategy.moderate_content(user, content)
+
+    status = result["status"]
+    summary = result["message"]
 
     try:
         if status == "approved":
             auto_approve_instance(instance, summary)
-            logger.info("%s %s AI审核通过", instance.__class__.__name__, instance.id)
+            logger.info("%s %s 审核通过", instance.__class__.__name__, instance.id)
             return "approved", summary
 
         if status == "rejected":
@@ -198,7 +204,9 @@ def smart_moderate_instance(instance, content=None):
                     note=summary,
                 )
 
-            logger.warning("%s %s AI识别违规，已自动拒绝", instance.__class__.__name__, instance.id)
+                update_related_counts(instance, target_type)
+
+            logger.warning("%s %s 识别违规，已自动拒绝", instance.__class__.__name__, instance.id)
             return "rejected", summary
 
         instance.review_status = "pending"

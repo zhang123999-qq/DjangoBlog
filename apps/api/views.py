@@ -167,7 +167,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         """获取主题回复（分页）"""
         topic = self.get_object()
         replies = (
-            Reply.objects.filter(topic=topic, review_status="approved", is_deleted=False)
+            Reply.objects.filter(topic=topic, review_status="approved")
             .select_related("author", "topic")
             .order_by("created_at")
         )

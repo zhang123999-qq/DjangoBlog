@@ -90,7 +90,7 @@ def async_moderate_text(self, content_type: str, content_id: int, content: str, 
         raise self.retry(exc=e)
     except Exception as e:
         _log_task_error("async_moderate_text", e, content_type=content_type, content_id=content_id, user_id=user_id)
-        raise self.retry(exc=e)
+        raise
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -143,7 +143,7 @@ def async_moderate_image(
         raise self.retry(exc=e)
     except Exception as e:
         _log_task_error("async_moderate_image", e, content_type=content_type, content_id=content_id, user_id=user_id)
-        raise self.retry(exc=e)
+        raise
 
 
 @shared_task
@@ -177,7 +177,7 @@ def check_pending_moderation():
         _log_task_error("check_pending_moderation.comments", e)
 
     try:
-        from apps.forum.models import Topic
+        from apps.forum.models import Reply, Topic
 
         pending_topics = Topic.objects.filter(review_status="pending", created_at__lt=threshold).values_list(
             "id", flat=True
@@ -185,8 +185,15 @@ def check_pending_moderation():
         for topic_id in pending_topics:
             if ("topic", topic_id) not in existing_reminders:
                 pending_items.append(("topic", topic_id))
+
+        pending_replies = Reply.objects.filter(review_status="pending", created_at__lt=threshold).values_list(
+            "id", flat=True
+        )
+        for reply_id in pending_replies:
+            if ("reply", reply_id) not in existing_reminders:
+                pending_items.append(("reply", reply_id))
     except (ImportError, DatabaseError) as e:
-        _log_task_error("check_pending_moderation.topics", e)
+        _log_task_error("check_pending_moderation.topics_replies", e)
 
     reminders_to_create = [
         ModerationReminder(target_type=target_type, target_id=target_id, assigned_admin=admin_mapping.get(target_type))
@@ -241,7 +248,7 @@ def auto_approve_old_pending():
         _log_task_error("auto_approve_old_pending.comments", e)
 
     try:
-        from apps.forum.models import Topic
+        from apps.forum.models import Reply, Topic
 
         pending_topics = list(Topic.objects.filter(review_status="pending", created_at__lt=threshold))
         batch_size = 100
@@ -265,8 +272,30 @@ def auto_approve_old_pending():
             if to_approve:
                 Topic.objects.bulk_update(to_approve, ["review_status", "review_note"], batch_size)
                 approved_count += len(to_approve)
+
+        pending_replies = list(Reply.all_objects.filter(review_status="pending", created_at__lt=threshold))
+        for i in range(0, len(pending_replies), batch_size):
+            batch = pending_replies[i : i + batch_size]
+            to_approve = []
+            for reply in batch:
+                has_sensitive, _ = check_sensitive_content(reply.content)
+                if not has_sensitive:
+                    reply.review_status = "approved"
+                    reply.review_note = "系统自动通过（超时无敏感词）"
+                    to_approve.append(reply)
+                    logs_to_create.append(
+                        ModerationLog(
+                            target_type="reply",
+                            target_id=reply.id,
+                            action="approved",
+                            note="系统自动通过（超时无敏感词）",
+                        )
+                    )
+            if to_approve:
+                Reply.all_objects.bulk_update(to_approve, ["review_status", "review_note"], batch_size)
+                approved_count += len(to_approve)
     except (ImportError, DatabaseError) as e:
-        _log_task_error("auto_approve_old_pending.topics", e)
+        _log_task_error("auto_approve_old_pending.topics_replies", e)
 
     if logs_to_create:
         ModerationLog.objects.bulk_create(logs_to_create, batch_size=100)
@@ -277,15 +306,14 @@ def auto_approve_old_pending():
 
 @shared_task
 def update_reputation_clean_days():
-    """更新用户信誉连续无违规天数。"""
+    """更新用户信誉连续无违规天数（使用 iterator 分批加载）。"""
     from .reputation import UserReputation
 
     logger.info("开始更新用户信誉连续无违规天数")
 
-    reputations = UserReputation.objects.all()
     updated_count = 0
 
-    for reputation in reputations:
+    for reputation in UserReputation.objects.iterator(chunk_size=500):
         old_clean_days = reputation.clean_days
         reputation.check_clean_days()
         if reputation.clean_days != old_clean_days:
@@ -335,9 +363,10 @@ def create_moderation_reminder(content_type: str, content_id: int):
 
         assigned_admin = None
         try:
-            mod_admin = ModerationAdmin.objects.get(target_type=content_type)
-            assigned_admin = mod_admin.admin
-        except ModerationAdmin.DoesNotExist:
+            mod_admin = ModerationAdmin.objects.filter(target_type=content_type).order_by("-is_primary").first()
+            if mod_admin:
+                assigned_admin = mod_admin.admin
+        except DatabaseError:
             assigned_admin = None
 
         ModerationReminder.objects.create(

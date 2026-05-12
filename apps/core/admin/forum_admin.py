@@ -101,12 +101,16 @@ class TopicAdmin(admin.ModelAdmin):
 class ReplyAdmin(admin.ModelAdmin):
     """回复管理"""
 
-    list_display = ["topic", "author", "content_short", "review_status", "like_count", "created_at"]
-    list_filter = ["review_status", "created_at"]
+    list_display = ["topic", "author", "content_short", "review_status", "is_deleted", "like_count", "created_at"]
+    list_filter = ["review_status", "is_deleted", "created_at"]
     search_fields = ["content", "author__username", "topic__title"]
     actions = ["approve_replies", "reject_replies"]
     list_select_related = ["topic", "author"]
     raw_id_fields = ["topic", "author"]
+
+    def get_queryset(self, request):
+        """管理员可以看到所有回复（包括已删除的）"""
+        return Reply.all_objects.all()
 
     def content_short(self, obj):
         return obj.content[:50] + "..." if len(obj.content) > 50 else obj.content

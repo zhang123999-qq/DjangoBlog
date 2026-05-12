@@ -95,8 +95,9 @@ class Post(models.Model):
             models.Index(fields=["-published_at"]),
             models.Index(fields=["status"]),
             models.Index(fields=["category"]),
-            models.Index(fields=["author"]),  # 添加作者索引
-            models.Index(fields=["slug"]),  # 添加slug索引
+            models.Index(fields=["author"]),
+            models.Index(fields=["slug"]),
+            models.Index(fields=["status", "-published_at"], name="idx_post_status_pub"),
         ]
 
     def save(self, *args, **kwargs):
@@ -168,13 +169,11 @@ class Post(models.Model):
                 return
 
             # 更新内存中的值（仅用于当前请求的乐观显示，纯整数递增）
-            try:
-                current = cache.get(cache_key, 0)
-                self.views_count = (self.views_count or 0) + current
-            except (TypeError, ValueError):
-                # 兼容处理：直接 +1
-                if isinstance(self.views_count, int):
-                    self.views_count += 1
+            # 修复：cache.incr 已经递增了 Redis 值，这里只需 +1 用于当前请求显示
+            if isinstance(self.views_count, int):
+                self.views_count += 1
+            else:
+                self.views_count = 1
 
         except Exception as e:
             # 异常时降级到数据库直接更新
@@ -254,9 +253,10 @@ class Comment(models.Model):
         return self.review_status == "rejected"
 
     def update_like_count(self):
-        """更新点赞"""
-        self.__class__.objects.filter(pk=self.pk).update(like_count=self.likes.count())
-        self.like_count = self.likes.count()
+        """更新点赞（单次 count 查询 + 原子 update）"""
+        actual_count = self.likes.count()
+        self.__class__.objects.filter(pk=self.pk).update(like_count=actual_count)
+        self.like_count = actual_count
 
     def save(self, *args, **kwargs):
         # 保持 is_approved 与 review_status 的兼容性

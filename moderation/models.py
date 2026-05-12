@@ -15,6 +15,9 @@ class SensitiveWord(models.Model):
         verbose_name = "敏感词"
         verbose_name_plural = "敏感词"
         ordering = ["word"]
+        indexes = [
+            models.Index(fields=["is_active"], name="idx_sw_active"),
+        ]
 
     def __str__(self):
         return self.word
@@ -88,7 +91,10 @@ class ModerationReminder(models.Model):
         verbose_name = "审核提醒"
         verbose_name_plural = "审核提醒"
         ordering = ["-created_at"]
-        unique_together = ["target_type", "target_id"]  # 确保每个内容只生成一条提醒
+        unique_together = ["target_type", "target_id"]
+        indexes = [
+            models.Index(fields=["is_processed"], name="idx_reminder_processed"),
+        ]
 
     def __str__(self):
         admin_name = self.assigned_admin.username if self.assigned_admin else "超级管理员"
@@ -123,6 +129,11 @@ class ModerationLog(models.Model):
         verbose_name = "审核日志"
         verbose_name_plural = "审核日志"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["target_type", "target_id"], name="idx_log_target"),
+            models.Index(fields=["action"], name="idx_log_action"),
+            models.Index(fields=["operator"], name="idx_log_operator"),
+        ]
 
     def __str__(self):
         operator_name = self.operator.username if self.operator else "系统"

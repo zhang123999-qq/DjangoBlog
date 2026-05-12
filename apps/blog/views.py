@@ -71,14 +71,6 @@ class PostListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        """
-        获取查询集，支持分类和标签筛选
-
-        性能优化：
-        - select_related: 预加载 author, category（一对多/一对一）
-        - prefetch_related: 预加载 tags（多对多）
-        - only: 只查询需要的字段
-        """
         queryset = (
             Post.objects.filter(status="published", slug__isnull=False)
             .exclude(slug="")
@@ -100,35 +92,29 @@ class PostListView(ListView):
             )
         )
 
-        # 分类筛选
         category_slug = self.kwargs.get("category_slug")
         if category_slug:
-            category = get_object_or_404(Category, slug=category_slug)
-            queryset = queryset.filter(category=category)
+            self._current_category = get_object_or_404(Category, slug=category_slug)
+            queryset = queryset.filter(category=self._current_category)
+        else:
+            self._current_category = None
 
-        # 标签筛选
         tag_slug = self.kwargs.get("tag_slug")
         if tag_slug:
-            tag = get_object_or_404(Tag, slug=tag_slug)
-            queryset = queryset.filter(tags=tag)
+            self._current_tag = get_object_or_404(Tag, slug=tag_slug)
+            queryset = queryset.filter(tags=self._current_tag)
+        else:
+            self._current_tag = None
 
         return queryset
 
     def get_context_data(self, **kwargs):
-        """获取上下文数据"""
         context = super().get_context_data(**kwargs)
-        # 获取分类和标签
         context["categories"], context["tags"] = get_categories_and_tags()
-
-        # 当前分类或标签
-        category_slug = self.kwargs.get("category_slug")
-        if category_slug:
-            context["current_category"] = get_object_or_404(Category, slug=category_slug)
-
-        tag_slug = self.kwargs.get("tag_slug")
-        if tag_slug:
-            context["current_tag"] = get_object_or_404(Tag, slug=tag_slug)
-
+        if self._current_category:
+            context["current_category"] = self._current_category
+        if self._current_tag:
+            context["current_tag"] = self._current_tag
         return context
 
 
@@ -320,9 +306,14 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     slug_field = "slug"
 
     def test_func(self):
-        """只有作者可以编辑"""
-        post = self.get_object()
-        return post.author == self.request.user or self.request.user.is_staff
+        """只有作者可以编辑（缓存对象避免重复查询）"""
+        self._cached_object = self.get_object()
+        return self._cached_object.author == self.request.user or self.request.user.is_staff
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "_cached_object"):
+            return self._cached_object
+        return super().get_object(queryset)
 
     def form_valid(self, form):
         messages.success(self.request, "文章更新成功！")
@@ -344,9 +335,14 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy("blog:post_list")
 
     def test_func(self):
-        """只有作者可以删除"""
-        post = self.get_object()
-        return post.author == self.request.user or self.request.user.is_staff
+        """只有作者可以删除（缓存对象避免重复查询）"""
+        self._cached_object = self.get_object()
+        return self._cached_object.author == self.request.user or self.request.user.is_staff
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "_cached_object"):
+            return self._cached_object
+        return super().get_object(queryset)
 
     def form_valid(self, form):
         messages.success(self.request, "文章已删除！")
@@ -356,7 +352,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 @login_required
 def post_draft_list(request):
     """我的草稿列表"""
-    drafts = Post.objects.filter(author=request.user, status="draft").order_by("-updated_at")
+    drafts = Post.objects.filter(author=request.user, status="draft").select_related("author", "category").order_by("-updated_at")
     categories, tags = get_categories_and_tags()
 
     paginator = Paginator(drafts, 20)
@@ -379,7 +375,7 @@ def post_draft_list(request):
 @login_required
 def my_posts(request):
     """我的文章列表"""
-    posts = Post.objects.filter(author=request.user).order_by("-updated_at")
+    posts = Post.objects.filter(author=request.user).select_related("author", "category").order_by("-updated_at")
     categories, tags = get_categories_and_tags()
 
     paginator = Paginator(posts, 20)

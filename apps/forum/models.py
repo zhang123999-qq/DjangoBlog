@@ -5,6 +5,13 @@ from django.db.models import F
 from apps.core.utils import generate_slug
 
 
+class ReplyManager(models.Manager):
+    """默认过滤已删除回复的管理器"""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class Board(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
@@ -34,21 +41,16 @@ class Board(models.Model):
         return "#"
 
     def update_counts(self):
-        """更新版块的主题数和回复数"""
+        """更新版块的主题数和回复数（使用 update_fields 减少写入量）"""
         from django.db.models import Sum
 
-        # 只统计审核通过的主题
         approved_topics = self.topics.filter(review_status="approved")
         self.topic_count = approved_topics.count()
-        # 使用聚合查询计算回复数，避免N+1查询
         reply_count_result = approved_topics.aggregate(total_replies=Sum("reply_count"))
         self.reply_count = reply_count_result["total_replies"] or 0
         last_topic = approved_topics.order_by("-last_reply_at").first()
-        if last_topic:
-            self.last_post_at = last_topic.last_reply_at
-        else:
-            self.last_post_at = None
-        self.save()
+        self.last_post_at = last_topic.last_reply_at if last_topic else None
+        self.save(update_fields=["topic_count", "reply_count", "last_post_at"])
 
 
 class Topic(models.Model):
@@ -106,16 +108,12 @@ class Topic(models.Model):
             self.views_count += 1
 
     def update_reply_count(self):
-        """更新回复数和最后回复时间"""
-        # 只统计审核通过且未删除的回复
-        approved_replies = self.replies.filter(is_deleted=False, review_status="approved")
+        """更新回复数和最后回复时间（使用 update_fields 减少写入量）"""
+        approved_replies = self.replies.filter(review_status="approved")
         self.reply_count = approved_replies.count()
         last_reply = approved_replies.order_by("-created_at").first()
-        if last_reply:
-            self.last_reply_at = last_reply.created_at
-        else:
-            self.last_reply_at = None
-        self.save()
+        self.last_reply_at = last_reply.created_at if last_reply else None
+        self.save(update_fields=["reply_count", "last_reply_at"])
         # 更新版块的统计信息
         self.board.update_counts()
 
@@ -144,6 +142,9 @@ class Reply(models.Model):
     content = models.TextField()
     like_count = models.PositiveIntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
+
+    objects = ReplyManager()
+    all_objects = models.Manager()
     review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default="pending")
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
