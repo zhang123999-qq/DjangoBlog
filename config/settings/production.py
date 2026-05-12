@@ -79,7 +79,9 @@ else:
                 'write_timeout': 30,
             },
             # 连接池配置
-            'CONN_MAX_AGE': 600,  # 10 分钟连接池
+            # gevent worker 下必须设为 0，否则 greenlet 切换导致
+            # DatabaseWrapper 跨线程共享报错
+            'CONN_MAX_AGE': 0,
             'CONN_HEALTH_CHECKS': True,  # 连接健康检查
             'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务
         }
@@ -198,7 +200,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30分钟超时
 
 # 数据库连接持久化
 db_config = cast(dict, DATABASES)
-db_config['default']['CONN_MAX_AGE'] = 600
+db_config['default']['CONN_MAX_AGE'] = 0
 
 # =============================================================================
 # 监控配置 (Prometheus + Sentry)
