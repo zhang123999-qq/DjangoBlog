@@ -183,21 +183,41 @@ log "检查网络环境..."
 if curl -s --connect-timeout 3 "https://www.baidu.com" > /dev/null 2>&1; then
     log "中国大陆网络，配置镜像加速..."
     DAEMON_JSON="/etc/docker/daemon.json"
-    MIRRORS='["https://docker.1ms.run","https://docker.xuanyuan.me"]'
+    # 按稳定性排序的镜像源列表（始终刷新，避免使用已失效的旧镜像）
+    MIRRORS='["https://dockerpull.org","https://docker.1ms.run","https://docker.xuanyuan.me"]'
+    NEED_RESTART=false
     if [ ! -f "$DAEMON_JSON" ]; then
         mkdir -p /etc/docker
         printf '{\n  "registry-mirrors": %s\n}\n' "$MIRRORS" > "$DAEMON_JSON"
-        systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
-        sleep 2
-        log "✅ 镜像加速完成"
-    elif ! grep -q "registry-mirrors" "$DAEMON_JSON"; then
-        cp "$DAEMON_JSON" "${DAEMON_JSON}.bak"
-        printf '{\n  "registry-mirrors": %s\n}\n' "$MIRRORS" > "$DAEMON_JSON"
-        systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
-        sleep 2
-        log "✅ 镜像加速完成"
+        NEED_RESTART=true
+        log "✅ 镜像加速已写入"
     else
-        log "✅ 镜像加速已配置，跳过"
+        CURRENT=$(grep -o '"registry-mirrors"[^]]*]' "$DAEMON_JSON" 2>/dev/null || true)
+        if [ "$CURRENT" != "\"registry-mirrors\": $MIRRORS" ]; then
+            cp "$DAEMON_JSON" "${DAEMON_JSON}.bak"
+            # 用 python 合并已有配置（保留其他字段），没有 python 则直接覆盖
+            if command -v python3 &> /dev/null; then
+                python3 -c "
+import json, sys
+with open('$DAEMON_JSON') as f:
+    cfg = json.load(f) if f.read().strip() else {}
+cfg['registry-mirrors'] = $MIRRORS
+with open('$DAEMON_JSON', 'w') as f:
+    json.dump(cfg, f, indent=2)
+" 2>/dev/null || printf '{\n  "registry-mirrors": %s\n}\n' "$MIRRORS" > "$DAEMON_JSON"
+            else
+                printf '{\n  "registry-mirrors": %s\n}\n' "$MIRRORS" > "$DAEMON_JSON"
+            fi
+            NEED_RESTART=true
+            log "✅ 镜像加速已更新"
+        else
+            log "✅ 镜像加速已是最新"
+        fi
+    fi
+    if $NEED_RESTART; then
+        log "重启 Docker 守护进程..."
+        systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
+        sleep 3
     fi
 else
     log "✅ 跳过镜像加速（非中国大陆网络）"
@@ -207,13 +227,12 @@ fi
 # 5. 预拉取基础镜像（加速构建）
 # ========================================
 log "预拉取基础镜像..."
-for image in "docker.1ms.run/library/python:3.13-slim" "mysql:8.0" "redis:7-alpine" "nginx:1.25-alpine"; do
-    if docker pull "$image" > /dev/null 2>&1; then
-        log "  ✅ $image"
-    else
-        warn "  ⏭️  $image 拉取失败（跳过，不影响后续）"
-    fi
-done
+# 只预拉取 Dockerfile 中直接引用的镜像（compose 服务镜像由 dc up 统一拉取）
+if ! docker pull "docker.1ms.run/library/python:3.13-slim" > /dev/null 2>&1; then
+    warn "Python 基础镜像拉取失败，构建可能使用缓存或失败"
+else
+    log "  ✅ docker.1ms.run/library/python:3.13-slim"
+fi
 
 # ========================================
 # 6. 构建镜像（只构建一次！）
