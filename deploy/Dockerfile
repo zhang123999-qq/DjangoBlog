@@ -63,23 +63,28 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources \
         libpng16-16 \
     && rm -rf /var/lib/apt/lists/*
 
+# 创建非 root 用户运行应用
+RUN groupadd -r djangoblog && useradd -r -g djangoblog -d /app -s /sbin/nologin djangoblog
+
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy project files
-COPY --chown=root:root manage.py /app/manage.py
-COPY --chown=root:root apps/ /app/apps/
-COPY --chown=root:root config/ /app/config/
-COPY --chown=root:root moderation/ /app/moderation/
-COPY --chown=root:root templates/ /app/templates/
-COPY --chown=root:root static/ /app/static/
-COPY --chown=root:root requirements/ /app/requirements/
-COPY --chown=root:root deploy/gunicorn.conf.py /app/deploy/gunicorn.conf.py
+COPY --chown=djangoblog:djangoblog manage.py /app/manage.py
+COPY --chown=djangoblog:djangoblog apps/ /app/apps/
+COPY --chown=djangoblog:djangoblog config/ /app/config/
+COPY --chown=djangoblog:djangoblog moderation/ /app/moderation/
+COPY --chown=djangoblog:djangoblog templates/ /app/templates/
+COPY --chown=djangoblog:djangoblog static/ /app/static/
+COPY --chown=djangoblog:djangoblog requirements/ /app/requirements/
+COPY --chown=djangoblog:djangoblog deploy/gunicorn.conf.py /app/deploy/gunicorn.conf.py
+COPY --chown=djangoblog:djangoblog deploy/entrypoint.sh /app/deploy/entrypoint.sh
 
-# Setup directories
+# Setup directories + ensure entrypoint is executable
 RUN mkdir -p /app/staticfiles /app/media /app/logs /app/beat_schedule \
-    && chmod 777 /app/staticfiles /app/media /app/logs /app/beat_schedule
+    && chown djangoblog:djangoblog /app/staticfiles /app/media /app/logs /app/beat_schedule \
+    && chmod +x /app/deploy/entrypoint.sh
 
 # 构建时执行 collectstatic，生成 WhiteNoise 清单
 RUN DJANGO_SETTINGS_MODULE=config.settings.production \
@@ -89,7 +94,11 @@ RUN DJANGO_SETTINGS_MODULE=config.settings.production \
     python manage.py collectstatic --noinput \
     && python manage.py compress --force
 
+# 切换到非 root 用户
+USER djangoblog
+
 EXPOSE 8000
 
-# 默认运行 Gunicorn（celery/migrate 会覆盖此命令）
+# entrypoint.sh 会在启动前执行 migrate/collectstatic/compress
+ENTRYPOINT ["/app/deploy/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]
