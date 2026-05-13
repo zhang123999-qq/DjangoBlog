@@ -219,13 +219,16 @@ def auto_approve_old_pending():
     approved_count = 0
     logs_to_create = []
 
+    batch_size = 100
+
     try:
         from apps.blog.models import Comment
 
-        pending_comments = list(Comment.objects.filter(review_status="pending", created_at__lt=threshold))
-        batch_size = 100
-        for i in range(0, len(pending_comments), batch_size):
-            batch = pending_comments[i : i + batch_size]
+        qs = Comment.objects.filter(review_status="pending", created_at__lt=threshold)
+        while True:
+            batch = list(qs[:batch_size])
+            if not batch:
+                break
             to_approve = []
             for comment in batch:
                 has_sensitive, _ = check_sensitive_content(comment.content)
@@ -250,10 +253,11 @@ def auto_approve_old_pending():
     try:
         from apps.forum.models import Reply, Topic
 
-        pending_topics = list(Topic.objects.filter(review_status="pending", created_at__lt=threshold))
-        batch_size = 100
-        for i in range(0, len(pending_topics), batch_size):
-            batch = pending_topics[i : i + batch_size]
+        qs = Topic.objects.filter(review_status="pending", created_at__lt=threshold)
+        while True:
+            batch = list(qs[:batch_size])
+            if not batch:
+                break
             to_approve = []
             for topic in batch:
                 has_sensitive, _ = check_sensitive_content(topic.content)
@@ -273,9 +277,11 @@ def auto_approve_old_pending():
                 Topic.objects.bulk_update(to_approve, ["review_status", "review_note"], batch_size)
                 approved_count += len(to_approve)
 
-        pending_replies = list(Reply.all_objects.filter(review_status="pending", created_at__lt=threshold))
-        for i in range(0, len(pending_replies), batch_size):
-            batch = pending_replies[i : i + batch_size]
+        qs = Reply.all_objects.filter(review_status="pending", created_at__lt=threshold)
+        while True:
+            batch = list(qs[:batch_size])
+            if not batch:
+                break
             to_approve = []
             for reply in batch:
                 has_sensitive, _ = check_sensitive_content(reply.content)

@@ -187,6 +187,9 @@ cd DjangoBlog
 
 # 2. 一键部署
 bash deploy/auto-deploy.sh
+
+# . 增量更新
+bash deploy/auto-deploy.sh update
 ```
 
 **脚本自动完成：**

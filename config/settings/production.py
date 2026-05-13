@@ -205,9 +205,9 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30分钟超时
 # 性能优化
 # =============================================================================
 
-# 数据库连接持久化
+# 数据库连接持久化（gthread 模式下复用连接，减少 TCP 握手开销）
 db_config = cast(dict, DATABASES)
-db_config['default']['CONN_MAX_AGE'] = 0
+db_config['default']['CONN_MAX_AGE'] = 600
 
 # =============================================================================
 # 监控配置 (Prometheus + Sentry)

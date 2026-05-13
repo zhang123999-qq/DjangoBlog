@@ -67,6 +67,7 @@ ALLOWED_HOSTS = get_allowed_hosts()
 
 # Application definition
 INSTALLED_APPS = [
+    "simpleui",  # SimpleUI 主题（必须在 django.contrib.admin 之前）
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -138,6 +139,7 @@ DATABASES = {
     "default": {
         "ENGINE": "apps.core.db_backends.sqlite3",  # 自定义后端，禁用外键约束
         "NAME": BASE_DIR / "db.sqlite3",
+        "CONN_MAX_AGE": 60,  # 复用连接，减少每次请求的打开/关闭开销
         "ATOMIC_REQUESTS": True,  # 为每个请求自动包装事务
     }
 }
@@ -237,8 +239,72 @@ BAIDU_API_KEY = env("BAIDU_API_KEY", default="")
 BAIDU_SECRET_KEY = env("BAIDU_SECRET_KEY", default="")
 BAIDU_MODERATION_ENABLED = bool(BAIDU_APP_ID and BAIDU_API_KEY and BAIDU_SECRET_KEY)
 
-# Caches - 将在环境配置中定义
-CACHES: dict[str, Any] = {}
+# Caches - 生产/开发环境会覆盖；兜底 LocMemCache 防止管理命令等场景无缓存
+CACHES: dict[str, Any] = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "djangoblog-default",
+        "TIMEOUT": 300,
+    }
+}
+
+# 上传大小限制（10MB）
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# =============================================================================
+# SimpleUI 后台主题配置
+# =============================================================================
+
+SIMPLEUI_DEFAULT_THEME = "simpleui.css"
+SIMPLEUI_ANALYSIS = False  # 关闭使用分析
+SIMPLEUI_LOADING = False  # 关闭加载遮罩
+
+SIMPLEUI_CONFIG = {
+    "system_keep": False,  # 不保留系统默认菜单（Group、Site 等）
+    "menus": [
+        {
+            "name": "内容管理",
+            "icon": "fa-solid fa-pen-nib",
+            "models": [
+                {"name": "博客文章", "url": "/admin/blog/post/", "icon": "fa-solid fa-file-lines"},
+                {"name": "分类", "url": "/admin/blog/category/", "icon": "fa-solid fa-folder"},
+                {"name": "标签", "url": "/admin/blog/tag/", "icon": "fa-solid fa-tags"},
+                {"name": "评论", "url": "/admin/blog/comment/", "icon": "fa-solid fa-comment-dots"},
+            ],
+        },
+        {
+            "name": "社区互动",
+            "icon": "fa-solid fa-comments",
+            "models": [
+                {"name": "论坛主题", "url": "/admin/forum/topic/", "icon": "fa-solid fa-comments"},
+                {"name": "回复", "url": "/admin/forum/reply/", "icon": "fa-solid fa-reply"},
+                {"name": "版块", "url": "/admin/forum/board/", "icon": "fa-solid fa-chess-board"},
+            ],
+        },
+        {
+            "name": "用户与风控",
+            "icon": "fa-solid fa-user-shield",
+            "models": [
+                {"name": "用户", "url": "/admin/accounts/user/", "icon": "fa-solid fa-users"},
+                {"name": "用户资料", "url": "/admin/accounts/profile/", "icon": "fa-solid fa-id-card"},
+                {"name": "信誉管理", "url": "/admin/moderation/userreputation/", "icon": "fa-solid fa-star-half-stroke"},
+                {"name": "信誉日志", "url": "/admin/moderation/reputationlog/", "icon": "fa-solid fa-clock-rotate-left"},
+                {"name": "敏感词", "url": "/admin/moderation/sensitiveword/", "icon": "fa-solid fa-shield-halved"},
+                {"name": "审核日志", "url": "/admin/moderation/moderationlog/", "icon": "fa-solid fa-clipboard-list"},
+            ],
+        },
+        {
+            "name": "系统维护",
+            "icon": "fa-solid fa-server",
+            "models": [
+                {"name": "网站配置", "url": "/admin/core/siteconfig/", "icon": "fa-solid fa-gear"},
+                {"name": "工具配置", "url": "/admin/tools/toolconfig/", "icon": "fa-solid fa-wrench"},
+                {"name": "通知", "url": "/admin/notifications/notification/", "icon": "fa-solid fa-bell"},
+            ],
+        },
+    ],
+}
 
 # Email settings
 EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")

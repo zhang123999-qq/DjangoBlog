@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static compress %}
 
 {% block title %}{{ topic.title }} - {{ site_config.site_title }}{% endblock %}
 
@@ -93,5 +93,7 @@
         {% endif %}
     </div>
     
+    {% compress js %}
     <script src="{% static 'js/reply-like.js' %}"></script>
+    {% endcompress %}
 {% endblock %}

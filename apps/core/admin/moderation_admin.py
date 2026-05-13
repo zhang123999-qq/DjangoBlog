@@ -22,6 +22,7 @@ class SensitiveWordAdmin(admin.ModelAdmin):
     list_display = ["word", "category", "is_active", "created_at"]
     list_filter = ["is_active", "category"]
     search_fields = ["word"]
+    date_hierarchy = "created_at"
     list_editable = ["is_active", "category"]
     actions = ["activate_words", "deactivate_words"]
 
@@ -44,6 +45,8 @@ class ModerationAdminAdmin(admin.ModelAdmin):
 
     list_display = ["target_type", "admin", "created_at"]
     list_filter = ["target_type", "admin"]
+    date_hierarchy = "created_at"
+    readonly_fields = ["created_at"]
     list_select_related = ["admin"]
 
 
@@ -86,6 +89,7 @@ class UserReputationAdmin(admin.ModelAdmin):
     list_display = ["user", "score", "level_display", "total_posts", "approved_count", "rejected_count", "clean_days"]
     list_filter = ["score"]
     search_fields = ["user__username", "user__email"]
+    date_hierarchy = "created_at"
     readonly_fields = ["created_at", "updated_at"]
     actions = ["add_bonus", "add_penalty", "reset_score"]
     list_select_related = ["user"]

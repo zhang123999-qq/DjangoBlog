@@ -191,6 +191,8 @@ services:
     container_name: djangoblog-celery-beat
     restart: always
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     environment:

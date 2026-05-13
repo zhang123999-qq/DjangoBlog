@@ -33,6 +33,15 @@ class SecurityMonitorMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        path = request.path.lower()
+        if any(pattern in path for pattern in self.SUSPICIOUS_PATTERNS):
+            logger.warning(
+                "[安全警告] 可疑请求: %s %s 来自: %s User-Agent: %s",
+                request.method,
+                request.path,
+                request.META.get("REMOTE_ADDR", "unknown"),
+                request.META.get("HTTP_USER_AGENT", "unknown"),
+            )
         response = self.get_response(request)
         return response
 

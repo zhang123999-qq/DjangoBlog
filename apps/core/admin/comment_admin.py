@@ -15,6 +15,8 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ["post", "user", "content_short", "review_status", "like_count", "created_at"]
     list_filter = ["review_status", "created_at"]
     search_fields = ["content", "user__username", "post__title"]
+    date_hierarchy = "created_at"
+    readonly_fields = ["ip_address", "user_agent", "like_count", "created_at", "updated_at"]
     actions = ["approve_comments", "reject_comments"]
     list_editable = ["review_status"]
     list_select_related = ["post", "user"]

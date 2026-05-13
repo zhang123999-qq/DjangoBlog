@@ -17,8 +17,13 @@ if [ -z "$(ls -A /app/staticfiles 2>/dev/null)" ]; then
     python manage.py collectstatic --noinput
 fi
 
-echo "[entrypoint] Compressing templates..."
-python manage.py compress --force || echo "[entrypoint] WARNING: compress failed, continuing..."
+# 仅在构建阶段未执行 compress 时才运行（检查 manifest 文件是否存在）
+if [ ! -f "/app/staticfiles/CACHE/manifest.json" ]; then
+    echo "[entrypoint] Compressing templates..."
+    python manage.py compress --force || echo "[entrypoint] WARNING: compress failed, continuing..."
+else
+    echo "[entrypoint] Compressed files already exist, skipping compress."
+fi
 
 echo "[entrypoint] Starting $*..."
 # 降权到 djangoblog 用户执行主进程（Gunicorn/Celery）
