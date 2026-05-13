@@ -87,12 +87,13 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs /app/beat_schedule \
     && chmod +x /app/deploy/entrypoint.sh
 
 # 构建时执行 collectstatic，生成 WhiteNoise 清单
+# compress 失败不阻塞构建（运行时 entrypoint.sh 会兜底）
 RUN DJANGO_SETTINGS_MODULE=config.settings.production \
     SECRET_KEY=build-placeholder-key-for-collectstatic \
     DB_ENGINE=sqlite \
     USE_REDIS=False \
     python manage.py collectstatic --noinput \
-    && python manage.py compress --force
+    && python manage.py compress --force || true
 
 # 切换到非 root 用户
 USER djangoblog

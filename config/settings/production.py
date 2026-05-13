@@ -241,12 +241,14 @@ if SENTRY_DSN:
 # 生产环境检查
 # =============================================================================
 
-# 确保关键配置已设置
-if not SECRET_KEY or SECRET_KEY == 'your-secret-key-here' or SECRET_KEY.startswith('django-insecure-'):  # nosec B105,B106
-    raise ImproperlyConfigured(
-        "SECRET_KEY 未设置或使用了不安全的默认值（含 django-insecure- 前缀），"
-        "请在 .env 文件中设置安全的密钥！"
-    )
+# 确保关键配置已设置（构建时占位符 build-placeholder- 开头的跳过检查）
+_is_build_key = SECRET_KEY.startswith('build-placeholder-')
+if not _is_build_key:
+    if not SECRET_KEY or SECRET_KEY == 'your-secret-key-here' or SECRET_KEY.startswith('django-insecure-'):  # nosec B105,B106
+        raise ImproperlyConfigured(
+            "SECRET_KEY 未设置或使用了不安全的默认值（含 django-insecure- 前缀），"
+            "请在 .env 文件中设置安全的密钥！"
+        )
 
 if DEBUG:
     import warnings
