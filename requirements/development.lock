@@ -87,6 +87,7 @@ django==4.2.30
     #   django-filter
     #   django-js-asset
     #   django-redis
+    #   django-simpleui
     #   django-stubs
     #   django-stubs-ext
     #   django-taggit
@@ -123,6 +124,8 @@ django-meta==2.5.1
 django-mptt==0.18.0
     # via -r requirements/base.txt
 django-redis==6.0.0
+    # via -r requirements/base.txt
+django-simpleui==2026.1.13
     # via -r requirements/base.txt
 django-stubs==6.0.2
     # via -r requirements/development.txt
@@ -358,13 +361,10 @@ types-pyyaml==6.0.12.20260408
     # via django-stubs
 typing-extensions==4.15.0
     # via
-    #   anyio
     #   django-stubs
     #   django-stubs-ext
     #   mypy
     #   pyee
-    #   pytest-asyncio
-    #   referencing
 tzdata==2026.2
     # via
     #   django
