@@ -3,6 +3,9 @@
 # DjangoBlog 一键自动部署脚本
 # 使用方法: bash deploy/auto-deploy.sh
 # 功能: 自动生成 .env、配置镜像加速、构建镜像、拉起服务、迁移、创建管理员
+# 架构: 5 容器 (db + redis + web + celery_worker + celery_beat)
+#       宿主机 Nginx 反向代理到 web:8000
+#       migrate/collectstatic 在 web 启动时由 entrypoint.sh 自动执行
 # 进程守护: 支持中断信号安全退出，完成后自动退出，容器由 Docker restart 策略守护
 # =============================================
 
@@ -53,6 +56,7 @@ fail() { echo -e "${RED}[$(date '+%H:%M:%S')] ERROR: $*${NC}"; exit 1; }
 echo "============================================================"
 echo " DjangoBlog 一键自动部署"
 echo " 项目路径: $PROJECT_DIR"
+echo " 架构: 5 容器 (db + redis + web + celery_worker + celery_beat)"
 echo "============================================================"
 
 # ========================================
@@ -82,11 +86,19 @@ if [ "$MODE" = "update" ]; then
     fi
     log "构建镜像（只构建一次）..."
     dc build web || fail "镜像构建失败"
-    log "运行迁移..."
-    dc rm -f migrate 2>/dev/null || true
-    dc run --rm migrate || warn "迁移有跳过项"
-    log "重启 web/celery..."
-    dc up -d --force-recreate web celery_worker celery_beat
+    log "重启 web/celery（entrypoint.sh 自动执行迁移）..."
+    dc up -d --force-recreate web celery_worker celery_beat || fail "服务重启失败"
+    log "等待 web 就绪..."
+    WEB_PORT=$(grep WEB_PORT_EXPOSED "$ENV_FILE" | head -1 | cut -d= -f2)
+    WEB_PORT="${WEB_PORT:-8000}"
+    waited=0
+    while ! curl -sf http://localhost:${WEB_PORT}/healthz/ > /dev/null 2>&1; do
+        sleep 2
+        waited=$((waited + 2))
+        [ $waited -ge 60 ] && { warn "Web 服务未就绪，检查日志: dc logs web"; break; }
+        printf "."
+    done
+    echo ""
     log "===== 更新完成 ====="
     dc ps
     exit 0
@@ -133,8 +145,6 @@ REDIS_URL=redis://redis:6379/0
 CELERY_BROKER_URL=redis://redis:6379/0
 CELERY_RESULT_BACKEND=redis://redis:6379/0
 WEB_PORT_EXPOSED=8000
-NGINX_PORT_EXPOSED=80
-NGINX_HTTPS_PORT_EXPOSED=443
 CSRF_TRUSTED_ORIGINS=http://localhost,http://127.0.0.1,http://${DOMAIN}
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
@@ -165,7 +175,7 @@ fi
 # 2. 创建数据目录
 # ========================================
 log "创建数据目录..."
-mkdir -p "$PROJECT_DIR/deploy/logs" "$PROJECT_DIR/deploy/nginx/ssl"
+mkdir -p "$PROJECT_DIR/deploy/logs"
 log "✅ 目录就绪"
 
 # ========================================
@@ -198,9 +208,12 @@ if curl -s --connect-timeout 3 "https://www.baidu.com" > /dev/null 2>&1; then
             # 用 python 合并已有配置（保留其他字段），没有 python 则直接覆盖
             if command -v python3 &> /dev/null; then
                 python3 -c "
-import json, sys
+import json
 with open('$DAEMON_JSON') as f:
-    cfg = json.load(f) if f.read().strip() else {}
+    try:
+        cfg = json.load(f)
+    except (json.JSONDecodeError, ValueError):
+        cfg = {}
 cfg['registry-mirrors'] = $MIRRORS
 with open('$DAEMON_JSON', 'w') as f:
     json.dump(cfg, f, indent=2)
@@ -259,37 +272,29 @@ echo ""
 log "✅ MySQL 就绪"
 
 # ========================================
-# 8. 数据库迁移
+# 8. 启动全部服务
 # ========================================
-log "运行数据库迁移..."
-# 清理旧 migrate 容器残留
-docker rm -f djangoblog-migrate 2>/dev/null || true
-dc run --rm migrate || fail "数据库迁移失败"
-log "✅ 迁移完成"
-
-# ========================================
-# 9. 启动全部服务
-# ========================================
-log "启动全部服务..."
+# web 容器的 entrypoint.sh 会自动执行 migrate + collectstatic + compress
+log "启动全部服务（web entrypoint 自动执行迁移）..."
 dc up -d
 log "✅ 服务已启动"
 
 # 等待 web 就绪
-log "等待 Web 服务就绪（最多30秒）..."
+log "等待 Web 服务就绪（最多60秒，含迁移时间）..."
 WEB_PORT=$(grep WEB_PORT_EXPOSED "$ENV_FILE" | head -1 | cut -d= -f2)
 WEB_PORT="${WEB_PORT:-8000}"
 waited=0
 while ! curl -sf http://localhost:${WEB_PORT}/healthz/ > /dev/null 2>&1; do
     sleep 2
     waited=$((waited + 2))
-    [ $waited -ge 30 ] && { warn "Web 服务未就绪，检查日志: dc logs web"; break; }
+    [ $waited -ge 60 ] && { warn "Web 服务未就绪，检查日志: dc logs web"; break; }
     printf "."
 done
 echo ""
 log "✅ Web 服务就绪"
 
 # ========================================
-# 10. 交互式创建管理员
+# 9. 交互式创建管理员
 # ========================================
 echo ""
 echo "============================================================"
@@ -321,21 +326,18 @@ elif [ "$HAS_ADMIN" = "no" ]; then
         echo "❌ 密码不匹配或为空，重试"
     done
     log "创建管理员..."
-    dc exec -T web python -c "
-import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.production'
-import django; django.setup()
-from django.contrib.auth import get_user_model
-User = get_user_model()
-User.objects.create_superuser('${ADMIN_USER}', '${ADMIN_EMAIL}', '${ADMIN_PASS}')
-print('OK')
-" 2>/dev/null && log "✅ 管理员创建成功" || warn "创建失败，请手动: dc exec web python manage.py createsuperuser"
+    # 使用 Django 管理命令创建，避免 shell 变量注入 Python 代码
+    dc exec -T -e DJANGO_SETTINGS_MODULE=config.settings.production \
+        -e DJANGO_SUPERUSER_PASSWORD="$ADMIN_PASS" \
+        web python manage.py createsuperuser \
+        --noinput --username "$ADMIN_USER" --email "$ADMIN_EMAIL" \
+        2>/dev/null && log "✅ 管理员创建成功" || warn "创建失败，请手动: dc exec web python manage.py createsuperuser"
 else
     warn "无法检测管理员状态，请手动: dc exec web python manage.py createsuperuser"
 fi
 
 # ========================================
-# 11. 显示最终状态 + 自动退出
+# 10. 显示最终状态 + 宿主机 Nginx 配置提示
 # ========================================
 echo ""
 echo "============================================================"
@@ -352,6 +354,12 @@ echo ""
 echo "  🌐 网站首页:  http://${SERVER_IP}"
 echo "  🛠 管理后台:  http://${SERVER_IP}/admin/"
 echo "  📊 Web 应用:  http://${SERVER_IP}:${WEB_PORT}"
+echo ""
+echo "  ⚠️  宿主机 Nginx 配置提示:"
+echo "    请将 deploy/nginx.generic.conf 复制到宿主机 Nginx 配置目录"
+echo "    cp deploy/nginx.generic.conf /etc/nginx/sites-available/djangoblog"
+echo "    ln -s /etc/nginx/sites-available/djangoblog /etc/nginx/sites-enabled/"
+echo "    nginx -t && nginx -s reload"
 echo ""
 echo "  常用命令:"
 echo "    查看日志:   dc logs -f web"

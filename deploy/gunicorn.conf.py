@@ -13,8 +13,9 @@ backlog = 2048
 # ============================================
 # 工作进程配置
 # ============================================
-# 推荐公式: CPU核心数 * 2 + 1
-workers = int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2 + 1))
+# gevent 模式下推荐 2-4 个 worker（每个 worker 已有 1000 并发连接）
+# sync 模式推荐公式: CPU核心数 * 2 + 1
+workers = int(os.environ.get("GUNICORN_WORKERS", 4))
 
 # 工作模式: sync, gevent, eventlet, tornado
 worker_class = os.environ.get("GUNICORN_WORKER_CLASS", "gevent")
@@ -22,9 +23,9 @@ worker_class = os.environ.get("GUNICORN_WORKER_CLASS", "gevent")
 # 每个 worker 的最大并发连接数 (gevent 模式)
 worker_connections = int(os.environ.get("GUNICORN_WORKER_CONNECTIONS", 1000))
 
-# 最大并发请求数
-max_requests = int(os.environ.get("GUNICORN_MAX_REQUESTS", 1000))
-max_requests_jitter = int(os.environ.get("GUNICORN_MAX_REQUESTS_JITTER", 50))
+# 最大并发请求数（gevent 模式建议较大值，避免频繁重启 worker）
+max_requests = int(os.environ.get("GUNICORN_MAX_REQUESTS", 5000))
+max_requests_jitter = int(os.environ.get("GUNICORN_MAX_REQUESTS_JITTER", 500))
 
 # ============================================
 # 超时设置

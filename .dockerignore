@@ -38,8 +38,6 @@ logs/
 
 # Docker
 .docker/
-Dockerfile
-docker-compose*.yml
 
 # OS
 .DS_Store
@@ -49,11 +47,6 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
-test_*.py
-tests/
-**/tests/
-**/tests.py
-**/test_*.py
 
 # Docs (not needed in production)
 docs/

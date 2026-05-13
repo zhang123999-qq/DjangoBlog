@@ -3,6 +3,8 @@
 import logging
 from typing import cast
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *
 
 # =============================================================================
@@ -240,9 +242,11 @@ if SENTRY_DSN:
 # =============================================================================
 
 # 确保关键配置已设置
-if not SECRET_KEY or SECRET_KEY == 'your-secret-key-here':  # nosec B105 - 仅用于检测占位符
-    import warnings
-    warnings.warn("警告: SECRET_KEY 未设置或使用了默认值，请在 .env 文件中设置安全的密钥！")
+if not SECRET_KEY or SECRET_KEY == 'your-secret-key-here' or SECRET_KEY.startswith('django-insecure-'):  # nosec B105,B106
+    raise ImproperlyConfigured(
+        "SECRET_KEY 未设置或使用了不安全的默认值（含 django-insecure- 前缀），"
+        "请在 .env 文件中设置安全的密钥！"
+    )
 
 if DEBUG:
     import warnings

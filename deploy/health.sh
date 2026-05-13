@@ -37,7 +37,7 @@ do_check() {
     log "====== 健康检查 ======"
 
     local all_healthy=true
-    for svc in db redis web celery_worker celery_beat nginx; do
+    for svc in db redis web celery_worker celery_beat; do
         local state="unknown"
         # 兼容不同 Docker Compose 版本的输出格式
         state=$(dc ps "$svc" --format '{{.Status}}' 2>/dev/null || echo "not found")
@@ -97,7 +97,7 @@ do_logs_celery() {
 }
 
 do_logs_nginx() {
-    dc logs --tail=100 -f nginx
+    log "Nginx 运行在宿主机，查看日志: tail -f /var/log/nginx/access.log"
 }
 
 # ===== 系统信息 =====
@@ -121,9 +121,13 @@ do_backup() {
     mkdir -p "$backup_dir"
 
     local db_pass="$(grep DB_ROOT_PASSWORD "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '[:space:]')"
-    db_pass="${db_pass:-rootpassword123}"
     local db_name="$(grep DB_NAME "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '[:space:]')"
     db_name="${db_name:-djangoblog}"
+
+    if [ -z "$db_pass" ]; then
+        echo -e "${RED}DB_ROOT_PASSWORD 未设置，无法备份${NC}"
+        return 1
+    fi
 
     log "开始数据库备份..."
     docker compose exec -T db mysqldump \
