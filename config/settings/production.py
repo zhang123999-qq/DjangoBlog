@@ -81,8 +81,6 @@ else:
                 'write_timeout': 30,
             },
             # 连接池配置
-            # gevent worker 下必须设为 0，否则 greenlet 切换导致
-            # DatabaseWrapper 跨线程共享报错
             'CONN_MAX_AGE': 0,
             'CONN_HEALTH_CHECKS': True,  # 连接健康检查
             'ATOMIC_REQUESTS': True,  # 为每个请求自动包装事务

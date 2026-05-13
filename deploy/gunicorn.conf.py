@@ -17,11 +17,16 @@ backlog = 2048
 # sync 模式推荐公式: CPU核心数 * 2 + 1
 workers = int(os.environ.get("GUNICORN_WORKERS", 4))
 
-# 工作模式: sync, gevent, eventlet, tornado
-worker_class = os.environ.get("GUNICORN_WORKER_CLASS", "gevent")
+# 工作模式: sync, gthread, gevent, eventlet, tornado
+# gthread 是 Django 生产部署推荐模式：线程安全，兼容 Django 的 thread-local 数据库连接
+# gevent 会因 greenlet 跨线程调度导致 DatabaseWrapper thread-safety 报错
+worker_class = os.environ.get("GUNICORN_WORKER_CLASS", "gthread")
 
 # 每个 worker 的最大并发连接数 (gevent 模式)
 worker_connections = int(os.environ.get("GUNICORN_WORKER_CONNECTIONS", 1000))
+
+# 每个 worker 的线程数 (gthread 模式)
+threads = int(os.environ.get("GUNICORN_THREADS", 4))
 
 # 最大并发请求数（gevent 模式建议较大值，避免频繁重启 worker）
 max_requests = int(os.environ.get("GUNICORN_MAX_REQUESTS", 5000))
@@ -81,6 +86,8 @@ def on_starting(server):
     print("DjangoBlog Gunicorn 服务器启动中...")
     print(f"工作进程数: {workers}")
     print(f"工作模式: {worker_class}")
+    if worker_class == "gthread":
+        print(f"每进程线程数: {threads}")
     print(f"绑定地址: {bind}")
 
 
