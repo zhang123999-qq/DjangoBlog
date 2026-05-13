@@ -95,11 +95,8 @@ RUN DJANGO_SETTINGS_MODULE=config.settings.production \
     python manage.py collectstatic --noinput \
     && python manage.py compress --force || true
 
-# 切换到非 root 用户
-USER djangoblog
-
 EXPOSE 8000
 
-# entrypoint.sh 会在启动前执行 migrate/collectstatic/compress
+# entrypoint 以 root 运行（修复 volume 权限），然后降权到 djangoblog 执行主进程
 ENTRYPOINT ["/app/deploy/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]

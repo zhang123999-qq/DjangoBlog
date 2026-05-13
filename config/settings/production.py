@@ -173,10 +173,17 @@ WHITENOISE_COMPRESS = True
 # 日志配置 - 生产环境
 # =============================================================================
 
-# 生产环境日志级别更高
+# Docker 环境：仅使用 console handler（stdout/stderr），不写文件
+# Docker 日志驱动负责持久化和轮转，容器内写文件会导致权限问题
 logging_config = cast(dict, LOGGING)
 logging_config['root']['level'] = 'WARNING'
+logging_config['root']['handlers'] = ['console']
 logging_config['loggers']['django']['level'] = 'ERROR'
+logging_config['loggers']['django']['handlers'] = ['console']
+logging_config['loggers']['django.request']['handlers'] = ['console']
+logging_config['loggers']['django.security']['handlers'] = ['console']
+logging_config['loggers']['apps']['handlers'] = ['console']
+logging_config['loggers']['security']['handlers'] = ['console']
 
 # 添加错误邮件通知（可选）
 ADMINS = [
