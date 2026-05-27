@@ -30,6 +30,9 @@ env/
 .DS_Store
 Thumbs.db
 
+# Backups
+backups/
+
 # Cache
 .cache/
 *.pyo

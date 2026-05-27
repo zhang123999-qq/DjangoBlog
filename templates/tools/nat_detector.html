@@ -279,7 +279,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 
 
 let localCandidates = [];    // 存储所有候选信息 { ip, type, addressType }
@@ -352,25 +352,24 @@ async function startDetection() {
         }
     } catch (error) {
         console.error('NAT检测错误:', error);
-        detectionStatusDiv.innerHTML = `
-            <div class="alert alert-warning mb-3">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                <strong>检测失败</strong>
-            </div>
-            <p class="text-muted mb-3">${error.message}</p>
-            <div class="text-start small text-muted mb-3">
-                <p class="mb-1"><strong>可能的原因：</strong></p>
-                <ul class="mb-0">
-                    <li>浏览器不支持 WebRTC</li>
-                    <li>隐私保护插件阻止了检测</li>
-                    <li>使用 HTTP 访问（需要 HTTPS）</li>
-                    <li>浏览器安全策略限制</li>
-                </ul>
-            </div>
-            <button class="btn btn-primary" onclick="startDetection()">
-                <i class="bi bi-arrow-clockwise me-1"></i>重新检测
-            </button>
-        `;
+        detectionStatusDiv.textContent = '';
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning mb-3';
+        alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i><strong>检测失败</strong>';
+        const errMsg = document.createElement('p');
+        errMsg.className = 'text-muted mb-3';
+        errMsg.textContent = error.message || '未知错误';
+        const reasonsDiv = document.createElement('div');
+        reasonsDiv.className = 'text-start small text-muted mb-3';
+        reasonsDiv.innerHTML = '<p class="mb-1"><strong>可能的原因：</strong></p><ul class="mb-0"><li>浏览器不支持 WebRTC</li><li>隐私保护插件阻止了检测</li><li>使用 HTTP 访问（需要 HTTPS）</li><li>浏览器安全策略限制</li></ul>';
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'btn btn-primary';
+        retryBtn.onclick = startDetection;
+        retryBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>重新检测';
+        detectionStatusDiv.appendChild(alertDiv);
+        detectionStatusDiv.appendChild(errMsg);
+        detectionStatusDiv.appendChild(reasonsDiv);
+        detectionStatusDiv.appendChild(retryBtn);
         detectionStatusDiv.style.display = 'block';
         if (resultDiv) {
             resultDiv.classList.add('u-hidden');
@@ -565,12 +564,23 @@ function analyzeNAT() {
     const displayIPs = [...new Set(allIPv4)]; // 去重
 
     if (displayIPs.length > 0) {
-        localIPsDiv.innerHTML = displayIPs.map(ip => {
+        localIPsDiv.textContent = '';
+        displayIPs.forEach(ip => {
             const isPrivate = isPrivateIP(ip);
             const typeLabel = isPrivate ? '内网' : (hasIPv4NAT ? '映射公网' : '公网');
             const badgeClass = isPrivate ? 'bg-secondary' : (hasIPv4NAT ? 'bg-info' : 'bg-success');
-            return `<div class="mb-1"><code>${ip}</code> <span class="badge ${badgeClass} ms-2">${typeLabel}</span></div>`;
-        }).join('');
+            const row = document.createElement('div');
+            row.className = 'mb-1';
+            const code = document.createElement('code');
+            code.textContent = ip;
+            const badge = document.createElement('span');
+            badge.className = `badge ${badgeClass} ms-2`;
+            badge.textContent = typeLabel;
+            row.appendChild(code);
+            row.appendChild(document.createTextNode(' '));
+            row.appendChild(badge);
+            localIPsDiv.appendChild(row);
+        });
         localIPCount.textContent = displayIPs.length;
     } else {
         localIPsDiv.innerHTML = '<p class="text-warning mb-1">无法获取本地 IPv4 地址</p>';
@@ -581,8 +591,15 @@ function analyzeNAT() {
     const publicIPDiv = document.getElementById('public-ip');
     const publicIPValue = document.getElementById('public-ip-value');
     let displayPublic = publicIPs.v4 || publicIPs.v6 || '无法获取';
-    publicIPDiv.innerHTML = `<code class="fs-5">${displayPublic}</code>`;
-    publicIPValue.innerHTML = `<code>${displayPublic}</code>`;
+    publicIPDiv.textContent = '';
+    const publicCode = document.createElement('code');
+    publicCode.className = 'fs-5';
+    publicCode.textContent = displayPublic;
+    publicIPDiv.appendChild(publicCode);
+    publicIPValue.textContent = '';
+    const publicValueCode = document.createElement('code');
+    publicValueCode.textContent = displayPublic;
+    publicIPValue.appendChild(publicValueCode);
 
     // 更新 NAT 状态
     const usingNAT = document.getElementById('using-nat');

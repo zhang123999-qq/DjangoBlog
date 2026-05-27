@@ -106,7 +106,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 function copyToClipboard(element, btnEl) {
     if (!element) return;
     if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {

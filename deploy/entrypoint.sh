@@ -8,19 +8,32 @@ for dir in /app/staticfiles /app/media /app/logs /app/beat_schedule; do
     fi
 done
 
+# 数据库就绪重试（MySQL 可能已接受 TCP 但尚未完成初始化）
 echo "[entrypoint] Running migrations..."
-python manage.py migrate --noinput
-
-# 仅在 staticfiles 为空时执行 collectstatic（volume 挂载首次为空，后续启动已有文件）
-if [ -z "$(ls -A /app/staticfiles 2>/dev/null)" ]; then
-    echo "[entrypoint] Collecting static files (first run)..."
-    python manage.py collectstatic --noinput
+MAX_RETRIES=30
+RETRY_INTERVAL=2
+i=0
+while [ $i -lt $MAX_RETRIES ]; do
+    if python manage.py migrate --noinput 2>&1; then
+        break
+    fi
+    i=$((i + 1))
+    echo "[entrypoint] Database not ready, retrying... ($i/$MAX_RETRIES)"
+    sleep $RETRY_INTERVAL
+done
+if [ $i -ge $MAX_RETRIES ]; then
+    echo "[entrypoint] ERROR: Database migration failed after $MAX_RETRIES attempts" >&2
+    exit 1
 fi
+
+# collectstatic 是幂等的，直接执行即可
+echo "[entrypoint] Collecting static files..."
+python manage.py collectstatic --noinput
 
 # 仅在构建阶段未执行 compress 时才运行（检查 manifest 文件是否存在）
 if [ ! -f "/app/staticfiles/CACHE/manifest.json" ]; then
     echo "[entrypoint] Compressing templates..."
-    python manage.py compress --force || echo "[entrypoint] WARNING: compress failed, continuing..."
+    python manage.py compress --force || echo "[entrypoint] WARNING: compress failed, continuing..." >&2
 else
     echo "[entrypoint] Compressed files already exist, skipping compress."
 fi

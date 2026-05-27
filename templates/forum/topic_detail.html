@@ -94,6 +94,6 @@
     </div>
     
     {% compress js %}
-    <script src="{% static 'js/reply-like.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'js/reply-like.js' %}"></script>
     {% endcompress %}
 {% endblock %}

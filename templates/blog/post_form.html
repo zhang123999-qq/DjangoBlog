@@ -122,6 +122,6 @@
 
 {% block extra_js %}
 <!-- 编辑器初始化脚本 -->
-<script src="{% static 'js/editor-init.js' %}"></script>
-<script src="{% static 'js/post-editor.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/editor-init.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/post-editor.js' %}"></script>
 {% endblock %}

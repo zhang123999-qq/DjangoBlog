@@ -220,7 +220,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/ip-detector.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/ip-detector.js' %}"></script>
 {% endblock %}
 
 {% block extra_css %}

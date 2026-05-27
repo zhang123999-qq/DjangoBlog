@@ -19,6 +19,17 @@ ENV_FILE="$PROJECT_DIR/deploy/.env"
 COMPOSE_FILE="$PROJECT_DIR/deploy/docker-compose.yml"
 
 # ====================================
+# 颜色输出（必须在其他函数之前定义）
+# ====================================
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+log()  { echo -e "${GREEN}[$(date '+%H:%M:%S')] $*${NC}"; }
+warn() { echo -e "${YELLOW}[$(date '+%H:%M:%S')] WARN: $*${NC}"; }
+fail() { echo -e "${RED}[$(date '+%H:%M:%S')] ERROR: $*${NC}"; exit 1; }
+
+# ====================================
 # 进程守护
 # ====================================
 # 捕获中断信号（Ctrl+C / SIGTERM），安全退出
@@ -41,17 +52,6 @@ fi
 # 快捷命令（统一参数）
 # ====================================
 dc() { docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"; }
-
-# ====================================
-# 颜色输出
-# ====================================
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-log()  { echo -e "${GREEN}[$(date '+%H:%M:%S')] $*${NC}"; }
-warn() { echo -e "${YELLOW}[$(date '+%H:%M:%S')] WARN: $*${NC}"; }
-fail() { echo -e "${RED}[$(date '+%H:%M:%S')] ERROR: $*${NC}"; exit 1; }
 
 echo "============================================================"
 echo " DjangoBlog 一键自动部署"
@@ -124,6 +124,7 @@ if [ ! -f "$ENV_FILE" ]; then
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(64))" 2>/dev/null || openssl rand -base64 48)
     DB_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(16))" 2>/dev/null || openssl rand -base64 16)
     DB_ROOT_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(20))" 2>/dev/null || openssl rand -base64 20)
+    REDIS_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(24))" 2>/dev/null || openssl rand -base64 24)
 
     read -p "请输入域名 (如 www.example.com，默认 localhost): " DOMAIN
     DOMAIN="${DOMAIN:-localhost}"
@@ -141,11 +142,14 @@ DB_PASSWORD=${DB_PASS}
 DB_HOST=db
 DB_PORT=3306
 DB_ROOT_PASSWORD=${DB_ROOT_PASS}
-REDIS_URL=redis://redis:6379/0
-CELERY_BROKER_URL=redis://redis:6379/0
-CELERY_RESULT_BACKEND=redis://redis:6379/0
+REDIS_PASSWORD=${REDIS_PASS}
+REDIS_URL=redis://:${REDIS_PASS}@redis:6379/1
+CELERY_BROKER_URL=redis://:${REDIS_PASS}@redis:6379/0
+CELERY_RESULT_BACKEND=redis://:${REDIS_PASS}@redis:6379/0
 WEB_PORT_EXPOSED=8000
+ALLOWED_HOSTS=${DOMAIN},127.0.0.1,localhost
 CSRF_TRUSTED_ORIGINS=http://localhost,http://127.0.0.1,http://${DOMAIN}
+USE_X_FORWARDED_PROTO=False
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False
@@ -241,10 +245,10 @@ fi
 # ========================================
 log "预拉取基础镜像..."
 # 只预拉取 Dockerfile 中直接引用的镜像（compose 服务镜像由 dc up 统一拉取）
-if ! docker pull "docker.1ms.run/library/python:3.13-slim" > /dev/null 2>&1; then
+if ! docker pull "python:3.13-slim" > /dev/null 2>&1; then
     warn "Python 基础镜像拉取失败，构建可能使用缓存或失败"
 else
-    log "  ✅ docker.1ms.run/library/python:3.13-slim"
+    log "  ✅ python:3.13-slim"
 fi
 
 # ========================================

@@ -173,7 +173,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/gitignore-generator.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/gitignore-generator.js' %}"></script>
 {% endblock %}
 
 {% block extra_css %}

@@ -46,7 +46,6 @@ jobs:
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
-        continue-on-error: true
 
   # ========================================
   # 代码质量检查
@@ -104,14 +103,14 @@ jobs:
       - name: Django deploy check
         env:
           DJANGO_SETTINGS_MODULE: config.settings.production
-          SECRET_KEY: ci-test-secret-key
+          SECRET_KEY: ci-test-secret-key-for-deploy-check-only
           DEBUG: "False"
           DB_ENGINE: sqlite
           USE_REDIS: "False"
           SECURE_SSL_REDIRECT: "False"
           SESSION_COOKIE_SECURE: "False"
           CSRF_COOKIE_SECURE: "False"
-        run: uv run python manage.py check --deploy || true
+        run: uv run python manage.py check --deploy
 
       - name: Flake8
         run: |
@@ -124,7 +123,7 @@ jobs:
         run: |
           uv run mypy apps/api/ apps/blog/ \
             --ignore-missing-imports \
-            --no-error-summary || true
+            --no-error-summary
 
   # ========================================
   # 多版本测试
@@ -295,11 +294,9 @@ jobs:
 
       - name: Safety check
         run: uv run safety check --full-report
-        continue-on-error: true
 
       - name: Pip-audit
         run: uv run pip-audit
-        continue-on-error: true
 
   # ========================================
   # 构建 Docker 镜像
@@ -307,7 +304,7 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [lint, test, security]
     if: github.event_name == 'push'
     permissions:
       contents: read
@@ -452,10 +449,9 @@ jobs:
 
       - name: JS syntax check
         run: |
-          node --check static/js/editor-init.js || true
-          node --check static/js/admin-editor.js || true
-          node --check static/js/upload-async-client.js || true
-        continue-on-error: true
+          node --check static/js/editor-init.js
+          node --check static/js/admin-editor.js
+          node --check static/js/upload-async-client.js
 
   # ========================================
   # 依赖更新检查

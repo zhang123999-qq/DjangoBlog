@@ -9,6 +9,28 @@
 
 ## [Unreleased]
 
+### 🔒 安全修复
+- **修复 DOM-based XSS 漏洞**：`nat_detector.html` 和 `json_formatter_enhanced.html` 中 `innerHTML` 直接插入外部数据（WebRTC ICE 候选、公网 IP、JSON 解析错误），改用 `textContent`/`createElement` 安全 API
+- **启用 CSP nonce 机制**：`CSPMiddleware` 集成 per-request nonce 生成，移除 `unsafe-inline`；所有模板 `<script>` 标签添加 `nonce="{{ request.csp_nonce }}"` 属性；Nginx 移除重复 CSP 头
+- **修复 AJAX CSRF 失效**：`CSRF_COOKIE_HTTPONLY` 从 `True` 改为 `False`，恢复 JS 读取 CSRF Token 能力
+- **Redis 添加密码认证**：docker-compose.yml 添加 `--requirepass`，所有 Redis URL 包含密码，`REDIS_PASSWORD` 强制校验
+- **修复部署链安全问题**：
+  - Dockerfile 基础镜像从 `docker.1ms.run` 改为官方 `python:3.13-slim`
+  - Nginx `ssl_session_tickets` 改为 `off`，增强前向保密
+  - Nginx 域名从硬编码 `www.zhtest.top` 改为占位符 `yourdomain.com`
+  - deploy/nginx.conf 添加 `server_tokens off`，移除含 `unsafe-inline` 的 CSP 头
+  - auto-deploy.sh 自动生成 `REDIS_PASSWORD`、`USE_X_FORWARDED_PROTO`
+  - deploy/.env 弱密码替换为 `CHANGE_ME_*` 占位符
+- **CI/CD 安全加固**：
+  - Safety/Pip-audit 安全扫描移除 `continue-on-error`，漏洞阻断构建
+  - build job 添加 `security` 依赖，安全扫描通过才能构建镜像
+  - JS 语法检查移除 `|| true`，错误不再被吞掉
+  - 移除不合理的 PyPI 发布 job（Django Web 应用不需要发布到 PyPI）
+- **统一 Redis 数据库编号**：DB 0=Celery broker、DB 1=Django cache/session、DB 2=Celery result backend
+- **entrypoint.sh 健壮性**：数据库迁移添加 30 次重试循环，collectstatic 改为幂等执行
+- **docker-compose 资源限制**：所有服务添加 CPU 限制，Redis 移除过度频繁的 RDB 持久化
+- **gunicorn timeout** 从 120s 降低为 60s
+
 ### 🎉 新功能
 - **管理后台数据备份与恢复**：新增 `/admin/backup/` 页面，支持一键下载 gzip 压缩的 JSON 备份文件，以及上传恢复之前下载的备份
   - 使用 `dumpdata --natural-foreign --natural-primary` 导出，保证跨环境可恢复

@@ -600,6 +600,7 @@ REPUTATION_WEEKLY_BONUS = 5  # 连续一周无违规 +5
 
 # 使用自定义 CSP 中间件（轻量级实现）
 CSP_ENABLED = env.bool("CSP_ENABLED", default=not DEBUG)
+CSP_NONCE_ENABLED = env.bool("CSP_NONCE_ENABLED", default=CSP_ENABLED)
 
 if CSP_ENABLED:
     # CSP 指令配置
@@ -608,8 +609,6 @@ if CSP_ENABLED:
         "CSP_SCRIPT_SRC",
         default=[
             "'self'",
-            "'unsafe-inline'",  # 内联脚本（Bootstrap 需要）
-            "'unsafe-eval'",  # eval（部分库需要）
             "cdn.jsdelivr.net",
             "code.jquery.com",
         ],
@@ -675,7 +674,7 @@ SESSION_COOKIE_SAMESITE = "Lax"  # CSRF 防护
 
 # CSRF 安全
 CSRF_COOKIE_SECURE = not DEBUG  # 仅 HTTPS（生产环境）
-CSRF_COOKIE_HTTPONLY = True  # 禁止 JS 访问
+CSRF_COOKIE_HTTPONLY = False  # JS 需要读取 CSRF Token 用于 AJAX 请求
 CSRF_COOKIE_SAMESITE = "Lax"
 
 # 允许的嵌入域名（iframe）

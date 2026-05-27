@@ -154,10 +154,10 @@
         </div>
     </div>
 
-    <script src="{% static 'js/utils.js' %}"></script>
-    <script src="{% static 'js/moderation-api-client.js' %}"></script>
-    <script src="{% static 'js/ui-toast.js' %}"></script>
-    <script>
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'js/utils.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'js/moderation-api-client.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'js/ui-toast.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}">
         (function () {
             const buttons = document.querySelectorAll('.js-moderation-action');
             const hasMetricsCard = !!document.getElementById('moderation-metrics-card');

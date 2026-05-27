@@ -231,5 +231,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/tool-search.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/tool-search.js' %}"></script>
 {% endblock %}

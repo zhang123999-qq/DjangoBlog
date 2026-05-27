@@ -37,7 +37,7 @@
                         {% endfor %}
                         <button type="submit" class="btn btn-primary w-100">注册</button>
                     </form>
-                    <script src="{% static 'js/captcha-refresh.js' %}"></script>
+                    <script nonce="{{ request.csp_nonce }}" src="{% static 'js/captcha-refresh.js' %}"></script>
                 </div>
             </div>
         </div>

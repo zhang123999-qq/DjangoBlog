@@ -2,7 +2,7 @@
 安全头中间件
 
 功能：
-- Content Security Policy (CSP)
+- Content Security Policy (CSP) with nonce support
 - HSTS
 - X-Frame-Options
 - X-Content-Type-Options
@@ -10,6 +10,7 @@
 - Referrer-Policy
 """
 
+import secrets
 from django.conf import settings
 
 
@@ -17,36 +18,56 @@ class CSPMiddleware:
     """
     Content Security Policy 中间件
 
-    轻量级实现，无需 django-csp 依赖
+    轻量级实现，无需 django-csp 依赖。
+    支持 per-request nonce 以替换 unsafe-inline。
     """
+
+    NONCE_LENGTH = 16  # 16 bytes = 32 hex chars
 
     def __init__(self, get_response):
         self.get_response = get_response
 
         # 从 settings 加载 CSP 配置
         self.csp_enabled = getattr(settings, "CSP_ENABLED", False)
-
-        if self.csp_enabled:
-            self.directives = self._build_directives()
+        self.nonce_enabled = getattr(settings, "CSP_NONCE_ENABLED", False)
 
     def __call__(self, request):
+        # 生成 per-request nonce（无论 CSP 是否启用，模板可能需要）
+        nonce = secrets.token_hex(self.NONCE_LENGTH)
+        request.csp_nonce = nonce
+
         response = self.get_response(request)
 
         if self.csp_enabled:
-            # 添加 CSP 头
-            response["Content-Security-Policy"] = self.directives
+            directives = self._build_directives(nonce if self.nonce_enabled else None)
+            response["Content-Security-Policy"] = directives
 
         return response
 
-    def _build_directives(self):
+    def _build_directives(self, nonce=None):
         """构建 CSP 指令字符串"""
         directives = []
 
         # 读取配置，使用默认值
+        script_src = list(getattr(settings, "CSP_SCRIPT_SRC", ["'self'"]))
+        style_src = list(getattr(settings, "CSP_STYLE_SRC", ["'self'"]))
+
+        # 如果启用了 nonce，替换 unsafe-inline
+        if nonce:
+            nonce_str = f"'nonce-{nonce}'"
+            if nonce_str not in script_src:
+                script_src.append(nonce_str)
+            if "'unsafe-inline'" in script_src:
+                script_src.remove("'unsafe-inline'")
+            if nonce_str not in style_src:
+                style_src.append(nonce_str)
+            if "'unsafe-inline'" in style_src:
+                style_src.remove("'unsafe-inline'")
+
         configs = {
             "default-src": getattr(settings, "CSP_DEFAULT_SRC", ["'self'"]),
-            "script-src": getattr(settings, "CSP_SCRIPT_SRC", ["'self'"]),
-            "style-src": getattr(settings, "CSP_STYLE_SRC", ["'self'"]),
+            "script-src": script_src,
+            "style-src": style_src,
             "img-src": getattr(settings, "CSP_IMG_SRC", ["'self'"]),
             "font-src": getattr(settings, "CSP_FONT_SRC", ["'self'"]),
             "connect-src": getattr(settings, "CSP_CONNECT_SRC", ["'self'"]),
