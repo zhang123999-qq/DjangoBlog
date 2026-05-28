@@ -18,8 +18,9 @@ django_asgi_app = get_asgi_application()
 
 # 尝试加载 Channels 支持（可选依赖）
 try:
-    from channels.routing import ProtocolTypeRouter, URLRouter
     from channels.auth import AuthMiddlewareStack
+    from channels.routing import ProtocolTypeRouter, URLRouter
+
     from apps.notifications.routing import websocket_urlpatterns
 
     # ASGI 应用配置（支持 WebSocket）

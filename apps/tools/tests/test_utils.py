@@ -7,10 +7,11 @@
 - 核心 JSON 格式化
 """
 
-import pytest
 import base64
 import hashlib
 import json
+
+import pytest
 
 
 class TestBase64Codec:
@@ -31,8 +32,8 @@ class TestBase64Codec:
     def test_encode_chinese(self):
         """测试中文编码"""
         text = "你好，世界！"
-        encoded = base64.b64encode(text.encode('utf-8')).decode()
-        decoded = base64.b64decode(encoded).decode('utf-8')
+        encoded = base64.b64encode(text.encode("utf-8")).decode()
+        decoded = base64.b64decode(encoded).decode("utf-8")
         assert decoded == text
 
     def test_empty_string(self):
@@ -55,7 +56,7 @@ class TestHashTool:
     def test_md5(self):
         """测试 MD5 哈希"""
         text = "hello"
-        md5_hash = hashlib.md5(text.encode()).hexdigest()
+        md5_hash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
         assert md5_hash == "5d41402abc4b2a76b9719d911017c592"
 
     def test_sha256(self):
@@ -67,20 +68,20 @@ class TestHashTool:
     def test_sha1(self):
         """测试 SHA1 哈希"""
         text = "hello"
-        sha1_hash = hashlib.sha1(text.encode()).hexdigest()
+        sha1_hash = hashlib.sha1(text.encode(), usedforsecurity=False).hexdigest()
         assert sha1_hash == "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"
 
     def test_hash_consistency(self):
         """测试哈希一致性"""
         text = "consistent"
-        hash1 = hashlib.md5(text.encode()).hexdigest()
-        hash2 = hashlib.md5(text.encode()).hexdigest()
+        hash1 = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
+        hash2 = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
         assert hash1 == hash2
 
     def test_hash_different_inputs(self):
         """测试不同输入产生不同哈希"""
-        hash1 = hashlib.md5("input1".encode()).hexdigest()
-        hash2 = hashlib.md5("input2".encode()).hexdigest()
+        hash1 = hashlib.md5("input1".encode(), usedforsecurity=False).hexdigest()
+        hash2 = hashlib.md5("input2".encode(), usedforsecurity=False).hexdigest()
         assert hash1 != hash2
 
 
@@ -103,14 +104,7 @@ class TestJSONFormatter:
 
     def test_nested_json(self):
         """测试嵌套 JSON"""
-        data = {
-            "user": {
-                "name": "test",
-                "profile": {
-                    "age": 25
-                }
-            }
-        }
+        data = {"user": {"name": "test", "profile": {"age": 25}}}
         json_str = json.dumps(data)
         parsed = json.loads(json_str)
         assert parsed["user"]["profile"]["age"] == 25
@@ -147,7 +141,7 @@ class TestTextCounter:
     def test_count_lines(self):
         """测试行数计数"""
         text = "Line 1\nLine 2\nLine 3"
-        lines = text.split('\n')
+        lines = text.split("\n")
         assert len(lines) == 3
 
     def test_count_chinese_characters(self):
@@ -169,6 +163,7 @@ class TestURLCodec:
     def test_url_encode(self):
         """测试 URL 编码"""
         from urllib.parse import quote
+
         text = "Hello World"
         encoded = quote(text)
         assert encoded == "Hello%20World"
@@ -176,6 +171,7 @@ class TestURLCodec:
     def test_url_decode(self):
         """测试 URL 解码"""
         from urllib.parse import unquote
+
         encoded = "Hello%20World"
         decoded = unquote(encoded)
         assert decoded == "Hello World"
@@ -183,6 +179,7 @@ class TestURLCodec:
     def test_url_encode_chinese(self):
         """测试中文 URL 编码"""
         from urllib.parse import quote, unquote
+
         text = "你好"
         encoded = quote(text)
         decoded = unquote(encoded)
@@ -191,7 +188,8 @@ class TestURLCodec:
     def test_url_encode_special_chars(self):
         """测试特殊字符 URL 编码"""
         from urllib.parse import quote, unquote
+
         text = "a=1&b=2"
-        encoded = quote(text, safe='')
+        encoded = quote(text, safe="")
         decoded = unquote(encoded)
         assert decoded == text

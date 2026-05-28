@@ -2,18 +2,20 @@
 HTTP请求模拟器工具 - 优化版
 """
 
-from ..categories import ToolCategory
-from django import forms
-from django.core.cache import cache
-from apps.tools.base_tool import BaseTool
-from http.cookies import SimpleCookie
 import json
 import socket
 import struct
 import time
+from http.cookies import SimpleCookie
 from urllib.parse import urljoin, urlparse, urlunparse
 
 import urllib3
+from django import forms
+from django.core.cache import cache
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 def _ip_to_int(ip_str):
@@ -224,9 +226,7 @@ class HTTPRequestTool(BaseTool):
 
         # 发送请求
         try:
-            response_meta = self._send_request(
-                method, url, headers_dict, data, content_type, timeout, follow_redirects
-            )
+            response_meta = self._send_request(method, url, headers_dict, data, content_type, timeout, follow_redirects)
         except Exception as e:
             return self._handle_request_error(e)
 

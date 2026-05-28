@@ -9,11 +9,12 @@
 """
 
 import pytest
+from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
-from django.core.cache import cache
+
 from apps.accounts.models import User
-from apps.blog.models import Post, Category
+from apps.blog.models import Category, Post
 
 
 @pytest.mark.django_db
@@ -23,26 +24,19 @@ class TestHomeView:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.category = Category.objects.create(name="技术", slug="tech")
         self.post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容",
-            author=self.user,
-            status="published"
+            title="测试文章", slug="test-post", content="内容", author=self.user, status="published"
         )
-        self.home_url = reverse('core:home')
+        self.home_url = reverse("core:home")
 
     def test_home_view_loads(self):
         """测试首页加载"""
         response = self.client.get(self.home_url)
         assert response.status_code == 200
-        assert 'latest_posts' in response.context
-        assert 'post_count' in response.context
+        assert "latest_posts" in response.context
+        assert "post_count" in response.context
 
     def test_home_view_caching(self):
         """测试首页缓存"""
@@ -66,9 +60,15 @@ class TestHomeView:
 
         # 检查必要的上下文变量
         required_keys = [
-            'latest_posts', 'hot_topics', 'popular_tools',
-            'post_count', 'topic_count', 'comment_count',
-            'user_count', 'tool_count', 'view_count'
+            "latest_posts",
+            "hot_topics",
+            "popular_tools",
+            "post_count",
+            "topic_count",
+            "comment_count",
+            "user_count",
+            "tool_count",
+            "view_count",
         ]
         for key in required_keys:
             assert key in response.context, f"Missing context key: {key}"
@@ -76,26 +76,20 @@ class TestHomeView:
     def test_home_view_only_published_posts(self):
         """测试首页只显示已发布文章"""
         # 创建草稿文章
-        Post.objects.create(
-            title="草稿文章",
-            slug="draft-post",
-            content="草稿内容",
-            author=self.user,
-            status="draft"
-        )
+        Post.objects.create(title="草稿文章", slug="draft-post", content="草稿内容", author=self.user, status="draft")
 
         response = self.client.get(self.home_url)
         assert response.status_code == 200
 
         # 检查只有已发布的文章
-        latest_posts = response.context['latest_posts']
+        latest_posts = response.context["latest_posts"]
         for post in latest_posts:
-            assert post.status == 'published'
+            assert post.status == "published"
 
     def test_home_view_performance(self):
         """测试首页性能（查询次数）"""
-        from django.test.utils import CaptureQueriesContext
         from django.db import connection
+        from django.test.utils import CaptureQueriesContext
 
         with CaptureQueriesContext(connection) as queries:
             response = self.client.get(self.home_url)
@@ -112,37 +106,35 @@ class TestContactView:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.contact_url = reverse('core:contact')
+        self.contact_url = reverse("core:contact")
 
     def test_contact_view_get(self):
         """测试联系我们页面GET请求"""
         response = self.client.get(self.contact_url)
         assert response.status_code == 200
-        assert 'core/contact.html' in [t.name for t in response.templates]
+        assert "core/contact.html" in [t.name for t in response.templates]
 
     def test_contact_view_post(self):
         """测试联系我们页面POST请求"""
-        response = self.client.post(self.contact_url, {
-            'name': '测试用户',
-            'email': 'test@example.com',
-            'message': '这是一条测试消息'
-        })
+        response = self.client.post(
+            self.contact_url, {"name": "测试用户", "email": "test@example.com", "message": "这是一条测试消息"}
+        )
         # 应该重定向回联系我们页面
         assert response.status_code == 302
-        assert response.url == reverse('core:contact')
+        assert response.url == reverse("core:contact")
 
     def test_contact_view_post_shows_message(self):
         """测试联系我们POST后显示成功消息"""
-        response = self.client.post(self.contact_url, {
-            'name': '测试用户',
-            'email': 'test@example.com',
-            'message': '这是一条测试消息'
-        }, follow=True)
+        response = self.client.post(
+            self.contact_url,
+            {"name": "测试用户", "email": "test@example.com", "message": "这是一条测试消息"},
+            follow=True,
+        )
 
         # 检查是否有成功消息
-        assert len(response.context['messages']) > 0
-        messages = list(response.context['messages'])
-        assert any('感谢您的留言' in str(message) for message in messages)
+        assert len(response.context["messages"]) > 0
+        messages = list(response.context["messages"])
+        assert any("感谢您的留言" in str(message) for message in messages)
 
     def test_contact_view_anonymous_access(self):
         """测试匿名用户可以访问联系我们页面"""
@@ -151,11 +143,8 @@ class TestContactView:
 
     def test_contact_view_authenticated_access(self):
         """测试登录用户可以访问联系我们页面"""
-        User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.client.login(username='testuser', password='testpass123')
+        User.objects.create_user(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password="testpass123")
 
         response = self.client.get(self.contact_url)
         assert response.status_code == 200
@@ -168,51 +157,44 @@ class TestSearchView:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.category = Category.objects.create(name="技术", slug="tech")
         self.post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="这是测试内容",
-            author=self.user,
-            status="published"
+            title="测试文章", slug="test-post", content="这是测试内容", author=self.user, status="published"
         )
-        self.search_url = reverse('core:search')
+        self.search_url = reverse("core:search")
 
     def test_search_view_empty_query(self):
         """测试空搜索词"""
-        response = self.client.get(self.search_url, {'q': ''})
+        response = self.client.get(self.search_url, {"q": ""})
         assert response.status_code == 200
-        assert len(response.context['results']['posts']) == 0
-        assert len(response.context['results']['topics']) == 0
+        assert len(response.context["results"]["posts"]) == 0
+        assert len(response.context["results"]["topics"]) == 0
 
     def test_search_view_with_query(self):
         """测试有搜索词"""
-        response = self.client.get(self.search_url, {'q': '测试'})
+        response = self.client.get(self.search_url, {"q": "测试"})
         assert response.status_code == 200
-        assert '测试' in response.context['query']
+        assert "测试" in response.context["query"]
 
     def test_search_view_sanitization(self):
         """测试搜索词清理"""
         # 测试XSS清理
-        response = self.client.get(self.search_url, {'q': '<script>alert("xss")</script>'})
+        response = self.client.get(self.search_url, {"q": '<script>alert("xss")</script>'})
         assert response.status_code == 200
-        assert '<script>' not in response.context['query']
+        assert "<script>" not in response.context["query"]
 
         # 测试SQL注入清理
-        response = self.client.get(self.search_url, {'q': "'; DROP TABLE users; --"})
+        response = self.client.get(self.search_url, {"q": "'; DROP TABLE users; --"})
         assert response.status_code == 200
-        assert 'DROP TABLE' not in response.context['query']
+        assert "DROP TABLE" not in response.context["query"]
 
     def test_search_view_length_limit(self):
         """测试搜索词长度限制"""
-        long_query = 'a' * 150  # 超过100字符
-        response = self.client.get(self.search_url, {'q': long_query})
+        long_query = "a" * 150  # 超过100字符
+        response = self.client.get(self.search_url, {"q": long_query})
         assert response.status_code == 200
-        assert len(response.context['query']) <= 100
+        assert len(response.context["query"]) <= 100
 
     def test_search_view_result_limit(self):
         """测试搜索结果数量限制"""
@@ -223,12 +205,12 @@ class TestSearchView:
                 slug=f"test-post-{i}",
                 content=f"测试内容{i}",
                 author=self.user,
-                status="published"
+                status="published",
             )
 
-        response = self.client.get(self.search_url, {'q': '测试'})
+        response = self.client.get(self.search_url, {"q": "测试"})
         assert response.status_code == 200
-        assert len(response.context['results']['posts']) <= 20  # 最多20条
+        assert len(response.context["results"]["posts"]) <= 20  # 最多20条
 
 
 @pytest.mark.django_db
@@ -238,34 +220,34 @@ class TestHealthCheckViews:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.healthz_url = reverse('core:healthz')
-        self.readiness_url = reverse('core:readiness')
-        self.liveness_url = reverse('core:liveness')
+        self.healthz_url = reverse("core:healthz")
+        self.readiness_url = reverse("core:readiness")
+        self.liveness_url = reverse("core:liveness")
 
     def test_healthz_view_healthy(self):
         """测试健康检查正常状态"""
         response = self.client.get(self.healthz_url)
         assert response.status_code == 200
         data = response.json()
-        assert data['status'] == 'healthy'
-        assert 'checks' in data
-        assert 'duration_ms' in data
-        assert 'version' in data
+        assert data["status"] == "healthy"
+        assert "checks" in data
+        assert "duration_ms" in data
+        assert "version" in data
 
     def test_readiness_view(self):
         """测试就绪检查"""
         response = self.client.get(self.readiness_url)
         assert response.status_code == 200
         data = response.json()
-        assert 'ready' in data
-        assert 'checks' in data
+        assert "ready" in data
+        assert "checks" in data
 
     def test_liveness_view(self):
         """测试存活检查"""
         response = self.client.get(self.liveness_url)
         assert response.status_code == 200
         data = response.json()
-        assert data['alive'] is True
+        assert data["alive"] is True
 
     def test_healthz_view_anonymous_access(self):
         """测试匿名用户可以访问健康检查"""
@@ -278,13 +260,13 @@ class TestHealthCheckViews:
         data = response.json()
 
         # 检查必要的字段
-        required_fields = ['status', 'checks', 'duration_ms', 'version']
+        required_fields = ["status", "checks", "duration_ms", "version"]
         for field in required_fields:
             assert field in data, f"Missing field: {field}"
 
         # 检查checks字段
-        assert 'database' in data['checks']
-        assert 'cache' in data['checks']
+        assert "database" in data["checks"]
+        assert "cache" in data["checks"]
 
 
 @pytest.mark.django_db

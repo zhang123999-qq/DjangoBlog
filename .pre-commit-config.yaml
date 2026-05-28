@@ -59,7 +59,7 @@ repos:
       - id: bandit
         args: [-r, -ll]
         files: ^apps/
-        exclude: ^(\.venv|venv|migrations|tests)/
+        exclude: ^(\.venv|venv|migrations|tests)/|/tests/
 
   # ============================================================
   # 通用检查

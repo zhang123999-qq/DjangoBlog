@@ -1,8 +1,8 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-
-import logging
 
 from .models import ModerationAdmin, ModerationLog, ModerationReminder
 

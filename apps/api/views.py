@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from apps.blog.models import Category, Comment, Post, Tag
 from apps.forum.models import Board, Reply, Topic
+
 from .serializers import (
     BoardSerializer,
     CategorySerializer,

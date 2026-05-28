@@ -194,8 +194,8 @@ class SensitiveDataFilter(logging.Filter):
                 if isinstance(record.args, dict):
                     record.args = self._mask_dict(record.args)
                 elif isinstance(record.args, tuple):
-                    record.args = (
-                        tuple(self._mask_sensitive_data(arg) if isinstance(arg, str) else arg for arg in record.args)
+                    record.args = tuple(
+                        self._mask_sensitive_data(arg) if isinstance(arg, str) else arg for arg in record.args
                     )
 
         # 处理消息
@@ -235,7 +235,7 @@ class SensitiveDataFilter(logging.Filter):
         Returns:
             Dict: 脱敏后的字典
         """
-        result = {}
+        result: Dict[str, Any] = {}
         for key, value in data.items():
             lower_key = key.lower().replace("-", "_")
 

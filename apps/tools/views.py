@@ -1,12 +1,14 @@
 import logging
+
+from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
-from django.contrib.auth.decorators import login_required
-from .registry import registry
-from .models import ToolConfig
+
 from .categories import TOOL_CATEGORIES
+from .models import ToolConfig
+from .registry import registry
 
 logger = logging.getLogger(__name__)
 

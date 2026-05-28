@@ -4,7 +4,7 @@ WebSocket 路由配置
 
 from django.urls import re_path
 
-from .consumers import NotificationConsumer, OnlineStatusConsumer, ChatConsumer
+from .consumers import ChatConsumer, NotificationConsumer, OnlineStatusConsumer
 
 websocket_urlpatterns = [
     # 通知 WebSocket

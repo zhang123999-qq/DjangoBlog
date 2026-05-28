@@ -4,9 +4,10 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .admin_site import admin_site
 
-from apps.accounts.models import User, Profile
+from apps.accounts.models import Profile, User
+
+from .admin_site import admin_site
 
 
 class ProfileInline(admin.StackedInline):
@@ -45,13 +46,13 @@ class CustomUserAdmin(UserAdmin):
         count = queryset.update(is_active=True)
         self.message_user(request, f"成功激活 {count} 个用户")
 
-    activate_users.short_description = "激活所选用户"
+    activate_users.short_description = "激活所选用户"  # type: ignore[attr-defined]
 
     def deactivate_users(self, request, queryset):
         count = queryset.update(is_active=False)
         self.message_user(request, f"成功禁用 {count} 个用户")
 
-    deactivate_users.short_description = "禁用所选用户"
+    deactivate_users.short_description = "禁用所选用户"  # type: ignore[attr-defined]
 
 
 @admin.register(Profile, site=admin_site)

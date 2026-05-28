@@ -1,5 +1,5 @@
-from django.db.utils import OperationalError, ProgrammingError
 from django.conf import settings
+from django.db.utils import OperationalError, ProgrammingError
 
 
 def site_config(request):

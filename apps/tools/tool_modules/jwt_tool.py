@@ -2,11 +2,14 @@
 JWT 工具 - 解码和生成
 """
 
-import json
 import base64
-from ..categories import ToolCategory
+import json
+
 from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class JWTForm(forms.Form):

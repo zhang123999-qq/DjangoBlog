@@ -3,9 +3,10 @@
 """
 
 from django.contrib import admin
-from .admin_site import admin_site
 
 from apps.blog.models import Category, Tag
+
+from .admin_site import admin_site
 
 
 @admin.register(Category, site=admin_site)

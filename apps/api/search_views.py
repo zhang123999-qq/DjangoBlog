@@ -4,14 +4,13 @@
 提供全局搜索、文章搜索、主题搜索等 API
 """
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from rest_framework.permissions import AllowAny
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from apps.core.search import SearchService
 from apps.api.response import APIResponse
-
+from apps.core.search import SearchService
 
 SEARCH_LIMIT_DEFAULT = 10
 SEARCH_LIMIT_MAX = 50

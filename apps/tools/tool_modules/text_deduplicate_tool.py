@@ -2,10 +2,13 @@
 文本去重工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import re
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class TextDeduplicateForm(forms.Form):

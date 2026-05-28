@@ -4,9 +4,11 @@
 
 from django import forms
 from django.core.validators import FileExtensionValidator
-from apps.core.validators import validate_image_extension, validate_file_size
-from ..categories import ToolCategory
+
+from apps.core.validators import validate_file_size, validate_image_extension
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class QRCodeDecodeForm(forms.Form):
@@ -37,8 +39,8 @@ class QRCodeDecodeTool(BaseTool):
         uploaded_file = form.cleaned_data["file"]
 
         try:
-            from pyzbar import pyzbar
             from PIL import Image
+            from pyzbar import pyzbar
         except ImportError:
             return {"error": "请安装 pyzbar 和 pillow: pip install pyzbar pillow"}
 

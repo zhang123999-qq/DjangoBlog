@@ -203,9 +203,7 @@ class NetworkToolSecurityTests(SimpleTestCase):
         return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0))],
     )
     def test_prepare_pinned_request_target_rejects_internal_resolution(self, _mock_getaddrinfo):
-        _parsed, _pinned_url, _host_header, _resolved_ip, error = _prepare_pinned_request_target(
-            "https://example.com/"
-        )
+        _parsed, _pinned_url, _host_header, _resolved_ip, error = _prepare_pinned_request_target("https://example.com/")
 
         self.assertIsNotNone(error)
         self.assertIn("内网地址", error)
@@ -365,6 +363,7 @@ class BackupRestoreTests(TestCase):
 
         # Step 3: restore original backup
         from django.core.files.uploadedfile import SimpleUploadedFile
+
         backup_file = SimpleUploadedFile(
             "backup.json.gz",
             backup_data,

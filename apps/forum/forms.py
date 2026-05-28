@@ -1,5 +1,6 @@
 from django import forms
-from .models import Topic, Reply
+
+from .models import Reply, Topic
 
 # 常量定义
 TOPIC_TITLE_MIN_LENGTH = 5

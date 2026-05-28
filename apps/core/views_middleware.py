@@ -8,8 +8,8 @@ import logging
 import re
 from typing import Callable, Optional
 
-from django.http import HttpRequest, HttpResponse
 from django.conf import settings
+from django.http import HttpRequest, HttpResponse
 
 from .views_counter import ViewsCounter
 
@@ -130,7 +130,7 @@ class ViewsCounterMiddleware:
                 from apps.blog.models import Post
 
                 post = Post.objects.filter(slug=lookup_value).first()
-                return post.id if post else None
+                return int(post.id) if post else None
         except Exception as e:
             logger.warning(f"解析对象 ID 失败: {e}")
 

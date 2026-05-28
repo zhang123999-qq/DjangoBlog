@@ -9,14 +9,15 @@
 - 验证后销毁，防止重放攻击
 """
 
-import secrets
-import time
+import base64
 import hashlib
+import io
 import logging
 import os
+import secrets
+import time
+
 from PIL import Image, ImageDraw, ImageFont
-import io
-import base64
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def get_client_ip(request):
     if x_forwarded_for:
         ip = x_forwarded_for.split(",")[0].strip()
     else:
-        ip = request.META.get("REMOTE_ADDR", "0.0.0.0")
+        ip = request.META.get("REMOTE_ADDR", "0.0.0.0")  # nosec B104
     return ip
 
 

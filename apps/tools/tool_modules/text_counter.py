@@ -2,10 +2,12 @@
 文本统计工具（综合版：英文 + 中文 + 标点符号）
 """
 
-from ..categories import ToolCategory
-from django import forms
-from ..base_tool import BaseTool
 import re
+
+from django import forms
+
+from ..base_tool import BaseTool
+from ..categories import ToolCategory
 
 
 class TextCounterForm(forms.Form):

@@ -8,14 +8,14 @@
             <!-- 主内容区 -->
             <div class="col-md-8">
                 <h1 class="mb-4">{{ post.title }}</h1>
-                
+
                 <div class="post-meta text-muted mb-4">
-                    <span>作者：{{ post.author.username }}</span> | 
-                    <span>分类：{% if post.category %}<a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>{% else %}未分类{% endif %}</span> | 
-                    <span>发布时间：{{ post.published_at|date:"Y-m-d H:i" }}</span> | 
+                    <span>作者：{{ post.author.username }}</span> |
+                    <span>分类：{% if post.category %}<a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>{% else %}未分类{% endif %}</span> |
+                    <span>发布时间：{{ post.published_at|date:"Y-m-d H:i" }}</span> |
                     <span>浏览：{{ post.views_count }}</span>
                 </div>
-                
+
                 {% if post.tags.all %}
                     <div class="post-tags mb-4">
                         标签：
@@ -24,16 +24,16 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                
+
                 <div class="post-content mb-6">
                     {% load sanitize %}
                     {{ post.content|safe_html }}
                 </div>
-                
+
                 <!-- 评论区 -->
                 <div class="comments-section">
                     <h3 class="mb-4">评论</h3>
-                    
+
                     {% if comments %}
                         <div class="comments-list mb-4">
                             {% for comment in comments %}
@@ -43,13 +43,13 @@
                     {% else %}
                         <div class="alert alert-info mb-4">暂无评论</div>
                     {% endif %}
-                    
+
                     <!-- 评论表单 -->
                     <div class="comment-form">
                         <h4 class="mb-3">发表评论</h4>
                         <form method="post" action="{% url 'blog:comment_create' post.slug %}">
                             {% csrf_token %}
-                            
+
                             {% if not user.is_authenticated %}
                                 <div class="mb-3">
                                     <label for="{{ comment_form.name.id_for_label }}" class="form-label">姓名</label>
@@ -60,19 +60,19 @@
                                     {{ comment_form.email }}
                                 </div>
                             {% endif %}
-                            
+
                             <div class="mb-3">
                                 <label for="{{ comment_form.content.id_for_label }}" class="form-label">评论内容</label>
                                 {{ comment_form.content }}
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary">提交评论</button>
                         </form>
                         <p class="text-muted mt-2">评论需要审核后才能显示</p>
                     </div>
                 </div>
             </div>
-            
+
             <!-- 侧边栏 -->
             <div class="col-md-4">
                 <!-- 分类 -->
@@ -91,7 +91,7 @@
                         {% endfor %}
                     </ul>
                 </div>
-                
+
                 <!-- 标签 -->
                 <div class="card mb-4">
                     <div class="card-header">

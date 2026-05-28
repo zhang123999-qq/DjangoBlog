@@ -1,12 +1,10 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.conf import settings
+
 from apps.blog.models import Comment
-from apps.forum.models import Topic, Reply
-from moderation.services import (
-    create_moderation_reminder,
-    smart_moderate_instance,
-)
+from apps.forum.models import Reply, Topic
+from moderation.services import create_moderation_reminder, smart_moderate_instance
 from moderation.utils import check_sensitive_content
 
 

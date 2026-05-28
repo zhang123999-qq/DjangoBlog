@@ -2,13 +2,14 @@
 通知 API 视图
 """
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
+
+from apps.api.response import APIResponse
 
 from .models import Notification
-from apps.api.response import APIResponse
 
 
 class NotificationSerializer(serializers.ModelSerializer):

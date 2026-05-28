@@ -4,9 +4,11 @@
 
 from django import forms
 from django.core.validators import FileExtensionValidator
-from apps.core.validators import validate_image_extension, validate_file_size
-from ..categories import ToolCategory
+
+from apps.core.validators import validate_file_size, validate_image_extension
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class EXIFForm(forms.Form):

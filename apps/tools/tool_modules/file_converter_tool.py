@@ -2,13 +2,16 @@
 文件格式转换工具
 """
 
-from django import forms
-from django.core.validators import FileExtensionValidator
-from apps.core.validators import validate_any_file_extension, validate_file_size
-from ..categories import ToolCategory
-from apps.tools.base_tool import BaseTool
 import os
 import tempfile
+
+from django import forms
+from django.core.validators import FileExtensionValidator
+
+from apps.core.validators import validate_any_file_extension, validate_file_size
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class FileConverterForm(forms.Form):

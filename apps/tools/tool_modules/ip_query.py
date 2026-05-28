@@ -2,11 +2,13 @@
 IP 查询工具 - 整合版（自动检测 + 手动查询）
 """
 
-from ..categories import ToolCategory
-from django import forms
-import requests
 import socket
+
+import requests
+from django import forms
+
 from ..base_tool import BaseTool
+from ..categories import ToolCategory
 
 
 class IPQueryForm(forms.Form):

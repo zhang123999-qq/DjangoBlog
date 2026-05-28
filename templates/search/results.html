@@ -9,7 +9,7 @@
         <div class="col-md-8">
             <form method="get" action="{% url 'core:search' %}">
                 <div class="input-group input-group-lg">
-                    <input type="text" class="form-control" name="q" 
+                    <input type="text" class="form-control" name="q"
                            value="{{ query }}" placeholder="搜索文章、论坛主题...">
                     <button class="btn btn-primary" type="submit">
                         <i class="bi bi-search"></i> 搜索
@@ -18,10 +18,10 @@
             </form>
         </div>
     </div>
-    
+
     {% if query %}
         <h4 class="mb-4">搜索 "<span class="text-primary">{{ query }}</span>" 的结果</h4>
-        
+
         <!-- 文章结果 -->
         {% if posts %}
         <div class="mb-5">
@@ -43,7 +43,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         <!-- 论坛主题结果 -->
         {% if topics %}
         <div class="mb-5">
@@ -59,7 +59,7 @@
                     </div>
                     <p class="mb-1 text-muted small">{{ topic.content|truncatewords:30 }}</p>
                     <small class="text-muted">
-                        <i class="bi bi-eye"></i> {{ topic.views_count }} · 
+                        <i class="bi bi-eye"></i> {{ topic.views_count }} ·
                         <i class="bi bi-chat"></i> {{ topic.reply_count }}
                     </small>
                 </a>
@@ -67,7 +67,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if not posts and not topics %}
         <div class="alert alert-info text-center">
             <i class="bi bi-search"></i> 没有找到相关结果，换个关键词试试？

@@ -9,11 +9,13 @@
 - 表单验证: 错误处理
 """
 
-import pytest
 import socket
 from unittest.mock import patch
+
+import pytest
 from django.test import Client, SimpleTestCase
 from django.urls import reverse
+
 from apps.accounts.models import User
 from apps.tools.models import ToolConfig
 from apps.tools.tool_modules.http_request_tool import HTTPRequestTool, _prepare_pinned_request_target
@@ -27,14 +29,14 @@ class TestToolListView:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.tool_list_url = reverse('tools:tool_list')
+        self.tool_list_url = reverse("tools:tool_list")
 
     def test_tool_list_view_loads(self):
         """测试工具列表加载"""
         response = self.client.get(self.tool_list_url)
         assert response.status_code == 200
-        assert 'categories' in response.context
-        assert 'tools' in response.context
+        assert "categories" in response.context
+        assert "tools" in response.context
 
     def test_tool_list_view_caching(self):
         """测试工具列表缓存"""
@@ -53,10 +55,10 @@ class TestToolListView:
 
         # 检查上下文数据
         context = response.context
-        assert 'categories' in context
-        assert 'tools' in context
-        assert 'total_tools' in context
-        assert 'enabled_tools_count' in context
+        assert "categories" in context
+        assert "tools" in context
+        assert "total_tools" in context
+        assert "enabled_tools_count" in context
 
 
 @pytest.mark.django_db
@@ -66,55 +68,48 @@ class TestToolDetailView:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
 
     def test_tool_detail_view_requires_login(self):
         """测试工具详情需要登录"""
         # 尝试访问一个存在的工具
-        url = reverse('tools:tool_detail', args=['hash'])
+        url = reverse("tools:tool_detail", args=["hash"])
         response = self.client.get(url)
         # 应该重定向到登录页
         assert response.status_code == 302
-        assert '/accounts/login/' in response.url
+        assert "/accounts/login/" in response.url
 
     def test_tool_detail_view_loads_when_logged_in(self):
         """测试登录后可以访问工具详情"""
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:tool_detail', args=['hash'])
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:tool_detail", args=["hash"])
         response = self.client.get(url)
         # 应该成功加载
         assert response.status_code == 200
-        assert 'tool' in response.context
-        assert 'form' in response.context
+        assert "tool" in response.context
+        assert "form" in response.context
 
     def test_tool_detail_view_nonexistent_tool(self):
         """测试不存在的工具"""
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:tool_detail', args=['nonexistent-tool'])
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:tool_detail", args=["nonexistent-tool"])
         response = self.client.get(url)
         # 应该显示错误信息
         assert response.status_code == 200
-        assert 'error' in response.context
+        assert "error" in response.context
 
     def test_tool_detail_view_disabled_tool(self):
         """测试被禁用的工具"""
         # 创建工具配置并禁用
-        ToolConfig.objects.create(
-            slug='hash',
-            name='哈希计算',
-            is_enabled=False
-        )
+        ToolConfig.objects.create(slug="hash", name="哈希计算", is_enabled=False)
 
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:tool_detail', args=['hash'])
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:tool_detail", args=["hash"])
         response = self.client.get(url)
         # 应该显示工具被禁用
         assert response.status_code == 200
-        assert 'error' in response.context
-        assert '已被禁用' in response.context['error']
+        assert "error" in response.context
+        assert "已被禁用" in response.context["error"]
 
 
 @pytest.mark.django_db
@@ -124,32 +119,29 @@ class TestMyIPJsonView:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
 
     def test_my_ip_json_requires_login(self):
         """测试IP查询需要登录"""
-        url = reverse('tools:my_ip_json')
+        url = reverse("tools:my_ip_json")
         response = self.client.get(url)
         # 应该重定向到登录页
         assert response.status_code == 302
-        assert '/accounts/login/' in response.url
+        assert "/accounts/login/" in response.url
 
     def test_my_ip_json_loads_when_logged_in(self):
         """测试登录后可以查询IP"""
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:my_ip_json')
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:my_ip_json")
         response = self.client.get(url)
         # 应该返回JSON响应
         assert response.status_code == 200
-        assert response['content-type'] == 'application/json'
+        assert response["content-type"] == "application/json"
 
         # 解析JSON响应
         data = response.json()
-        assert 'ok' in data
-        assert 'ip' in data
+        assert "ok" in data
+        assert "ip" in data
 
 
 @pytest.mark.django_db
@@ -159,42 +151,36 @@ class TestToolFormValidation:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
 
     def test_tool_form_validation_error(self):
         """测试工具表单验证错误"""
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:tool_detail', args=['hash'])
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:tool_detail", args=["hash"])
 
         # 提交空表单（应该验证失败）
         response = self.client.post(url, {})
 
         # 应该返回表单页面（带错误信息）
         assert response.status_code == 200
-        assert 'form' in response.context
-        assert 'error_message' in response.context
-        assert response.context['error_message'] is not None
+        assert "form" in response.context
+        assert "error_message" in response.context
+        assert response.context["error_message"] is not None
 
     def test_tool_form_validation_success(self):
         """测试工具表单验证成功"""
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:tool_detail', args=['hash'])
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:tool_detail", args=["hash"])
 
         # 提交有效表单
-        response = self.client.post(url, {
-            'text': 'hello',
-            'algorithm': 'md5'
-        })
+        response = self.client.post(url, {"text": "hello", "algorithm": "md5"})
 
         # 应该返回结果
         assert response.status_code == 200
-        assert 'result' in response.context
+        assert "result" in response.context
         # 结果应该包含哈希值
-        if response.context['result']:
-            assert 'hash' in response.context['result'] or 'result' in response.context['result']
+        if response.context["result"]:
+            assert "hash" in response.context["result"] or "result" in response.context["result"]
 
 
 @pytest.mark.django_db
@@ -204,38 +190,35 @@ class TestToolPermissionControl:
     def setup_method(self):
         """设置测试数据"""
         self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
 
     def test_anonymous_cannot_access_tools(self):
         """测试匿名用户不能访问工具"""
-        url = reverse('tools:tool_detail', args=['hash'])
+        url = reverse("tools:tool_detail", args=["hash"])
         response = self.client.get(url)
         # 应该重定向到登录页
         assert response.status_code == 302
-        assert '/accounts/login/' in response.url
+        assert "/accounts/login/" in response.url
 
     def test_anonymous_can_view_tool_list(self):
         """测试匿名用户可以查看工具列表"""
-        url = reverse('tools:tool_list')
+        url = reverse("tools:tool_list")
         response = self.client.get(url)
         # 应该可以查看列表
         assert response.status_code == 200
 
     def test_anonymous_cannot_use_my_ip_json(self):
         """测试匿名用户不能使用IP查询"""
-        url = reverse('tools:my_ip_json')
+        url = reverse("tools:my_ip_json")
         response = self.client.get(url)
         # 应该重定向到登录页
         assert response.status_code == 302
-        assert '/accounts/login/' in response.url
+        assert "/accounts/login/" in response.url
 
     def test_logged_in_user_can_access_tools(self):
         """测试登录用户可以访问工具"""
-        self.client.login(username='testuser', password='testpass123')
-        url = reverse('tools:tool_detail', args=['hash'])
+        self.client.login(username="testuser", password="testpass123")
+        url = reverse("tools:tool_detail", args=["hash"])
         response = self.client.get(url)
         # 应该可以访问
         assert response.status_code == 200
@@ -270,9 +253,7 @@ class TestNetworkToolSecurity(SimpleTestCase):
         return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0))],
     )
     def test_prepare_pinned_request_target_rejects_internal_resolution(self, _mock_getaddrinfo):
-        _parsed, _pinned_url, _host_header, _resolved_ip, error = _prepare_pinned_request_target(
-            "https://example.com/"
-        )
+        _parsed, _pinned_url, _host_header, _resolved_ip, error = _prepare_pinned_request_target("https://example.com/")
 
         assert error is not None
         assert "内网地址" in error

@@ -22,21 +22,21 @@
 
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        
+
                         <h5 class="mb-3 border-bottom pb-2">
                             <i class="bi bi-info-circle me-2"></i>网站信息
                         </h5>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">网站名称</label>
                             <input type="text" name="site_name" class="form-control" value="{{ site_name }}" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">网站描述</label>
                             <textarea name="site_description" class="form-control" rows="2">{{ site_description }}</textarea>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label class="form-label">网站 URL</label>
                             <input type="url" name="site_url" class="form-control" value="{{ site_url }}" placeholder="https://example.com">
@@ -45,7 +45,7 @@
                         <h5 class="mb-3 border-bottom pb-2">
                             <i class="bi bi-wifi me-2"></i>访问设置
                         </h5>
-                        
+
                         <div class="mb-3 form-check">
                             <input type="checkbox" name="allow_lan" class="form-check-input" id="allowLan" {% if allow_lan %}checked{% endif %}>
                             <label class="form-check-label" for="allowLan">
@@ -53,7 +53,7 @@
                                 <span class="text-muted small">(允许其他设备通过 IP 地址访问)</span>
                             </label>
                         </div>
-                        
+
                         <div class="mb-4 form-check">
                             <input type="checkbox" name="debug" class="form-check-input" id="debugMode" {% if debug %}checked{% endif %}>
                             <label class="form-check-label" for="debugMode">

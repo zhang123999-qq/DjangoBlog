@@ -2,10 +2,11 @@
 通用工具函数
 """
 
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from functools import wraps
 import hashlib
+from functools import wraps
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.utils.text import slugify
 
 

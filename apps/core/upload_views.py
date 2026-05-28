@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime
 
 import redis.exceptions
-
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.storage import default_storage

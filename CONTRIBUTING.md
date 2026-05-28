@@ -163,10 +163,10 @@ pre-commit run --all-files
 ```python
 def get_published_posts(category_id: int) -> QuerySet:
     """获取指定分类下的已发布文章列表。
-    
+
     Args:
         category_id: 分类 ID
-        
+
     Returns:
         已发布文章的 QuerySet
     """

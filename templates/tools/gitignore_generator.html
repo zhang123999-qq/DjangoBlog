@@ -185,7 +185,7 @@
         background: #1e1e1e;
         border-radius: 0 0 0.375rem 0.375rem;
     }
-    
+
     .code-output {
         margin: 0;
         padding: 1rem;
@@ -196,12 +196,12 @@
         white-space: pre;
         tab-size: 4;
     }
-    
+
     .code-output code {
         color: inherit;
         background: transparent;
     }
-    
+
     .empty-state {
         height: 100%;
         display: flex;
@@ -211,19 +211,19 @@
         background: #f8f9fa;
         border-radius: 0 0 0.375rem 0.375rem;
     }
-    
+
     /* 选项区域 */
     .option-section {
         margin-bottom: 1.25rem;
         padding-bottom: 1rem;
         border-bottom: 1px solid #e9ecef;
     }
-    
+
     .option-section:last-of-type {
         border-bottom: none;
         margin-bottom: 0;
     }
-    
+
     .option-title {
         font-size: 0.875rem;
         font-weight: 600;
@@ -231,13 +231,13 @@
         display: flex;
         align-items: center;
     }
-    
+
     .option-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 0.5rem;
     }
-    
+
     .option-checkbox {
         display: flex;
         align-items: center;
@@ -249,32 +249,32 @@
         transition: all 0.15s ease;
         position: relative;
     }
-    
+
     .option-checkbox:hover {
         background: #e9ecef;
         border-color: #0d6efd;
     }
-    
+
     .option-checkbox input {
         display: none;
     }
-    
+
     .checkbox-label {
         font-size: 0.8rem;
         color: #495057;
         flex: 1;
     }
-    
+
     .option-checkbox:has(input:checked) {
         background: #e7f1ff;
         border-color: #0d6efd;
     }
-    
+
     .option-checkbox:has(input:checked) .checkbox-label {
         color: #0d6efd;
         font-weight: 500;
     }
-    
+
     .option-checkbox:has(input:checked)::after {
         content: '✓';
         position: absolute;
@@ -282,32 +282,32 @@
         color: #0d6efd;
         font-weight: bold;
     }
-    
+
     /* 滚动条美化 */
     .code-container::-webkit-scrollbar {
         width: 8px;
         height: 8px;
     }
-    
+
     .code-container::-webkit-scrollbar-track {
         background: #2d2d2d;
     }
-    
+
     .code-container::-webkit-scrollbar-thumb {
         background: #555;
         border-radius: 4px;
     }
-    
+
     .code-container::-webkit-scrollbar-thumb:hover {
         background: #666;
     }
-    
+
     /* 响应式调整 */
     @media (max-width: 991.98px) {
         .code-container {
             height: 350px;
         }
-        
+
         .option-grid {
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
         }

@@ -3,9 +3,10 @@
 """
 
 from django.contrib import admin
-from .admin_site import admin_site
 
 from apps.blog.models import Post
+
+from .admin_site import admin_site
 
 
 @admin.register(Post, site=admin_site)
@@ -62,10 +63,10 @@ class PostAdmin(admin.ModelAdmin):
         count = queryset.update(status="published")
         self.message_user(request, f"成功发布 {count} 篇文章")
 
-    publish_posts.short_description = "发布所选文章"
+    publish_posts.short_description = "发布所选文章"  # type: ignore[attr-defined]
 
     def unpublish_posts(self, request, queryset):
         count = queryset.update(status="draft")
         self.message_user(request, f"成功取消发布 {count} 篇文章")
 
-    unpublish_posts.short_description = "取消发布所选文章"
+    unpublish_posts.short_description = "取消发布所选文章"  # type: ignore[attr-defined]

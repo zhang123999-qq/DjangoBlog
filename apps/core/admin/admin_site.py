@@ -8,13 +8,14 @@
 - 工具列表缓存
 """
 
+import platform
+import sys
+from datetime import datetime, timedelta
+
 from django.contrib import admin
 from django.core.cache import cache
-from django.db.models import Sum, Count
+from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
-from datetime import datetime, timedelta
-import sys
-import platform
 
 
 class DjangoBlogAdminSite(admin.AdminSite):
@@ -42,11 +43,12 @@ class DjangoBlogAdminSite(admin.AdminSite):
         if cached_stats:
             return cached_stats
 
-        from django.utils import timezone
         from django.conf import settings
+        from django.utils import timezone
+
         from apps.accounts.models import User
-        from apps.blog.models import Post, Comment, Category, Tag
-        from apps.forum.models import Topic, Reply, Board
+        from apps.blog.models import Category, Comment, Post, Tag
+        from apps.forum.models import Board, Reply, Topic
 
         stats = {}
         today = timezone.now().date()
@@ -194,6 +196,7 @@ class DjangoBlogAdminSite(admin.AdminSite):
 
     def get_urls(self):
         from django.urls import path
+
         from apps.core.backup_views import backup_view, restore_view
 
         custom_urls = [

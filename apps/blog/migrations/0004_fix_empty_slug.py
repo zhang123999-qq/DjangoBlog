@@ -1,6 +1,6 @@
 from django.db import migrations
-from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 def fix_empty_slug(apps, schema_editor):

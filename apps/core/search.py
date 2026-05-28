@@ -15,7 +15,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.db.models import Q
@@ -76,9 +76,9 @@ class MeilisearchBackend(SearchBackend):
             if self.client is None:
                 return False
 
-            index = self.client.index(index)
+            meili_index = self.client.index(index)
             document["id"] = doc_id  # Meilisearch 使用 id 字段
-            index.add_documents([document])
+            meili_index.add_documents([document])
             return True
         except Exception as e:
             logger.error(f"Meilisearch 索引文档失败: {e}")
@@ -89,8 +89,8 @@ class MeilisearchBackend(SearchBackend):
             if self.client is None:
                 return False
 
-            index = self.client.index(index)
-            index.delete_document(doc_id)
+            meili_index = self.client.index(index)
+            meili_index.delete_document(doc_id)
             return True
         except Exception as e:
             logger.error(f"Meilisearch 删除文档失败: {e}")
@@ -155,7 +155,7 @@ class MeilisearchBackend(SearchBackend):
         try:
             if self.client is None:
                 return False
-            return self.client.is_healthy()
+            return bool(self.client.is_healthy())
         except Exception:
             return False
 
@@ -263,7 +263,7 @@ class ElasticsearchBackend(SearchBackend):
         try:
             if self.client is None:
                 return False
-            return self.client.ping()
+            return bool(self.client.ping())
         except Exception:
             return False
 
@@ -313,7 +313,7 @@ class DatabaseSearchBackend(SearchBackend):
             limit = kwargs.get("limit", 20)
             offset = kwargs.get("offset", 0)
 
-            results = queryset[offset: offset + limit]
+            results = queryset[offset : offset + limit]
 
             hits = []
             for obj in results:
@@ -370,7 +370,7 @@ class SearchService:
             }
 
             backend_class = backends.get(backend_name, DatabaseSearchBackend)
-            cls._backend = backend_class()
+            cls._backend = backend_class()  # type: ignore[abstract]
 
         return cls._backend
 
@@ -472,7 +472,7 @@ class SearchService:
         Returns:
             Dict: 重建结果
         """
-        result = {"posts": 0, "topics": 0, "errors": []}
+        result: Dict[str, Any] = {"posts": 0, "topics": 0, "errors": []}
 
         # 重建文章索引
         try:
@@ -509,7 +509,7 @@ def setup_search_signals():
 
     当文章/主题创建或更新时自动索引
     """
-    from django.db.models.signals import post_save, post_delete
+    from django.db.models.signals import post_delete, post_save
     from django.dispatch import receiver
 
     @receiver(post_save, sender="blog.Post", dispatch_uid="search_index_post_on_save")

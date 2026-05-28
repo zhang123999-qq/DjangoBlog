@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from django.conf import settings
 
 from apps.core.error_codes import ErrorCodes, error_message
+
 from .constants import parse_baidu_violation_data_simple
 
 logger = logging.getLogger(__name__)
@@ -180,7 +181,7 @@ class BaiduModerationService:
 
     def _parse_violation_data(self, data: List[Dict]) -> List[Dict]:
         """解析违规数据 — 委托到共享常量模块"""
-        return parse_baidu_violation_data_simple(data)
+        return list(parse_baidu_violation_data_simple(data))
 
 
 class MockModerationService:

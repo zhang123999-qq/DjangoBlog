@@ -4,9 +4,10 @@
 
 from django.contrib import admin, messages
 from django.utils.html import format_html
-from .admin_site import admin_site
 
 from apps.core.models import SiteConfig
+
+from .admin_site import admin_site
 
 
 @admin.register(SiteConfig, site=admin_site)

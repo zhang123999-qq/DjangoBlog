@@ -288,8 +288,16 @@ SIMPLEUI_CONFIG = {
             "models": [
                 {"name": "用户", "url": "/admin/accounts/user/", "icon": "fa-solid fa-users"},
                 {"name": "用户资料", "url": "/admin/accounts/profile/", "icon": "fa-solid fa-id-card"},
-                {"name": "信誉管理", "url": "/admin/moderation/userreputation/", "icon": "fa-solid fa-star-half-stroke"},
-                {"name": "信誉日志", "url": "/admin/moderation/reputationlog/", "icon": "fa-solid fa-clock-rotate-left"},
+                {
+                    "name": "信誉管理",
+                    "url": "/admin/moderation/userreputation/",
+                    "icon": "fa-solid fa-star-half-stroke",
+                },
+                {
+                    "name": "信誉日志",
+                    "url": "/admin/moderation/reputationlog/",
+                    "icon": "fa-solid fa-clock-rotate-left",
+                },
                 {"name": "敏感词", "url": "/admin/moderation/sensitiveword/", "icon": "fa-solid fa-shield-halved"},
                 {"name": "审核日志", "url": "/admin/moderation/moderationlog/", "icon": "fa-solid fa-clipboard-list"},
             ],
@@ -704,11 +712,12 @@ SENTRY_DSN = env("SENTRY_DSN", default="")
 
 if SENTRY_DSN:
     try:
-        import sentry_sdk
-        from sentry_sdk.integrations.django import DjangoIntegration
-        from sentry_sdk.integrations.celery import CeleryIntegration
-        from sentry_sdk.integrations.redis import RedisIntegration
         import logging
+
+        import sentry_sdk
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        from sentry_sdk.integrations.django import DjangoIntegration
+        from sentry_sdk.integrations.redis import RedisIntegration
 
         _logger = logging.getLogger(__name__)
 

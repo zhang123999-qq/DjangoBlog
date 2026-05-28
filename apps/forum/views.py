@@ -1,15 +1,17 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
+from django.http import HttpResponseForbidden, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
+from django.views.generic import DetailView, ListView
+
 from moderation.services import smart_moderate_instance
-from .models import Board, Topic, Reply, ReplyLike
-from .forms import TopicForm, ReplyForm
+
+from .forms import ReplyForm, TopicForm
+from .models import Board, Reply, ReplyLike, Topic
 
 
 @method_decorator(cache_page(60), name="dispatch")

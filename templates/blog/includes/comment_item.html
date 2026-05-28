@@ -16,13 +16,13 @@
     </div>
     <div class="comment-actions mt-3 d-flex justify-content-between align-items-center">
         <div class="like-section">
-            <button 
-                class="like-btn btn btn-sm btn-outline-primary" 
+            <button
+                class="like-btn btn btn-sm btn-outline-primary"
                 data-comment-id="{{ comment.id }}"
                 data-like-url="{% url 'blog:like_comment' comment.id %}"
                 {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
             >
-                <i class="bi bi-hand-thumbs-up"></i> 
+                <i class="bi bi-hand-thumbs-up"></i>
                 <span class="like-count">{{ comment.like_count }}</span>
             </button>
         </div>

@@ -4,8 +4,8 @@
 存储用户通知记录
 """
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class Notification(models.Model):
@@ -60,7 +60,7 @@ class Notification(models.Model):
     @classmethod
     def get_unread_count(cls, user) -> int:
         """获取用户未读通知数量"""
-        return cls.objects.filter(user=user, is_read=False).count()
+        return int(cls.objects.filter(user=user, is_read=False).count())
 
     @classmethod
     def get_recent(cls, user, limit: int = 10):

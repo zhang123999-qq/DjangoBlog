@@ -1,8 +1,10 @@
 import os
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm
-from .models import User, Profile
+from django.contrib.auth.forms import AuthenticationForm, UserChangeForm, UserCreationForm
+
 from .captcha import validate_captcha
+from .models import Profile, User
 
 # 常量定义
 MAX_AVATAR_SIZE = 1024 * 1024  # 1MB

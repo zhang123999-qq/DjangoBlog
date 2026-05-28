@@ -2,11 +2,13 @@
 AES 加密解密工具
 """
 
-from ..categories import ToolCategory
+import base64
+
 from django import forms
+
 from apps.tools.base_tool import BaseTool
 
-import base64
+from ..categories import ToolCategory
 
 try:
     # 仅用于探测依赖是否安装

@@ -12,17 +12,17 @@ DjangoBlog 自动化部署脚本 v2.0
     python run.py --help       # 显示帮助
 """
 
-import os
-import sys
-import subprocess
-import platform
-import shutil
 import argparse
 import logging
+import os
+import platform
+import shutil
+import subprocess
+import sys
 import traceback
-from pathlib import Path
-from typing import Optional, List, Tuple, Dict
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 # ============================================
 # 终端编码处理
@@ -207,8 +207,8 @@ class DjangoBlogSetup:
         self.logger = Logger(self.logs_dir)
 
         self.use_uv = False
-        self.python_cmd = None
-        self.pip_cmd = None
+        self.python_cmd: Optional[str] = None
+        self.pip_cmd: Optional[str] = None
 
         self.step_results: Dict[str, str] = {}
 
@@ -271,7 +271,7 @@ class DjangoBlogSetup:
         return None
 
     def _run_command(
-        self, cmd: List[str], cwd: Path = None, check: bool = True, timeout: int = 300
+        self, cmd: List[str], cwd: Optional[Path] = None, check: bool = True, timeout: int = 300
     ) -> Tuple[int, str, str]:
         """执行命令"""
         cwd = cwd or self.project_root
@@ -364,6 +364,7 @@ class DjangoBlogSetup:
         if self.use_uv:
             cmd = ["uv", "venv", str(self.venv_dir)]
         else:
+            assert self.python_cmd is not None
             cmd = [self.python_cmd, "-m", "venv", str(self.venv_dir)]
 
         returncode, _, stderr = self._run_command(cmd, check=False, timeout=120)

@@ -1,14 +1,15 @@
 """API URL 配置"""
 
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
 
 from apps.core.upload_views import upload_file, upload_image, upload_status
 from apps.notifications.api_views import NotificationViewSet
-from .moderation_views import moderation_approve_api, moderation_reject_api, moderation_metrics_api
+
+from .moderation_views import moderation_approve_api, moderation_metrics_api, moderation_reject_api
+from .search_views import GlobalSearchView, PostSearchView, SearchHealthView, TopicSearchView
 from .views import BoardViewSet, CategoryViewSet, PostViewSet, TagViewSet, TopicViewSet
-from .search_views import GlobalSearchView, PostSearchView, TopicSearchView, SearchHealthView
 
 app_name = "api"
 

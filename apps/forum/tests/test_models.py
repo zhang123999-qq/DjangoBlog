@@ -11,12 +11,12 @@ Forum 模型测试
 import pytest
 
 from apps.accounts.models import User
-from apps.forum.models import Board, Topic, Reply, ReplyLike
-
+from apps.forum.models import Board, Reply, ReplyLike, Topic
 
 # ============================================================
 # Board 测试
 # ============================================================
+
 
 @pytest.mark.django_db
 class TestBoardModel:
@@ -74,14 +74,13 @@ class TestBoardModel:
 # Topic 测试
 # ============================================================
 
+
 @pytest.mark.django_db
 class TestTopicModel:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.user = User.objects.create_user(
-            username="tester", email="test@forum.com", password="pass123"
-        )
+        self.user = User.objects.create_user(username="tester", email="test@forum.com", password="pass123")
         self.board = Board.objects.create(name="技术", slug="tech")
 
     def test_create_topic(self):
@@ -148,8 +147,10 @@ class TestTopicModel:
     def test_topic_review_status_properties(self):
         """测试审核状态属性"""
         topic = Topic.objects.create(
-            board=self.board, author=self.user,
-            title="状态测试", content="内容",
+            board=self.board,
+            author=self.user,
+            title="状态测试",
+            content="内容",
             review_status="pending",
         )
         assert topic.is_pending
@@ -168,13 +169,17 @@ class TestTopicModel:
     def test_topic_pinned_ordering(self):
         """测试置顶帖排在前面"""
         Topic.objects.create(
-            board=self.board, author=self.user,
-            title="普通帖", content="内容",
+            board=self.board,
+            author=self.user,
+            title="普通帖",
+            content="内容",
             review_status="approved",
         )
         Topic.objects.create(
-            board=self.board, author=self.user,
-            title="置顶帖", content="内容",
+            board=self.board,
+            author=self.user,
+            title="置顶帖",
+            content="内容",
             review_status="approved",
             is_pinned=True,
         )
@@ -190,18 +195,19 @@ class TestTopicModel:
 # Reply 测试
 # ============================================================
 
+
 @pytest.mark.django_db
 class TestReplyModel:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.user = User.objects.create_user(
-            username="replyer", email="reply@test.com", password="pass123"
-        )
+        self.user = User.objects.create_user(username="replyer", email="reply@test.com", password="pass123")
         self.board = Board.objects.create(name="技术", slug="tech2")
         self.topic = Topic.objects.create(
-            board=self.board, author=self.user,
-            title="主题帖", content="主题内容",
+            board=self.board,
+            author=self.user,
+            title="主题帖",
+            content="主题内容",
             review_status="approved",
         )
 
@@ -220,7 +226,8 @@ class TestReplyModel:
     def test_reply_str(self):
         """测试字符串表示"""
         reply = Reply.objects.create(
-            topic=self.topic, author=self.user,
+            topic=self.topic,
+            author=self.user,
             content="回复内容",
         )
         assert "replyer" in str(reply)
@@ -228,7 +235,9 @@ class TestReplyModel:
     def test_reply_review_status(self):
         """测试回复审核状态"""
         reply = Reply.objects.create(
-            topic=self.topic, author=self.user, content="内容",
+            topic=self.topic,
+            author=self.user,
+            content="内容",
         )
         assert reply.is_pending
 
@@ -243,12 +252,16 @@ class TestReplyModel:
     def test_topic_update_reply_count(self):
         """测试主题更新回复数"""
         Reply.objects.create(
-            topic=self.topic, author=self.user,
-            content="回复1", review_status="approved",
+            topic=self.topic,
+            author=self.user,
+            content="回复1",
+            review_status="approved",
         )
         Reply.objects.create(
-            topic=self.topic, author=self.user,
-            content="回复2", review_status="approved",
+            topic=self.topic,
+            author=self.user,
+            content="回复2",
+            review_status="approved",
         )
         self.topic.update_reply_count()
         assert self.topic.reply_count == 2
@@ -256,11 +269,15 @@ class TestReplyModel:
     def test_reply_ordering(self):
         """测试回复按时间正序"""
         Reply.objects.create(
-            topic=self.topic, author=self.user, content="第一条",
+            topic=self.topic,
+            author=self.user,
+            content="第一条",
             review_status="approved",
         )
         Reply.objects.create(
-            topic=self.topic, author=self.user, content="第二条",
+            topic=self.topic,
+            author=self.user,
+            content="第二条",
             review_status="approved",
         )
         replies = list(Reply.objects.filter(topic=self.topic))
@@ -272,25 +289,27 @@ class TestReplyModel:
 # ReplyLike 测试
 # ============================================================
 
+
 @pytest.mark.django_db
 class TestReplyLikeModel:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.user = User.objects.create_user(
-            username="liker", email="like@test.com", password="pass123"
-        )
-        self.author = User.objects.create_user(
-            username="poster", email="poster@test.com", password="pass123"
-        )
+        self.user = User.objects.create_user(username="liker", email="like@test.com", password="pass123")
+        self.author = User.objects.create_user(username="poster", email="poster@test.com", password="pass123")
         self.board = Board.objects.create(name="区", slug="zone")
         self.topic = Topic.objects.create(
-            board=self.board, author=self.author,
-            title="帖", content="内容", review_status="approved",
+            board=self.board,
+            author=self.author,
+            title="帖",
+            content="内容",
+            review_status="approved",
         )
         self.reply = Reply.objects.create(
-            topic=self.topic, author=self.author,
-            content="回复", review_status="approved",
+            topic=self.topic,
+            author=self.author,
+            content="回复",
+            review_status="approved",
         )
 
     def test_create_like(self):
@@ -325,6 +344,7 @@ class TestReplyLikeModel:
 # 表单验证测试
 # ============================================================
 
+
 @pytest.mark.django_db
 class TestTopicForm:
     """主题表单测试"""
@@ -332,63 +352,50 @@ class TestTopicForm:
     def setup_method(self):
         """设置测试数据"""
         from apps.forum.forms import TopicForm
+
         self.TopicForm = TopicForm
 
     def test_valid_topic_form(self):
         """测试有效的主题表单"""
-        form = self.TopicForm(data={
-            'title': '这是一个有效的主题标题',
-            'content': '这是一个有效的主题内容，至少10个字符'
-        })
+        form = self.TopicForm(
+            data={"title": "这是一个有效的主题标题", "content": "这是一个有效的主题内容，至少10个字符"}
+        )
         assert form.is_valid()
 
     def test_title_too_short(self):
         """测试标题过短"""
-        form = self.TopicForm(data={
-            'title': '短',  # 少于5个字符
-            'content': '这是一个有效的主题内容，至少10个字符'
-        })
+        form = self.TopicForm(data={"title": "短", "content": "这是一个有效的主题内容，至少10个字符"})  # 少于5个字符
         assert not form.is_valid()
-        assert 'title' in form.errors
+        assert "title" in form.errors
 
     def test_title_too_long(self):
         """测试标题过长"""
-        long_title = 'a' * 201  # 超过200字符
-        form = self.TopicForm(data={
-            'title': long_title,
-            'content': '这是一个有效的主题内容，至少10个字符'
-        })
+        long_title = "a" * 201  # 超过200字符
+        form = self.TopicForm(data={"title": long_title, "content": "这是一个有效的主题内容，至少10个字符"})
         assert not form.is_valid()
-        assert 'title' in form.errors
+        assert "title" in form.errors
 
     def test_content_too_short(self):
         """测试内容过短"""
-        form = self.TopicForm(data={
-            'title': '这是一个有效的主题标题',
-            'content': '短'  # 少于10个字符
-        })
+        form = self.TopicForm(data={"title": "这是一个有效的主题标题", "content": "短"})  # 少于10个字符
         assert not form.is_valid()
-        assert 'content' in form.errors
+        assert "content" in form.errors
 
     def test_content_too_long(self):
         """测试内容过长"""
-        long_content = 'a' * 10001  # 超过10000字符
-        form = self.TopicForm(data={
-            'title': '这是一个有效的主题标题',
-            'content': long_content
-        })
+        long_content = "a" * 10001  # 超过10000字符
+        form = self.TopicForm(data={"title": "这是一个有效的主题标题", "content": long_content})
         assert not form.is_valid()
-        assert 'content' in form.errors
+        assert "content" in form.errors
 
     def test_content_whitespace_stripped(self):
         """测试内容自动去除首尾空格"""
-        form = self.TopicForm(data={
-            'title': '  这是一个有效的主题标题  ',
-            'content': '  这是一个有效的主题内容，至少10个字符  '
-        })
+        form = self.TopicForm(
+            data={"title": "  这是一个有效的主题标题  ", "content": "  这是一个有效的主题内容，至少10个字符  "}
+        )
         assert form.is_valid()
-        assert form.cleaned_data['title'] == '这是一个有效的主题标题'
-        assert form.cleaned_data['content'] == '这是一个有效的主题内容，至少10个字符'
+        assert form.cleaned_data["title"] == "这是一个有效的主题标题"
+        assert form.cleaned_data["content"] == "这是一个有效的主题内容，至少10个字符"
 
 
 @pytest.mark.django_db
@@ -398,36 +405,29 @@ class TestReplyForm:
     def setup_method(self):
         """设置测试数据"""
         from apps.forum.forms import ReplyForm
+
         self.ReplyForm = ReplyForm
 
     def test_valid_reply_form(self):
         """测试有效的回复表单"""
-        form = self.ReplyForm(data={
-            'content': '这是一个有效的回复内容，至少5个字符'
-        })
+        form = self.ReplyForm(data={"content": "这是一个有效的回复内容，至少5个字符"})
         assert form.is_valid()
 
     def test_content_too_short(self):
         """测试回复内容过短"""
-        form = self.ReplyForm(data={
-            'content': '短'  # 少于5个字符
-        })
+        form = self.ReplyForm(data={"content": "短"})  # 少于5个字符
         assert not form.is_valid()
-        assert 'content' in form.errors
+        assert "content" in form.errors
 
     def test_content_too_long(self):
         """测试回复内容过长"""
-        long_content = 'a' * 5001  # 超过5000字符
-        form = self.ReplyForm(data={
-            'content': long_content
-        })
+        long_content = "a" * 5001  # 超过5000字符
+        form = self.ReplyForm(data={"content": long_content})
         assert not form.is_valid()
-        assert 'content' in form.errors
+        assert "content" in form.errors
 
     def test_content_whitespace_stripped(self):
         """测试回复内容自动去除首尾空格"""
-        form = self.ReplyForm(data={
-            'content': '  这是一个有效的回复内容，至少5个字符  '
-        })
+        form = self.ReplyForm(data={"content": "  这是一个有效的回复内容，至少5个字符  "})
         assert form.is_valid()
-        assert form.cleaned_data['content'] == '这是一个有效的回复内容，至少5个字符'
+        assert form.cleaned_data["content"] == "这是一个有效的回复内容，至少5个字符"

@@ -2,12 +2,15 @@
 HTML/Markdown互转工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
-import markdown
 import re
 from html.parser import HTMLParser
+
+import markdown
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class HTMLMarkdownForm(forms.Form):

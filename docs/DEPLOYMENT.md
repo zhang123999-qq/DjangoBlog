@@ -93,7 +93,7 @@ gunicorn config.wsgi:application \
 server {
     listen 80;
     server_name your-domain.com;
-    
+
     # 重定向到 HTTPS
     return 301 https://$server_name$request_uri;
 }
@@ -101,26 +101,26 @@ server {
 server {
     listen 443 ssl http2;
     server_name your-domain.com;
-    
+
     # SSL 配置
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
-    
+
     # 静态文件
     location /static/ {
         alias /path/to/DjangoBlog/staticfiles/;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
-    
+
     # 媒体文件
     location /media/ {
         alias /path/to/DjangoBlog/media/;
         expires 7d;
     }
-    
+
     # API 和应用
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -128,7 +128,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # WebSocket 支持
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -353,6 +353,6 @@ python manage.py dbshell
 
 ---
 
-**文档版本:** 1.0  
-**最后更新:** 2026年4月15日  
+**文档版本:** 1.0
+**最后更新:** 2026年4月15日
 **维护者:** DjangoBlog 团队

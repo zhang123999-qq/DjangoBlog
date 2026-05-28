@@ -3,10 +3,13 @@ UUID Generator Tool
 Generate UUID/GUID with different versions
 """
 
-from ..categories import ToolCategory
-from django import forms
 import uuid
+
+from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class UUIDForm(forms.Form):

@@ -6,6 +6,7 @@ DjangoBlog Admin 包
 """
 
 from .blog_admin import *  # noqa: F401, F403
+from .builtin_admin import *  # noqa: F401, F403
 from .category_tag_admin import *  # noqa: F401, F403
 from .comment_admin import *  # noqa: F401, F403
 from .forum_admin import *  # noqa: F401, F403
@@ -13,4 +14,3 @@ from .moderation_admin import *  # noqa: F401, F403
 from .site_config_admin import *  # noqa: F401, F403
 from .tool_admin import *  # noqa: F401, F403
 from .user_admin import *  # noqa: F401, F403
-from .builtin_admin import *  # noqa: F401, F403

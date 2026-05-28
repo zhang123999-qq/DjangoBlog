@@ -1,5 +1,5 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class SensitiveWord(models.Model):
@@ -98,7 +98,7 @@ class ModerationReminder(models.Model):
 
     def __str__(self):
         admin_name = self.assigned_admin.username if self.assigned_admin else "超级管理员"
-        return f'{self.get_target_type_display()} {self.target_id} 提醒给 {admin_name}'
+        return f"{self.get_target_type_display()} {self.target_id} 提醒给 {admin_name}"
 
 
 class ModerationLog(models.Model):
@@ -141,7 +141,7 @@ class ModerationLog(models.Model):
 
 
 # 导入信誉模型
-from .reputation import UserReputation, ReputationLog  # noqa: E402
+from .reputation import ReputationLog, UserReputation  # noqa: E402
 
 __all__ = [
     "SensitiveWord",

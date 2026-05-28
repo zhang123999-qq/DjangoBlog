@@ -1,7 +1,8 @@
+import html as _html
+
+import bleach
 from django import template
 from django.utils.safestring import mark_safe
-import bleach
-import html as _html
 
 register = template.Library()
 
@@ -72,4 +73,4 @@ def safe_html(value: str) -> str:
     # 将裸链转换为可点击链接
     cleaned = bleach.linkify(cleaned)
 
-    return mark_safe(cleaned)
+    return mark_safe(cleaned)  # type: ignore[no-any-return]  # nosec B703 B308

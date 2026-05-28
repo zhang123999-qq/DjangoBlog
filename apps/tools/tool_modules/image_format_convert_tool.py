@@ -3,15 +3,18 @@
 支持 PNG/JPG/WEBP/GIF/BMP/TIFF 互转
 """
 
+import base64
+import io
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
-from apps.core.validators import validate_image_extension, validate_file_size
-from ..categories import ToolCategory
-from apps.tools.base_tool import BaseTool
 from PIL import Image
-import io
-import base64
+
+from apps.core.validators import validate_file_size, validate_image_extension
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class ImageFormatConvertForm(forms.Form):
@@ -136,15 +139,13 @@ class ImageFormatConvertTool(BaseTool):
 
             # 处理尺寸调整
             resize_options = {
-                'resize_option': resize_option,
-                'resize_percent': resize_percent,
-                'custom_width': custom_width,
-                'custom_height': custom_height,
-                'maintain_aspect': maintain_aspect,
+                "resize_option": resize_option,
+                "resize_percent": resize_percent,
+                "custom_width": custom_width,
+                "custom_height": custom_height,
+                "maintain_aspect": maintain_aspect,
             }
-            img, new_width, new_height = self._resize_image(
-                img, original_width, original_height, resize_options
-            )
+            img, new_width, new_height = self._resize_image(img, original_width, original_height, resize_options)
 
             # 处理颜色模式转换
             img = self._convert_color_mode(img, output_format)
@@ -207,11 +208,11 @@ class ImageFormatConvertTool(BaseTool):
         """
         new_width, new_height = original_width, original_height
 
-        resize_option = resize_options.get('resize_option')
-        resize_percent = resize_options.get('resize_percent')
-        custom_width = resize_options.get('custom_width')
-        custom_height = resize_options.get('custom_height')
-        maintain_aspect = resize_options.get('maintain_aspect', True)
+        resize_option = resize_options.get("resize_option")
+        resize_percent = resize_options.get("resize_percent")
+        custom_width = resize_options.get("custom_width")
+        custom_height = resize_options.get("custom_height")
+        maintain_aspect = resize_options.get("maintain_aspect", True)
 
         if resize_option == "percent" and resize_percent:
             scale = resize_percent / 100

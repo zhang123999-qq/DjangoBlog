@@ -2,12 +2,15 @@
 CSV与JSON互转工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import csv
-import json
 import io
+import json
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class CSVJSONForm(forms.Form):

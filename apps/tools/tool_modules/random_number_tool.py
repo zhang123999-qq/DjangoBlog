@@ -6,8 +6,9 @@ import random
 
 from django import forms
 
-from ..categories import ToolCategory
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class RandomNumberForm(forms.Form):

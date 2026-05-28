@@ -2,10 +2,13 @@
 驼峰命名转换工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import re
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class CamelCaseForm(forms.Form):

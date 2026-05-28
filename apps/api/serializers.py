@@ -1,9 +1,10 @@
 """API 序列化器"""
 
 from rest_framework import serializers
-from apps.blog.models import Category, Tag, Post, Comment
-from apps.forum.models import Board, Topic, Reply
+
 from apps.accounts.models import User
+from apps.blog.models import Category, Comment, Post, Tag
+from apps.forum.models import Board, Reply, Topic
 
 
 class UserSerializer(serializers.ModelSerializer):

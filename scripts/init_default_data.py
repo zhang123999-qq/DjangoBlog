@@ -38,8 +38,9 @@ def _setup_django():
 
     django.setup()
 
+    from apps.blog.models import Category as _Category
+    from apps.blog.models import Tag as _Tag
     from apps.forum.models import Board as _Board
-    from apps.blog.models import Category as _Category, Tag as _Tag
 
     Board = _Board
     Category = _Category

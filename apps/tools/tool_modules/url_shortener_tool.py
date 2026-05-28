@@ -2,10 +2,13 @@
 URL缩短工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import hashlib
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class URLShortenerForm(forms.Form):

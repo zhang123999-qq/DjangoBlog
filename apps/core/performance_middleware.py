@@ -10,12 +10,13 @@
 - 连接池状态
 """
 
-import time
-import logging
 import gc
+import logging
+import time
+
+from django.conf import settings
 from django.db import connection
 from django.db.utils import DatabaseError, OperationalError
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 

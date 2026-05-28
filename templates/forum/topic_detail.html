@@ -34,7 +34,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- 回复列表 -->
     <div class="mb-4">
         <h3>回复 ({{ topic.reply_count }})</h3>
@@ -49,8 +49,8 @@
                                     <span class="text-muted small ml-2">{{ reply.created_at|date:"Y-m-d H:i" }}</span>
                                 </div>
                                 <div class="reply-actions">
-                                    <button 
-                                        class="btn btn-sm btn-outline-primary like-btn" 
+                                    <button
+                                        class="btn btn-sm btn-outline-primary like-btn"
                                         data-reply-id="{{ reply.id }}"
                                         data-like-url="{% url 'forum:like_reply' reply.id %}"
                                         {% if not user.is_authenticated %} disabled title="请先登录" {% endif %}
@@ -71,7 +71,7 @@
             <div class="alert alert-info">暂无回复</div>
         {% endif %}
     </div>
-    
+
     <!-- 回复表单 -->
     <div class="mb-4">
         <h3>发表回复</h3>
@@ -92,7 +92,7 @@
             <div class="alert alert-info">请先 <a href="{% url 'accounts:login' %}">登录</a> 后回复</div>
         {% endif %}
     </div>
-    
+
     {% compress js %}
     <script nonce="{{ request.csp_nonce }}" src="{% static 'js/reply-like.js' %}"></script>
     {% endcompress %}

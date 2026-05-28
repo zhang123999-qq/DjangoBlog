@@ -12,12 +12,12 @@ import logging
 import tempfile
 from datetime import datetime
 
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.db import connection
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
-from django.contrib import messages
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,12 @@ MAX_RESTORE_SIZE = 50 * 1024 * 1024  # 50MB
 
 def _superuser_required(view_func):
     """仅允许超级用户访问"""
+
     def wrapper(request, *args, **kwargs):
         if not request.user.is_superuser:
             return HttpResponseForbidden("仅超级用户可执行此操作")
         return view_func(request, *args, **kwargs)
+
     return wrapper
 
 
@@ -49,7 +51,8 @@ def _download_backup(request):
         "dumpdata",
         "--natural-foreign",
         "--natural-primary",
-        "--indent", "2",
+        "--indent",
+        "2",
         stdout=output,
     )
     compressed = gzip.compress(output.getvalue().encode("utf-8"))
@@ -148,7 +151,7 @@ def _do_restore(records):
             if existing_tables is not None and table not in existing_tables:
                 return
             try:
-                cursor.execute(f'DELETE FROM "{table}"')
+                cursor.execute(f'DELETE FROM "{table}"')  # nosec B608
             except Exception:
                 pass
 
@@ -166,18 +169,18 @@ def _do_restore(records):
             cursor.execute("PRAGMA foreign_keys = ON")
 
     # 写入临时文件并 loaddata
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".json", delete=False, encoding="utf-8"
-    ) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
         json.dump(records, f, ensure_ascii=False)
         tmp_path = f.name
 
     # 临时禁用 User post_save 信号，避免 loaddata 触发自动创建 Profile 导致冲突
     import apps.accounts.models as accounts_models
+
     accounts_models._restoring_backup = True
     try:
         call_command("loaddata", tmp_path, verbosity=0)
     finally:
         accounts_models._restoring_backup = False
         import os
+
         os.unlink(tmp_path)

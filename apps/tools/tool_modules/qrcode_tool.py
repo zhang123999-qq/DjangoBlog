@@ -2,14 +2,17 @@
 二维码生成工具
 """
 
-from ..categories import ToolCategory
 from django import forms
+
 from apps.tools.base_tool import BaseTool
 
+from ..categories import ToolCategory
+
 try:
-    import qrcode
-    from io import BytesIO
     import base64
+    from io import BytesIO
+
+    import qrcode
 
     HAS_QRCODE = True
 except ImportError:

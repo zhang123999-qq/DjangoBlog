@@ -23,8 +23,9 @@ CSP Nonce 中间件
    </style>
 """
 
-import secrets
 import logging
+import secrets
+
 from django.conf import settings
 
 logger = logging.getLogger(__name__)

@@ -1,11 +1,12 @@
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate, logout
-from django.http import HttpResponseNotAllowed, JsonResponse
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_GET
 from django.contrib import messages
-from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CustomLoginForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseNotAllowed, JsonResponse
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_GET
+
 from .captcha import generate_captcha, store_captcha
+from .forms import CustomLoginForm, ProfileUpdateForm, UserRegisterForm, UserUpdateForm
 
 
 def register_view(request):
@@ -40,7 +41,7 @@ def profile_view(request):
     """个人中心视图"""
     # 获取用户的待审核内容
     from apps.blog.models import Comment
-    from apps.forum.models import Topic, Reply
+    from apps.forum.models import Reply, Topic
 
     pending_comments = Comment.objects.filter(user=request.user, review_status="pending").order_by("-created_at")
 

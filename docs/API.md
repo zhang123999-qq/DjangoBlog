@@ -1542,14 +1542,14 @@ Retry-After: 60
 
 ### Q4: 如何调试 API 请求？
 
-**A**: 
+**A**:
 1. 使用浏览器访问 `/api/docs/` 查看 Swagger UI
 2. 使用 `curl -v` 查看详细请求/响应
 3. 检查响应头中的 `X-RateLimit-*` 信息
 
 ### Q5: 分页参数如何使用？
 
-**A**: 
+**A**:
 ```
 GET /api/posts/?page=2&page_size=50
 ```
@@ -1558,7 +1558,7 @@ GET /api/posts/?page=2&page_size=50
 
 ### Q6: 如何处理 429 限流错误？
 
-**A**: 
+**A**:
 - 检查响应头 `Retry-After` 获取重试时间
 - 降低请求频率
 - 对于批量操作，考虑增加请求间隔

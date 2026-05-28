@@ -6,6 +6,7 @@ API 文档: https://cloud.baidu.com/doc/ANTIPORN/s/Nk3h6xb2j
 """
 
 import logging
+
 from django.conf import settings
 
 from .constants import CONCLUSION_TYPE

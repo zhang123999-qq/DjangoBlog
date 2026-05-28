@@ -110,6 +110,7 @@ def post_fork(server, worker):
     # 关闭从 master 继承的数据库连接，避免跨线程共享报错
     try:
         from django.db import connections
+
         connections.close_all()
     except Exception:
         pass

@@ -3,10 +3,13 @@ Diff / Text Compare Tool
 Compare two texts and show differences
 """
 
-from ..categories import ToolCategory
-from django import forms
 import difflib
+
+from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class DiffForm(forms.Form):

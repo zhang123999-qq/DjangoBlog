@@ -1,8 +1,9 @@
-from django.db import models
 from django.conf import settings
-from django.urls import reverse
-from django.db.models import F
 from django.core.cache import cache
+from django.db import models
+from django.db.models import F
+from django.urls import reverse
+
 from apps.core.utils import generate_slug
 
 # Redis key 前缀（与 tasks.py 保持一致）

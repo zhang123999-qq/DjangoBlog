@@ -2,10 +2,13 @@
 灵感文库：古诗词 + 名言警句
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import random
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class InspirationForm(forms.Form):

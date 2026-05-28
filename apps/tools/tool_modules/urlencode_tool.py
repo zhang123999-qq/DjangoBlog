@@ -3,9 +3,12 @@ URL 编码解码工具
 """
 
 from urllib.parse import quote, unquote
-from ..categories import ToolCategory
+
 from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class URLEncodeForm(forms.Form):

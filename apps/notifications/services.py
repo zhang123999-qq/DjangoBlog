@@ -118,7 +118,7 @@ class NotificationService:
         data = {"title": title, "content": content, "link": link, "type": notification_type, **extra}
 
         try:
-            return async_to_sync(cls.async_send_to_user)(user_id, data)
+            return bool(async_to_sync(cls.async_send_to_user)(user_id, data))
         except Exception as e:
             logger.error(f"发送通知失败: {e}")
             return False
@@ -207,7 +207,7 @@ class NotificationService:
         data = {"title": title, "content": content, "link": link, **extra}
 
         try:
-            return async_to_sync(cls.async_broadcast)(data)
+            return bool(async_to_sync(cls.async_broadcast)(data))
         except Exception as e:
             logger.error(f"广播消息失败: {e}")
             return False

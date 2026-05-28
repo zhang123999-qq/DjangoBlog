@@ -1,5 +1,6 @@
 from django import forms
-from .models import Comment, Post, Category, Tag
+
+from .models import Category, Comment, Post, Tag
 
 # 常量定义
 MIN_COMMENT_LENGTH = 5

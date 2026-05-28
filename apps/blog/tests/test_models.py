@@ -9,8 +9,9 @@
 """
 
 import pytest
+
 from apps.accounts.models import User
-from apps.blog.models import Category, Tag, Post, Comment
+from apps.blog.models import Category, Comment, Post, Tag
 
 
 @pytest.mark.django_db
@@ -81,11 +82,7 @@ class TestPostModel:
     @pytest.fixture(autouse=True)
     def setup(self):
         """测试数据准备"""
-        self.user = User.objects.create_user(
-            username="testuser",
-            email="test@example.com",
-            password="testpass123"
-        )
+        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
         self.category = Category.objects.create(name="技术", slug="tech")
         self.tag1 = Tag.objects.create(name="Python", slug="python")
         self.tag2 = Tag.objects.create(name="Django", slug="django")
@@ -98,7 +95,7 @@ class TestPostModel:
             content="这是测试内容",
             author=self.user,
             category=self.category,
-            status="published"
+            status="published",
         )
         assert post.title == "测试文章"
         assert post.status == "published"
@@ -107,61 +104,31 @@ class TestPostModel:
 
     def test_post_slug_auto_generate(self):
         """测试文章 Slug 自动生成"""
-        post = Post.objects.create(
-            title="中文标题测试",
-            content="内容",
-            author=self.user,
-            status="draft"
-        )
+        post = Post.objects.create(title="中文标题测试", content="内容", author=self.user, status="draft")
         assert post.slug is not None
         assert len(post.slug) > 0
 
     def test_post_slug_unique(self):
         """测试文章 Slug 唯一性"""
-        Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容1",
-            author=self.user,
-            status="draft"
-        )
+        Post.objects.create(title="测试文章", slug="test-post", content="内容1", author=self.user, status="draft")
         # 第二篇相同标题的文章，slug 应该自动加后缀
-        post2 = Post.objects.create(
-            title="测试文章",
-            content="内容2",
-            author=self.user,
-            status="draft"
-        )
+        post2 = Post.objects.create(title="测试文章", content="内容2", author=self.user, status="draft")
         assert post2.slug != "test-post"
 
     def test_post_published_at_auto_set(self):
         """测试发布时间自动设置"""
-        post = Post.objects.create(
-            title="测试文章",
-            content="内容",
-            author=self.user,
-            status="published"
-        )
+        post = Post.objects.create(title="测试文章", content="内容", author=self.user, status="published")
         assert post.published_at is not None
 
     def test_post_draft_no_published_at(self):
         """测试草稿没有发布时间"""
-        post = Post.objects.create(
-            title="测试文章",
-            content="内容",
-            author=self.user,
-            status="draft"
-        )
+        post = Post.objects.create(title="测试文章", content="内容", author=self.user, status="draft")
         assert post.published_at is None
 
     def test_post_tags(self):
         """测试文章标签关联"""
         post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容",
-            author=self.user,
-            status="published"
+            title="测试文章", slug="test-post", content="内容", author=self.user, status="published"
         )
         post.tags.add(self.tag1, self.tag2)
         assert post.tags.count() == 2
@@ -169,20 +136,8 @@ class TestPostModel:
 
     def test_post_ordering(self):
         """测试文章排序（按发布时间倒序）"""
-        Post.objects.create(
-            title="文章1",
-            slug="post-1",
-            content="内容",
-            author=self.user,
-            status="published"
-        )
-        Post.objects.create(
-            title="文章2",
-            slug="post-2",
-            content="内容",
-            author=self.user,
-            status="published"
-        )
+        Post.objects.create(title="文章1", slug="post-1", content="内容", author=self.user, status="published")
+        Post.objects.create(title="文章2", slug="post-2", content="内容", author=self.user, status="published")
         posts = list(Post.objects.filter(status="published"))
         # 最新发布的在前
         assert posts[0].title == "文章2"
@@ -190,11 +145,7 @@ class TestPostModel:
     def test_post_increase_views(self):
         """测试浏览量增加"""
         post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容",
-            author=self.user,
-            status="published"
+            title="测试文章", slug="test-post", content="内容", author=self.user, status="published"
         )
         post.views_count
         post.increase_views()
@@ -210,38 +161,22 @@ class TestCommentModel:
     @pytest.fixture(autouse=True)
     def setup(self):
         """测试数据准备"""
-        self.user = User.objects.create_user(
-            username="testuser",
-            email="test@example.com",
-            password="testpass123"
-        )
+        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
         self.category = Category.objects.create(name="技术", slug="tech")
         self.post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容",
-            author=self.user,
-            status="published"
+            title="测试文章", slug="test-post", content="内容", author=self.user, status="published"
         )
 
     def test_create_comment(self):
         """测试创建评论"""
-        comment = Comment.objects.create(
-            post=self.post,
-            user=self.user,
-            content="这是一条评论"
-        )
+        comment = Comment.objects.create(post=self.post, user=self.user, content="这是一条评论")
         assert comment.content == "这是一条评论"
         assert comment.review_status == "pending"
         assert str(comment) == "testuser 评论了 测试文章"
 
     def test_comment_review_status(self):
         """测试评论审核状态"""
-        comment = Comment.objects.create(
-            post=self.post,
-            user=self.user,
-            content="评论内容"
-        )
+        comment = Comment.objects.create(post=self.post, user=self.user, content="评论内容")
 
         # 初始状态
         assert comment.is_pending is True
@@ -263,28 +198,16 @@ class TestCommentModel:
     def test_comment_ordering(self):
         """测试评论排序（按时间倒序）"""
         import time
-        Comment.objects.create(
-            post=self.post,
-            user=self.user,
-            content="评论1"
-        )
+
+        Comment.objects.create(post=self.post, user=self.user, content="评论1")
         time.sleep(0.01)
-        Comment.objects.create(
-            post=self.post,
-            user=self.user,
-            content="评论2"
-        )
+        Comment.objects.create(post=self.post, user=self.user, content="评论2")
         comments = list(Comment.objects.all())
         assert comments[0].content == "评论2"
 
     def test_guest_comment(self):
         """测试游客评论"""
-        comment = Comment.objects.create(
-            post=self.post,
-            name="游客",
-            email="guest@example.com",
-            content="游客评论"
-        )
+        comment = Comment.objects.create(post=self.post, name="游客", email="guest@example.com", content="游客评论")
         assert comment.user is None
         assert comment.name == "游客"
         assert str(comment) == "游客 评论了 测试文章"
@@ -297,93 +220,65 @@ class TestCommentForm:
     def setup_method(self):
         """设置测试数据"""
         from apps.accounts.models import User
-        from apps.blog.models import Category, Post
         from apps.blog.forms import CommentForm
+        from apps.blog.models import Category, Post
 
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
         self.category = Category.objects.create(name="技术", slug="tech")
         self.post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容",
-            author=self.user,
-            status="published"
+            title="测试文章", slug="test-post", content="内容", author=self.user, status="published"
         )
         self.CommentForm = CommentForm
 
     def test_valid_comment_form(self):
         """测试有效的评论表单"""
-        form = self.CommentForm(data={
-            'content': '这是一条有效的评论内容',
-            'name': '测试用户',
-            'email': 'test@example.com'
-        })
+        form = self.CommentForm(
+            data={"content": "这是一条有效的评论内容", "name": "测试用户", "email": "test@example.com"}
+        )
         assert form.is_valid()
 
     def test_content_too_short(self):
         """测试评论内容过短"""
-        form = self.CommentForm(data={
-            'content': '短',  # 少于5个字符
-            'name': '测试用户',
-            'email': 'test@example.com'
-        })
+        form = self.CommentForm(data={"content": "短", "name": "测试用户", "email": "test@example.com"})  # 少于5个字符
         assert not form.is_valid()
-        assert 'content' in form.errors
+        assert "content" in form.errors
 
     def test_content_too_long(self):
         """测试评论内容过长"""
         from apps.blog.forms import MAX_COMMENT_LENGTH
-        long_content = 'a' * (MAX_COMMENT_LENGTH + 1)  # 超过最大长度
-        form = self.CommentForm(data={
-            'content': long_content,
-            'name': '测试用户',
-            'email': 'test@example.com'
-        })
+
+        long_content = "a" * (MAX_COMMENT_LENGTH + 1)  # 超过最大长度
+        form = self.CommentForm(data={"content": long_content, "name": "测试用户", "email": "test@example.com"})
         assert not form.is_valid()
-        assert 'content' in form.errors
+        assert "content" in form.errors
 
     def test_guest_required_fields(self):
         """测试游客必填字段"""
         # 游客缺少姓名
-        form = self.CommentForm(data={
-            'content': '有效评论内容',
-            'email': 'test@example.com'
-        })
+        form = self.CommentForm(data={"content": "有效评论内容", "email": "test@example.com"})
         assert not form.is_valid()
-        assert 'name' in form.errors
+        assert "name" in form.errors
 
         # 游客缺少邮箱
-        form = self.CommentForm(data={
-            'content': '有效评论内容',
-            'name': '测试用户'
-        })
+        form = self.CommentForm(data={"content": "有效评论内容", "name": "测试用户"})
         assert not form.is_valid()
-        assert 'email' in form.errors
+        assert "email" in form.errors
 
     def test_authenticated_user_form(self):
         """测试登录用户的表单（隐藏姓名和邮箱）"""
-        form = self.CommentForm(data={
-            'content': '登录用户的评论'
-        }, user=self.user)
+        form = self.CommentForm(data={"content": "登录用户的评论"}, user=self.user)
 
         # 登录用户应该不需要姓名和邮箱
         assert form.is_valid()
         # 检查表单字段
-        assert 'name' not in form.fields
-        assert 'email' not in form.fields
+        assert "name" not in form.fields
+        assert "email" not in form.fields
 
     def test_content_whitespace_stripped(self):
         """测试评论内容自动去除首尾空格"""
-        form = self.CommentForm(data={
-            'content': '  有效评论内容  ',
-            'name': '测试用户',
-            'email': 'test@example.com'
-        })
+        form = self.CommentForm(data={"content": "  有效评论内容  ", "name": "测试用户", "email": "test@example.com"})
         assert form.is_valid()
-        assert form.cleaned_data['content'] == '有效评论内容'
+        assert form.cleaned_data["content"] == "有效评论内容"
 
 
 @pytest.mark.django_db
@@ -393,38 +288,22 @@ class TestCommentLike:
     def setup_method(self):
         """设置测试数据"""
         from apps.accounts.models import User
-        from apps.blog.models import Category, Post, Comment, CommentLike
+        from apps.blog.models import Category, Comment, CommentLike, Post
 
-        self.user1 = User.objects.create_user(
-            username='user1',
-            password='testpass123'
-        )
-        self.user2 = User.objects.create_user(
-            username='user2',
-            password='testpass123'
-        )
+        self.user1 = User.objects.create_user(username="user1", password="testpass123")
+        self.user2 = User.objects.create_user(username="user2", password="testpass123")
         self.category = Category.objects.create(name="技术", slug="tech")
         self.post = Post.objects.create(
-            title="测试文章",
-            slug="test-post",
-            content="内容",
-            author=self.user1,
-            status="published"
+            title="测试文章", slug="test-post", content="内容", author=self.user1, status="published"
         )
         self.comment = Comment.objects.create(
-            post=self.post,
-            user=self.user1,
-            content="测试评论",
-            review_status="approved"
+            post=self.post, user=self.user1, content="测试评论", review_status="approved"
         )
         self.CommentLike = CommentLike
 
     def test_create_comment_like(self):
         """测试创建评论点赞"""
-        like = self.CommentLike.objects.create(
-            user=self.user1,
-            comment=self.comment
-        )
+        like = self.CommentLike.objects.create(user=self.user1, comment=self.comment)
         assert like.user == self.user1
         assert like.comment == self.comment
         assert str(like) == "user1 点赞了评论"
@@ -432,28 +311,17 @@ class TestCommentLike:
     def test_unique_together_constraint(self):
         """测试唯一约束（同一用户不能重复点赞）"""
         # 第一次点赞
-        self.CommentLike.objects.create(
-            user=self.user1,
-            comment=self.comment
-        )
+        self.CommentLike.objects.create(user=self.user1, comment=self.comment)
         # 尝试重复点赞应该抛出 IntegrityError
         from django.db import IntegrityError
+
         with pytest.raises(IntegrityError):
-            self.CommentLike.objects.create(
-                user=self.user1,
-                comment=self.comment
-            )
+            self.CommentLike.objects.create(user=self.user1, comment=self.comment)
 
     def test_multiple_users_can_like(self):
         """测试多个用户可以点赞同一评论"""
-        self.CommentLike.objects.create(
-            user=self.user1,
-            comment=self.comment
-        )
-        self.CommentLike.objects.create(
-            user=self.user2,
-            comment=self.comment
-        )
+        self.CommentLike.objects.create(user=self.user1, comment=self.comment)
+        self.CommentLike.objects.create(user=self.user2, comment=self.comment)
         assert self.CommentLike.objects.filter(comment=self.comment).count() == 2
 
     def test_update_like_count(self):
@@ -462,28 +330,19 @@ class TestCommentLike:
         assert self.comment.like_count == 0
 
         # 添加点赞
-        self.CommentLike.objects.create(
-            user=self.user1,
-            comment=self.comment
-        )
+        self.CommentLike.objects.create(user=self.user1, comment=self.comment)
         self.comment.update_like_count()
         assert self.comment.like_count == 1
 
         # 再添加一个点赞
-        self.CommentLike.objects.create(
-            user=self.user2,
-            comment=self.comment
-        )
+        self.CommentLike.objects.create(user=self.user2, comment=self.comment)
         self.comment.update_like_count()
         assert self.comment.like_count == 2
 
     def test_delete_like_updates_count(self):
         """测试删除点赞更新点赞数"""
         # 添加点赞
-        like = self.CommentLike.objects.create(
-            user=self.user1,
-            comment=self.comment
-        )
+        like = self.CommentLike.objects.create(user=self.user1, comment=self.comment)
         self.comment.update_like_count()
         assert self.comment.like_count == 1
 

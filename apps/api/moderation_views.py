@@ -228,7 +228,7 @@ def _collect_metrics(minutes: int = 10):
             keys = list(cache.iter_keys(pattern)) if hasattr(cache, "iter_keys") else []
             for key in keys:
                 # key: moderation:metric:user:{user_id}:{bucket}
-                s = key.decode() if isinstance(key, bytes) else str(key)
+                s = key.decode() if isinstance(key, bytes) else str(key)  # type: ignore[attr-defined]
                 parts = s.split(":")
                 if len(parts) >= 5:
                     uid = parts[3]

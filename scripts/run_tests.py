@@ -17,7 +17,7 @@ from pathlib import Path
 
 def run_command(cmd, cwd=None):
     """运行命令并返回结果"""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"运行: {' '.join(cmd)}")
     print("=" * 60)
 

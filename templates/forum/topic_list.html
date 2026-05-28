@@ -10,7 +10,7 @@
         {% endif %}
         <a href="{% url 'forum:topic_create' board.slug %}" class="btn btn-primary">发布主题</a>
     </div>
-    
+
     <div class="card">
         <div class="card-body">
             {% if topics %}
@@ -46,7 +46,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-                
+
                 <!-- 分页 -->
                 {% if is_paginated %}
                     <nav aria-label="Page navigation">
@@ -64,7 +64,7 @@
                                     </a>
                                 </li>
                             {% endif %}
-                            
+
                             {% for i in paginator.page_range %}
                                 {% if page_obj.number == i %}
                                     <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
@@ -72,7 +72,7 @@
                                     <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
                                 {% endif %}
                             {% endfor %}
-                            
+
                             {% if page_obj.has_next %}
                                 <li class="page-item">
                                     <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">

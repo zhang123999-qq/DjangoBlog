@@ -3,9 +3,10 @@
 """
 
 from django.contrib import admin
-from .admin_site import admin_site
 
 from apps.tools.models import ToolConfig
+
+from .admin_site import admin_site
 
 
 @admin.register(ToolConfig, site=admin_site)

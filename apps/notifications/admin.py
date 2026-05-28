@@ -3,7 +3,9 @@
 """
 
 from django.contrib import admin
+
 from apps.core.admin.admin_site import admin_site
+
 from .models import Notification
 
 

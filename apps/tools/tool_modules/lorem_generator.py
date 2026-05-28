@@ -3,10 +3,13 @@ Lorem Ipsum Generator Tool
 Generate placeholder text for various languages
 """
 
-from ..categories import ToolCategory
-from django import forms
 import random
+
+from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class LoremForm(forms.Form):

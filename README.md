@@ -14,7 +14,7 @@
 ![Deploy](https://img.shields.io/badge/Deploy-ready-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/zhang123999-qq/DjangoBlog?style=social)
 
-一个面向生产部署的 Django 综合站点：**博客 + 论坛 + 工具箱 + API**。  
+一个面向生产部署的 Django 综合站点：**博客 + 论坛 + 工具箱 + API**。
 强调「可用性、可维护性、可部署性」，适合个人站点、中小团队内容平台与教学演示。
 
 **🔒 安全审计通过** | **📊 代码质量 9.5/10** | **🚀 生产就绪**
@@ -177,7 +177,7 @@ DjangoBlog/
 
 ### 一键自动部署（推荐）
 
-> **支持环境**：阿里云、腾讯云、华为云、飞牛 NAS 等  
+> **支持环境**：阿里云、腾讯云、华为云、飞牛 NAS 等
 > **前置条件**：已安装 Docker 和 Docker Compose
 
 ```bash

@@ -2,7 +2,7 @@
 
 > **推荐**：如果使用 Docker 部署，请参考项目根目录 [README.md](../README.md) 的「快速开始」章节。
 >
-> 本教程适用于：不使用 Docker，直接在服务器上通过 Python + Gunicorn + Nginx 部署。  
+> 本教程适用于：不使用 Docker，直接在服务器上通过 Python + Gunicorn + Nginx 部署。
 > 本教程按"能跑通、可排错、可维护"的顺序编写。
 
 ---

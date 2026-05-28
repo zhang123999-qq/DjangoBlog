@@ -1,7 +1,9 @@
-from ..categories import ToolCategory
-from django import forms
 import base64
+
+from django import forms
+
 from ..base_tool import BaseTool
+from ..categories import ToolCategory
 
 
 class Base64CodecForm(forms.Form):

@@ -1,8 +1,10 @@
-from ..categories import ToolCategory
-from django import forms
 import secrets
 import string
+
+from django import forms
+
 from ..base_tool import BaseTool
+from ..categories import ToolCategory
 
 
 class PasswordGenForm(forms.Form):

@@ -4,18 +4,20 @@ import logging
 import os
 import re
 import time
-from django.shortcuts import render, redirect
-from django.db.models import Q, Sum
-from django.http import JsonResponse, HttpResponseForbidden
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.conf import settings
-from django.db import connection
-from django.db.utils import DatabaseError, OperationalError
 from django.core.cache import cache
-from apps.blog.models import Post, Comment
-from apps.forum.models import Topic
+from django.db import connection
+from django.db.models import Q, Sum
+from django.db.utils import DatabaseError, OperationalError
+from django.http import HttpResponseForbidden, JsonResponse
+from django.shortcuts import redirect, render
+
 from apps.accounts.models import User
+from apps.blog.models import Comment, Post
+from apps.forum.models import Topic
 from apps.tools.registry import registry as tool_registry
 
 logger = logging.getLogger(__name__)
@@ -181,7 +183,9 @@ def _sanitize_search_query(query):
     """清理搜索查询，移除潜在的危险字符"""
     sanitized = query
     sanitized = re.sub(r"(;|--|/\*|\*/)", "", sanitized)
-    sanitized = re.sub(r"\b(xp_|exec|execute|select|drop|delete|update|insert|table|users)\b", "", sanitized, flags=re.I)
+    sanitized = re.sub(
+        r"\b(xp_|exec|execute|select|drop|delete|update|insert|table|users)\b", "", sanitized, flags=re.I
+    )
     sanitized = re.sub(r"<\s*/?\s*script[^>]*>", "", sanitized, flags=re.I)
     sanitized = re.sub(r"(javascript:|onload=|onerror=|[<>])", "", sanitized, flags=re.I)
     return " ".join(sanitized.split())

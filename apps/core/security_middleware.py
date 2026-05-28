@@ -4,6 +4,7 @@
 """
 
 import logging
+
 from django.http import HttpResponseNotFound
 
 logger = logging.getLogger("security")

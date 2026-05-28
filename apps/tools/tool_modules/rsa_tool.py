@@ -2,9 +2,11 @@
 RSA 加密解密工具
 """
 
-from ..categories import ToolCategory
 from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class RSAForm(forms.Form):
@@ -41,9 +43,10 @@ class RSATool(BaseTool):
 
     def handle(self, request, form):
         try:
-            from cryptography.hazmat.primitives import serialization, hashes
-            from cryptography.hazmat.primitives.asymmetric import padding
             import base64
+
+            from cryptography.hazmat.primitives import hashes, serialization
+            from cryptography.hazmat.primitives.asymmetric import padding
         except ImportError:
             return {"error": "请安装 cryptography: pip install cryptography"}
 

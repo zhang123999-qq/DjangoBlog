@@ -2,11 +2,13 @@
 Markdown编辑器工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
-import markdown
 import bleach
+import markdown
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class MarkdownEditorForm(forms.Form):

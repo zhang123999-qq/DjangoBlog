@@ -1,6 +1,7 @@
-from django.core.management.base import BaseCommand
 from django.conf import settings
-from moderation.baidu_moderation import moderate_text, get_baidu_client
+from django.core.management.base import BaseCommand
+
+from moderation.baidu_moderation import get_baidu_client, moderate_text
 
 
 class Command(BaseCommand):

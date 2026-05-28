@@ -2,9 +2,11 @@
 Cron表达式解析工具
 """
 
-from ..categories import ToolCategory
 from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class CronParserForm(forms.Form):
@@ -31,8 +33,9 @@ class CronParserTool(BaseTool):
         cron_expression = form.cleaned_data["cron_expression"]
 
         try:
-            from croniter import croniter
             import datetime
+
+            from croniter import croniter
         except ImportError:
             return {"error": "请安装 croniter: pip install croniter"}
 

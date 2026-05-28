@@ -3,9 +3,12 @@
 """
 
 import re
-from ..categories import ToolCategory
+
 from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class RegexForm(forms.Form):

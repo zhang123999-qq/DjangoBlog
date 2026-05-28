@@ -142,11 +142,13 @@ def migrate():
 
     # 5. 文章
     print("迁移文章...")
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         SELECT id, title, slug, summary, content, status, views_count, published_at,
                created_at, updated_at, author_id, category_id, allow_comments
         FROM {post_table}
-    """)
+    """
+    )
     posts = {}
     for p in cursor.fetchall():
         post = Post.objects.update_or_create(
@@ -178,11 +180,13 @@ def migrate():
 
     # 7. 评论
     print("迁移评论...")
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         SELECT id, post_id, user_id, name, email, content, is_approved, review_status,
                ip_address, user_agent, like_count, created_at, updated_at
         FROM {comment_table}
-    """)
+    """
+    )
     for c in cursor.fetchall():
         Comment.objects.update_or_create(
             id=c[0],
@@ -204,11 +208,13 @@ def migrate():
 
     # 8. 版块
     print("迁移版块...")
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         SELECT id, name, slug, description, topic_count, reply_count,
                last_post_at, created_at, updated_at
         FROM {board_table}
-    """)
+    """
+    )
     for b in cursor.fetchall():
         Board.objects.update_or_create(
             id=b[0],
@@ -226,11 +232,13 @@ def migrate():
 
     # 9. 主题
     print("迁移主题...")
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         SELECT id, title, content, views_count, reply_count, is_pinned, is_locked,
                last_reply_at, created_at, updated_at, author_id, board_id, review_status
         FROM {topic_table}
-    """)
+    """
+    )
     for t in cursor.fetchall():
         Topic.objects.update_or_create(
             id=t[0],
@@ -252,11 +260,13 @@ def migrate():
 
     # 10. 回复
     print("迁移回复...")
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         SELECT id, content, like_count, is_deleted, created_at, updated_at,
                author_id, topic_id, review_status
         FROM {reply_table}
-    """)
+    """
+    )
     for r in cursor.fetchall():
         Reply.objects.update_or_create(
             id=r[0],

@@ -2,12 +2,15 @@
 邮箱格式验证工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
-from apps.tools.base_tool import BaseTool
 import re
+
+from django import forms
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class EmailValidatorForm(forms.Form):

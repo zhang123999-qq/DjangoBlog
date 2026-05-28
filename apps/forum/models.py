@@ -1,7 +1,8 @@
-from django.db import models
 from django.conf import settings
-from django.urls import reverse
+from django.db import models
 from django.db.models import F
+from django.urls import reverse
+
 from apps.core.utils import generate_slug
 
 

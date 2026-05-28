@@ -11,10 +11,10 @@ DjangoBlog 快速启动脚本
 """
 
 import os
-import sys
-import subprocess
 import platform
 import socket
+import subprocess
+import sys
 from pathlib import Path
 
 # ============================================
@@ -119,7 +119,7 @@ def get_local_ip() -> str:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
+        ip = str(s.getsockname()[0])
         s.close()
         return ip
     except Exception:
@@ -141,9 +141,9 @@ def check_server_running(port: int) -> bool:
 def print_banner():
     """打印启动横幅"""
     safe_print("")
-    safe_print(f"{Colors.OKCYAN}{Colors.BOLD}{'='*55}{Colors.ENDC}")
+    safe_print(f"{Colors.OKCYAN}{Colors.BOLD}{'=' * 55}{Colors.ENDC}")
     safe_print(f"{Colors.OKCYAN}{Colors.BOLD}{'DjangoBlog 开发服务器':^55}{Colors.ENDC}")
-    safe_print(f"{Colors.OKCYAN}{Colors.BOLD}{'='*55}{Colors.ENDC}")
+    safe_print(f"{Colors.OKCYAN}{Colors.BOLD}{'=' * 55}{Colors.ENDC}")
     safe_print("")
 
 

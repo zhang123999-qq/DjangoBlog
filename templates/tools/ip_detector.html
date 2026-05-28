@@ -50,7 +50,7 @@
                         <h5 class="mb-3">
                             <i class="bi bi-info-circle me-2"></i>IP 详细信息
                         </h5>
-                        
+
                         <div class="row g-3">
                             <!-- 位置信息 -->
                             <div class="col-md-6">
@@ -64,8 +64,8 @@
                                                 <td class="text-muted u-cell-w-80">国家</td>
                                                 <td>
                                                     {% if result.ip_info.country_code %}
-                                                    <img src="https://flagcdn.com/24x18/{{ result.ip_info.country_code|lower }}.png" 
-                                                         alt="{{ result.ip_info.country }}" 
+                                                    <img src="https://flagcdn.com/24x18/{{ result.ip_info.country_code|lower }}.png"
+                                                         alt="{{ result.ip_info.country }}"
                                                          class="me-2 u-va-middle">
                                                     {% endif %}
                                                     {{ result.ip_info.country|default:"-" }}
@@ -132,8 +132,8 @@
                                             <span class="badge bg-primary me-3">
                                                 经度: {{ result.ip_info.lon }}
                                             </span>
-                                            <a href="https://www.google.com/maps?q={{ result.ip_info.lat }},{{ result.ip_info.lon }}" 
-                                               target="_blank" 
+                                            <a href="https://www.google.com/maps?q={{ result.ip_info.lat }},{{ result.ip_info.lon }}"
+                                               target="_blank"
                                                class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-map me-1"></i>在地图中查看
                                             </a>

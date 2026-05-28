@@ -23,7 +23,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- 分类列表 -->
         <div class="card shadow-sm">
             <div class="card-header">
@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- 文章列表 -->
     <div class="col-lg-9">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -48,7 +48,7 @@
                 <i class="bi bi-plus-lg me-1"></i>创建文章
             </a>
         </div>
-        
+
         {% if posts %}
         <div class="list-group shadow-sm">
             {% for post in posts %}
@@ -88,7 +88,7 @@
             </div>
             {% endfor %}
         </div>
-        
+
         <!-- 分页 -->
         {% if posts.has_other_pages %}
         <nav class="mt-4">
@@ -98,13 +98,13 @@
                     <a class="page-link" href="?page={{ posts.previous_page_number }}">上一页</a>
                 </li>
                 {% endif %}
-                
+
                 {% for num in posts.paginator.page_range %}
                 <li class="page-item {% if posts.number == num %}active{% endif %}">
                     <a class="page-link" href="?page={{ num }}">{{ num }}</a>
                 </li>
                 {% endfor %}
-                
+
                 {% if posts.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ posts.next_page_number }}">下一页</a>
@@ -113,7 +113,7 @@
             </ul>
         </nav>
         {% endif %}
-        
+
         {% else %}
         <div class="text-center py-5">
             <i class="bi bi-file-earmark-text display-1 text-muted"></i>

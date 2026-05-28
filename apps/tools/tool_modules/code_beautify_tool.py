@@ -3,11 +3,14 @@ Code Beautifier / Formatter Tool
 Format and beautify code (JSON, CSS, HTML, SQL)
 """
 
-from ..categories import ToolCategory
-from django import forms
 import json
 import re
+
+from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class CodeBeautifyForm(forms.Form):

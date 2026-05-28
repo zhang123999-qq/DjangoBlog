@@ -8,13 +8,14 @@
 """
 
 import logging
-from typing import Tuple, Dict, Any, Optional
+from typing import Any, Dict, Optional, Tuple
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from .utils import check_sensitive_content
 from .ai_service import get_moderation_service
 from .reputation import UserReputation
+from .utils import check_sensitive_content
 
 User = get_user_model()
 logger = logging.getLogger(__name__)

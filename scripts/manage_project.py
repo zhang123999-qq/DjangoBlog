@@ -5,10 +5,10 @@ Django Blog 项目管理脚本
 用法: python manage_project.py [命令]
 """
 
-import sys
-import subprocess
-import shutil
 import shlex
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 # 项目根目录（scripts 的父目录）
@@ -166,7 +166,8 @@ def collectstatic():
 
 def show_help():
     """显示帮助"""
-    print("""
+    print(
+        """
 Django Blog 项目管理脚本
 用法: python scripts/manage_project.py [命令]
 
@@ -187,7 +188,8 @@ Django Blog 项目管理脚本
 示例:
   python scripts/manage_project.py clean
   python scripts/manage_project.py test
-""")
+"""
+    )
 
 
 if __name__ == "__main__":

@@ -3,16 +3,17 @@
 """
 
 from django.contrib import admin
-from .admin_site import admin_site
 
 from moderation.models import (
-    SensitiveWord,
-    ModerationLog,
     ModerationAdmin,
+    ModerationLog,
     ModerationReminder,
-    UserReputation,
     ReputationLog,
+    SensitiveWord,
+    UserReputation,
 )
+
+from .admin_site import admin_site
 
 
 @admin.register(SensitiveWord, site=admin_site)
@@ -30,13 +31,13 @@ class SensitiveWordAdmin(admin.ModelAdmin):
         count = queryset.update(is_active=True)
         self.message_user(request, f"成功启用 {count} 个敏感词")
 
-    activate_words.short_description = "启用所选敏感词"
+    activate_words.short_description = "启用所选敏感词"  # type: ignore[attr-defined]
 
     def deactivate_words(self, request, queryset):
         count = queryset.update(is_active=False)
         self.message_user(request, f"成功禁用 {count} 个敏感词")
 
-    deactivate_words.short_description = "禁用所选敏感词"
+    deactivate_words.short_description = "禁用所选敏感词"  # type: ignore[attr-defined]
 
 
 @admin.register(ModerationAdmin, site=admin_site)
@@ -67,7 +68,7 @@ class ModerationReminderAdmin(admin.ModelAdmin):
         count = queryset.filter(is_processed=False).update(is_processed=True, processed_at=timezone.now())
         self.message_user(request, f"已标记 {count} 条提醒为已处理")
 
-    mark_as_processed.short_description = "标记为已处理"
+    mark_as_processed.short_description = "标记为已处理"  # type: ignore[attr-defined]
 
 
 @admin.register(ModerationLog, site=admin_site)
@@ -98,28 +99,28 @@ class UserReputationAdmin(admin.ModelAdmin):
     def level_display(self, obj):
         return obj.get_level_display()
 
-    level_display.short_description = "信誉等级"
+    level_display.short_description = "信誉等级"  # type: ignore[attr-defined]
 
     def add_bonus(self, request, queryset):
         for rep in queryset:
             rep.update_score(5, "管理员奖励")
         self.message_user(request, f"已为 {queryset.count()} 个用户奖励 5 分")
 
-    add_bonus.short_description = "奖励 5 分"
+    add_bonus.short_description = "奖励 5 分"  # type: ignore[attr-defined]
 
     def add_penalty(self, request, queryset):
         for rep in queryset:
             rep.update_score(-5, "管理员惩罚")
         self.message_user(request, f"已对 {queryset.count()} 个用户扣 5 分")
 
-    add_penalty.short_description = "惩罚 5 分"
+    add_penalty.short_description = "惩罚 5 分"  # type: ignore[attr-defined]
 
     def reset_score(self, request, queryset):
         for rep in queryset:
             rep.update_score(50 - rep.score, "管理员重置")
         self.message_user(request, f"已重置 {queryset.count()} 个用户的信誉分")
 
-    reset_score.short_description = "重置为 50 分"
+    reset_score.short_description = "重置为 50 分"  # type: ignore[attr-defined]
 
 
 @admin.register(ReputationLog, site=admin_site)

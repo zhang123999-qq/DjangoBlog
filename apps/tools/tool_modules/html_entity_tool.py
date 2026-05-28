@@ -2,10 +2,13 @@
 HTML实体编码/解码工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import html
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class HTMLEntityForm(forms.Form):

@@ -1,9 +1,11 @@
 import importlib
 import logging
 import os
+
 from django.core.cache import cache
+
 from .base_tool import BaseTool
-from .categories import TOOL_CATEGORIES, CATEGORY_ORDER
+from .categories import CATEGORY_ORDER, TOOL_CATEGORIES
 
 logger = logging.getLogger(__name__)
 

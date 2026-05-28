@@ -117,7 +117,7 @@ jobs:
           uv run flake8 apps/ config/ \
             --max-line-length=120 \
             --exclude=__pycache__,migrations,.venv \
-            --extend-ignore=E501,W503,W293,W391,F401,F841,E402,F541,E201,E128,W292
+            --extend-ignore=E501,W503,W293,W391,F401,F841,E402,F541,E201,E128,W292,E203
 
       - name: Mypy (scoped)
         run: |

@@ -2,10 +2,13 @@
 密码强度检测工具
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import re
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class PasswordStrengthForm(forms.Form):
@@ -120,7 +123,7 @@ class PasswordStrengthTool(BaseTool):
         password_lower = password.lower()
         for seq in sequences:
             for i in range(len(seq) - 2):
-                if seq[i: i + 3] in password_lower or seq[i: i + 3][::-1] in password_lower:
+                if seq[i : i + 3] in password_lower or seq[i : i + 3][::-1] in password_lower:
                     return True
         return False
 

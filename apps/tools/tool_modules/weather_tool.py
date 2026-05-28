@@ -2,11 +2,13 @@
 天气查询工具（支持多个 API 源作为 fallback）
 """
 
-from ..categories import ToolCategory
+import requests
 from django import forms
 from django.conf import settings
+
 from apps.tools.base_tool import BaseTool
-import requests
+
+from ..categories import ToolCategory
 
 
 class WeatherForm(forms.Form):

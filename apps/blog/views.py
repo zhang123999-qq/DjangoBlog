@@ -1,21 +1,23 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.http import JsonResponse
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Count, Prefetch
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.core.cache import cache
 from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_POST
-from moderation.services import smart_moderate_instance
-from apps.core.rate_limit import rate_limit, rate_limit_by_user
 from django.views.decorators.cache import cache_page
-from .models import Post, Category, Tag, Comment, CommentLike
+from django.views.decorators.http import require_POST
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from apps.core.rate_limit import rate_limit, rate_limit_by_user
+from moderation.services import smart_moderate_instance
+
 from .forms import CommentForm, PostForm
+from .models import Category, Comment, CommentLike, Post, Tag
 
 # 限流常量
 COMMENT_RATE_LIMIT = "10/m"  # 每分钟最多10条评论
@@ -352,7 +354,11 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 @login_required
 def post_draft_list(request):
     """我的草稿列表"""
-    drafts = Post.objects.filter(author=request.user, status="draft").select_related("author", "category").order_by("-updated_at")
+    drafts = (
+        Post.objects.filter(author=request.user, status="draft")
+        .select_related("author", "category")
+        .order_by("-updated_at")
+    )
     categories, tags = get_categories_and_tags()
 
     paginator = Paginator(drafts, 20)

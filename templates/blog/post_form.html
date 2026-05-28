@@ -15,7 +15,7 @@
             <div class="card-body">
                 <form method="post" id="post-form">
                     {% csrf_token %}
-                    
+
                     <!-- 标题 -->
                     <div class="mb-4">
                         <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
@@ -28,7 +28,7 @@
                             </div>
                         {% endif %}
                     </div>
-                    
+
                     <!-- 摘要 -->
                     <div class="mb-4">
                         <label for="{{ form.summary.id_for_label }}" class="form-label fw-bold">
@@ -37,7 +37,7 @@
                         {{ form.summary }}
                         <small class="text-muted">用于SEO和文章列表显示，留空将自动截取内容前200字</small>
                     </div>
-                    
+
                     <!-- 内容编辑器 -->
                     <div class="mb-4">
                         <label for="{{ form.content.id_for_label }}" class="form-label fw-bold">
@@ -50,7 +50,7 @@
                             </div>
                         {% endif %}
                     </div>
-                    
+
                     <!-- 分类和标签 -->
                     <div class="row mb-4">
                         <div class="col-md-6">
@@ -67,7 +67,7 @@
                             <small class="text-muted">按住 Ctrl 键可多选</small>
                         </div>
                     </div>
-                    
+
                     <!-- 状态和设置 -->
                     <div class="row mb-4">
                         <div class="col-md-6">
@@ -85,7 +85,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- 操作按钮 -->
                     <div class="d-flex justify-content-between align-items-center border-top pt-4">
                         <a href="{% url 'blog:post_list' %}" class="btn btn-outline-secondary">
@@ -103,7 +103,7 @@
                 </form>
             </div>
         </div>
-        
+
         <!-- 编辑器提示 -->
         <div class="card mt-4 shadow-sm">
             <div class="card-body">

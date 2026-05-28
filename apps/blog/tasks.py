@@ -7,6 +7,7 @@
 """
 
 import logging
+
 from celery import shared_task
 from django.core.cache import cache
 
@@ -50,9 +51,11 @@ def update_hot_posts():
 
     定时任务：每小时执行一次
     """
-    from apps.blog.models import Post
-    from django.utils import timezone
     from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.blog.models import Post
 
     try:
         # 获取最近 7 天的热门文章
@@ -94,9 +97,11 @@ def cleanup_old_drafts(days=90):
 
     定时任务：每周执行一次
     """
-    from apps.blog.models import Post
-    from django.utils import timezone
     from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.blog.models import Post
 
     try:
         threshold = timezone.now() - timedelta(days=days)

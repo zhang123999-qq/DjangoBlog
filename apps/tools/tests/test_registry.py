@@ -7,6 +7,7 @@
 
 import pytest
 from django.core.cache import cache
+
 from apps.tools.registry import ToolRegistry, registry
 
 
@@ -18,6 +19,7 @@ class TestToolRegistry:
         """测试注册表单例"""
         # 全局注册表应该是单例
         from apps.tools.registry import registry as global_registry
+
         assert global_registry is registry
 
     def test_registry_discover_tools(self):
@@ -33,13 +35,13 @@ class TestToolRegistry:
     def test_registry_get_tool(self):
         """测试获取工具"""
         # 获取一个已知的工具
-        tool = registry.get_tool('hash')
+        tool = registry.get_tool("hash")
         assert tool is not None
-        assert tool.slug == 'hash'
+        assert tool.slug == "hash"
 
     def test_registry_get_nonexistent_tool(self):
         """测试获取不存在的工具"""
-        tool = registry.get_tool('nonexistent-tool')
+        tool = registry.get_tool("nonexistent-tool")
         assert tool is None
 
     def test_registry_get_all_tools(self):
@@ -48,15 +50,15 @@ class TestToolRegistry:
         assert len(tools) > 0
         # 应该包含一些已知工具
         tool_slugs = [t.slug for t in tools]
-        assert 'hash' in tool_slugs
-        assert 'base64' in tool_slugs or 'base64-codec' in tool_slugs
+        assert "hash" in tool_slugs
+        assert "base64" in tool_slugs or "base64-codec" in tool_slugs
 
     def test_registry_get_tools_by_category(self):
         """测试按分类获取工具"""
         categorized = registry.get_tools_by_category()
         assert len(categorized) > 0
         # 应该有一些分类
-        assert 'encrypt' in categorized or 'ENCRYPT' in str(categorized)
+        assert "encrypt" in categorized or "ENCRYPT" in str(categorized)
 
     def test_registry_get_categories_with_tools(self):
         """测试获取包含工具的分类"""
@@ -64,11 +66,11 @@ class TestToolRegistry:
         assert len(categories) > 0
         # 每个分类应该有必要的字段
         for category in categories:
-            assert 'key' in category
-            assert 'name' in category
-            assert 'tools' in category
-            assert 'count' in category
-            assert category['count'] > 0
+            assert "key" in category
+            assert "name" in category
+            assert "tools" in category
+            assert "count" in category
+            assert category["count"] > 0
 
     def test_registry_caching(self):
         """测试注册表缓存"""
@@ -103,15 +105,15 @@ class TestToolRegistry:
     def test_registry_clear_cache(self):
         """测试清除缓存"""
         # 设置一些缓存
-        cache.set('tools:all_tools', 'test_value', 300)
-        cache.set('tools:by_category', 'test_value', 300)
+        cache.set("tools:all_tools", "test_value", 300)
+        cache.set("tools:by_category", "test_value", 300)
 
         # 清除缓存
         registry.clear_cache()
 
         # 验证缓存已被清除
-        assert cache.get('tools:all_tools') is None
-        assert cache.get('tools:by_category') is None
+        assert cache.get("tools:all_tools") is None
+        assert cache.get("tools:by_category") is None
 
 
 @pytest.mark.django_db
@@ -126,11 +128,11 @@ class TestToolRegistryIntegration:
 
         # 检查每个工具都有必要的属性
         for tool in tools:
-            assert hasattr(tool, 'name')
-            assert hasattr(tool, 'slug')
-            assert hasattr(tool, 'description')
-            assert hasattr(tool, 'category')
-            assert hasattr(tool, 'handle')
+            assert hasattr(tool, "name")
+            assert hasattr(tool, "slug")
+            assert hasattr(tool, "description")
+            assert hasattr(tool, "category")
+            assert hasattr(tool, "handle")
 
     def test_registry_tool_categories(self):
         """测试工具分类"""
@@ -140,14 +142,14 @@ class TestToolRegistryIntegration:
 
         # 检查分类结构
         for category in categories:
-            assert 'key' in category
-            assert 'name' in category
-            assert 'icon' in category
-            assert 'color' in category
-            assert 'description' in category
-            assert 'tools' in category
-            assert 'count' in category
-            assert category['count'] > 0
+            assert "key" in category
+            assert "name" in category
+            assert "icon" in category
+            assert "color" in category
+            assert "description" in category
+            assert "tools" in category
+            assert "count" in category
+            assert category["count"] > 0
 
     def test_registry_tool_slug_uniqueness(self):
         """测试工具 slug 唯一性"""
@@ -159,21 +161,21 @@ class TestToolRegistryIntegration:
     def test_registry_tool_handle_method(self):
         """测试工具 handle 方法"""
         # 获取一个工具
-        tool = registry.get_tool('hash')
+        tool = registry.get_tool("hash")
         assert tool is not None
 
         # 检查 handle 方法存在
-        assert hasattr(tool, 'handle')
+        assert hasattr(tool, "handle")
         assert callable(tool.handle)
 
     def test_registry_tool_form_class(self):
         """测试工具表单类"""
         # 获取一个工具
-        tool = registry.get_tool('hash')
+        tool = registry.get_tool("hash")
         assert tool is not None
 
         # 检查表单类存在
-        assert hasattr(tool, 'form_class')
+        assert hasattr(tool, "form_class")
         if tool.form_class:
             # 如果有表单类，应该可以实例化
             form = tool.get_form()

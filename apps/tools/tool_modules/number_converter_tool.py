@@ -3,10 +3,13 @@ Number Converter Tool
 Convert between different number formats and bases
 """
 
-from ..categories import ToolCategory
-from django import forms
 import struct
+
+from django import forms
+
 from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class NumberConverterForm(forms.Form):
@@ -97,7 +100,7 @@ def format_with_separators(number, base, separator="_", group_size=None):
         s = "0" * (group_size - len(s) % group_size) + s
 
     # Add separators
-    groups = [s[i: i + group_size] for i in range(0, len(s), group_size)]
+    groups = [s[i : i + group_size] for i in range(0, len(s), group_size)]
     return separator.join(groups)
 
 

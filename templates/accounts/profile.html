@@ -49,7 +49,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- 待审核内容 -->
             <div class="card mt-4">
                 <div class="card-header bg-primary text-white">
@@ -71,7 +71,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     <!-- 待审核回复 -->
                     {% if pending_replies %}
                         <div class="mb-4">
@@ -87,7 +87,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     <!-- 待审核评论 -->
                     {% if pending_comments %}
                         <div class="mb-4">
@@ -103,13 +103,13 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if not pending_topics and not pending_replies and not pending_comments %}
                         <p class="text-muted">暂无待审核内容</p>
                     {% endif %}
                 </div>
             </div>
-            
+
             <!-- 已拒绝内容 -->
             <div class="card mt-4">
                 <div class="card-header bg-danger text-white">
@@ -134,7 +134,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     <!-- 已拒绝回复 -->
                     {% if rejected_replies %}
                         <div class="mb-4">
@@ -153,7 +153,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     <!-- 已拒绝评论 -->
                     {% if rejected_comments %}
                         <div class="mb-4">
@@ -172,7 +172,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if not rejected_topics and not rejected_replies and not rejected_comments %}
                         <p class="text-muted">暂无已拒绝内容</p>
                     {% endif %}

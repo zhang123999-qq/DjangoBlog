@@ -3,12 +3,13 @@ NAT 检测工具 - 检测网络地址转换状态
 """
 
 import socket
+
 import requests
+from django import forms
 from requests.exceptions import RequestException
 
-from ..categories import ToolCategory
-from django import forms
 from ..base_tool import BaseTool
+from ..categories import ToolCategory
 
 
 class NATDetectorForm(forms.Form):

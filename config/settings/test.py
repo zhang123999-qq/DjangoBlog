@@ -56,7 +56,7 @@ if use_redis:
                     "max_connections": 20,
                     "timeout": 10,
                 },
-            }
+            },
         }
     }
     SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"

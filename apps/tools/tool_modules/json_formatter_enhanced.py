@@ -2,10 +2,13 @@
 增强版 JSON 格式化工具（使用 Monaco Editor）
 """
 
-from ..categories import ToolCategory
-from django import forms
-from apps.tools.base_tool import BaseTool
 import json
+
+from django import forms
+
+from apps.tools.base_tool import BaseTool
+
+from ..categories import ToolCategory
 
 
 class JsonFormatterEnhancedForm(forms.Form):

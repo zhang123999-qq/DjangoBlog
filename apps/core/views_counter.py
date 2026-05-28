@@ -23,10 +23,10 @@ import time
 from collections import defaultdict
 from typing import Dict, Optional, Set
 
+from django.conf import settings
 from django.core.cache import cache
 from django.db.models import F
 from django.http import HttpRequest
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -241,13 +241,13 @@ class ViewsCounter:
         """获取客户端 IP"""
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            return x_forwarded_for.split(",")[0].strip()
+            return str(x_forwarded_for).split(",")[0].strip()
 
         x_real_ip = request.META.get("HTTP_X_REAL_IP")
         if x_real_ip:
-            return x_real_ip
+            return str(x_real_ip)
 
-        return request.META.get("REMOTE_ADDR", "0.0.0.0")
+        return str(request.META.get("REMOTE_ADDR", "0.0.0.0"))  # nosec B104
 
     @classmethod
     def get_views(cls, model_type: str, object_id: int, include_buffer: bool = True) -> int:
@@ -275,7 +275,7 @@ class ViewsCounter:
         else:
             buffer_views = 0
 
-        return db_views + views + buffer_views
+        return db_views + int(views) + buffer_views
 
     @classmethod
     def _get_db_views(cls, model_type: str, object_id: int) -> int:
@@ -310,7 +310,7 @@ class ViewsCounter:
         Returns:
             Dict: 同步结果
         """
-        result = {"synced": 0, "errors": 0}
+        result: Dict[str, int] = {"synced": 0, "errors": 0}
 
         # 先刷新缓冲区
         cls._buffer.force_flush()
@@ -336,8 +336,8 @@ class ViewsCounter:
                     if len(parts) != 3:
                         continue
 
-                    _, mt, obj_id = parts
-                    obj_id = int(obj_id)
+                    _, mt, obj_id_str = parts
+                    obj_id = int(obj_id_str)
 
                     if model_type and mt != model_type:
                         continue
@@ -359,7 +359,7 @@ class ViewsCounter:
 
         except Exception as e:
             logger.error(f"同步浏览量到数据库失败: {e}")
-            result["error"] = str(e)
+            result["errors"] += 1
 
         return result
 
