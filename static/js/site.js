@@ -47,13 +47,13 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.style.maxWidth = '300px';
             document.body.appendChild(toast);
         }
-        
+
         // 设置消息内容
         toast.textContent = message;
-        
+
         // 显示toast
         toast.style.display = 'block';
-        
+
         // 3秒后隐藏
         setTimeout(function() {
             toast.style.display = 'none';
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 spinner.className = 'spinner-border spinner-border-sm';
                 spinner.setAttribute('role', 'status');
                 spinner.setAttribute('aria-hidden', 'true');
-                
+
                 submitButton.textContent = '';
                 submitButton.appendChild(spinner);
                 submitButton.appendChild(document.createTextNode(' 提交中...'));

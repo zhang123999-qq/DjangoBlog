@@ -29,33 +29,33 @@
 
         return uploadClientLoadPromise;
     }
-    
+
     // 等待 DOM 加载完成
     document.addEventListener('DOMContentLoaded', function() {
         initTinyMCE();
     });
-    
+
     // 如果 DOM 已加载完成，立即初始化
     if (document.readyState !== 'loading') {
         initTinyMCE();
     }
-    
+
     function initTinyMCE() {
         // 检查 TinyMCE 是否加载
         if (typeof tinymce === 'undefined') {
             console.warn('TinyMCE not loaded');
             return;
         }
-        
+
         // 查找所有带有 data-editor="tinymce" 的 textarea
         const textareas = document.querySelectorAll('textarea[data-editor="tinymce"]');
-        
+
         textareas.forEach(function(textarea) {
             // 如果已经初始化，跳过
             if (tinymce.get(textarea.id)) {
                 return;
             }
-            
+
             // 初始化 TinyMCE
             tinymce.init({
                 target: textarea,
@@ -165,7 +165,7 @@
                 remove_script_host: false,
                 convert_urls: true,
                 content_style: `
-                    body { 
+                    body {
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                         font-size: 15px;
                         line-height: 1.6;
@@ -173,9 +173,9 @@
                         max-width: 100%;
                         padding: 10px;
                     }
-                    pre { 
-                        background: #f5f5f5; 
-                        padding: 15px; 
+                    pre {
+                        background: #f5f5f5;
+                        padding: 15px;
                         border-radius: 5px;
                         overflow-x: auto;
                     }
@@ -191,9 +191,9 @@
                         padding: 0;
                     }
                     img { max-width: 100%; height: auto; }
-                    blockquote { 
-                        border-left: 4px solid #4f46e5; 
-                        padding-left: 16px; 
+                    blockquote {
+                        border-left: 4px solid #4f46e5;
+                        padding-left: 16px;
                         margin-left: 0;
                         color: #666;
                     }
@@ -215,7 +215,7 @@
                             }
                         }
                     });
-                    
+
                     // 编辑器就绪
                     editor.on('init', function() {
                         console.log('TinyMCE initialized for:', textarea.id);
@@ -224,7 +224,7 @@
             });
         });
     }
-    
+
     // 为 Django admin 的添加/修改页面提供重新初始化功能
     window.initAdminTinyMCE = initTinyMCE;
 })();

@@ -59,14 +59,12 @@ class PostAdmin(admin.ModelAdmin):
         ("发布设置", {"fields": ("status", "allow_comments", "published_at")}),
     )
 
+    @admin.action(description="发布所选文章")
     def publish_posts(self, request, queryset):
         count = queryset.update(status="published")
         self.message_user(request, f"成功发布 {count} 篇文章")
 
-    publish_posts.short_description = "发布所选文章"  # type: ignore[attr-defined]
-
+    @admin.action(description="取消发布所选文章")
     def unpublish_posts(self, request, queryset):
         count = queryset.update(status="draft")
         self.message_user(request, f"成功取消发布 {count} 篇文章")
-
-    unpublish_posts.short_description = "取消发布所选文章"  # type: ignore[attr-defined]

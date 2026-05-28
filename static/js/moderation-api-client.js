@@ -1,6 +1,6 @@
 /**
  * Moderation API 客户端
- * 
+ *
  * 依赖: utils.js (getCookie, requestJson, resolveErrorMessage)
  * 在模板中引入顺序: utils.js → moderation-api-client.js
  */

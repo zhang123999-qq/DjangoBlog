@@ -1,10 +1,10 @@
 /**
  * 异步上传客户端（轮询 + 超时重试 + 错误码映射）
- * 
+ *
  * 适配后端接口：
  * - POST /api/upload/file/
  * - GET  /api/upload/status/{upload_id}/
- * 
+ *
  * 依赖: utils.js (getCookie, requestJson, resolveErrorMessage)
  */
 (function (global) {
@@ -52,30 +52,30 @@
   async function requestJson(url, options = {}) {
     const headers = new Headers(options.headers || {});
     headers.set('Accept', 'application/json');
-    
+
     const csrfToken = getCookie('csrftoken');
     if (csrfToken) {
       headers.set('X-CSRFToken', csrfToken);
     }
-    
+
     const response = await fetch(url, {
       credentials: 'include',
       ...options,
       headers: headers,
     });
-    
+
     let data;
     try {
       data = await response.json();
     } catch (_) {
       data = { error: '服务返回非 JSON', statusCode: response.status };
     }
-    
+
     if (!response.ok) {
       if (typeof data === 'object' && data) data.statusCode = response.status;
       throw toUploadError(data, response.status);
     }
-    
+
     return data;
   }
 

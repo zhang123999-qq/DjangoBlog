@@ -19,7 +19,7 @@ function loadMonaco() {
     if (monacoLoadPromise) {
         return monacoLoadPromise;
     }
-    
+
     monacoLoadPromise = new Promise((resolve, reject) => {
         // 动态加载 Monaco Editor
         const script = document.createElement('script');
@@ -27,9 +27,9 @@ function loadMonaco() {
         // SRI + crossOrigin 防止 CDN 被劫持
         script.crossOrigin = 'anonymous';
         script.onload = () => {
-            require.config({ 
-                paths: { 
-                    'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' 
+            require.config({
+                paths: {
+                    'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'
                 }
             });
             require(['vs/editor/editor.main'], () => {
@@ -43,7 +43,7 @@ function loadMonaco() {
         };
         document.head.appendChild(script);
     });
-    
+
     return monacoLoadPromise;
 }
 
@@ -54,7 +54,7 @@ function loadMonaco() {
  */
 async function createMonacoEditor(elementId, options = {}) {
     await loadMonaco();
-    
+
     const defaultOptions = {
         language: 'javascript',
         theme: 'vs',
@@ -73,23 +73,23 @@ async function createMonacoEditor(elementId, options = {}) {
             horizontal: 'auto'
         }
     };
-    
+
     const finalOptions = { ...defaultOptions, ...options };
-    
+
     // 检查是否深色主题
     if (document.documentElement.getAttribute('data-theme') === 'dark') {
         finalOptions.theme = 'vs-dark';
     }
-    
+
     const editor = monaco.editor.create(document.getElementById(elementId), finalOptions);
-    
+
     // 支持主题切换
     const observer = new MutationObserver(() => {
         const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs';
         monaco.editor.setTheme(theme);
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    
+
     return editor;
 }
 
@@ -152,7 +152,7 @@ function loadTinyMCE() {
     if (tinymceLoadPromise) {
         return tinymceLoadPromise;
     }
-    
+
     tinymceLoadPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js';
@@ -168,7 +168,7 @@ function loadTinyMCE() {
         };
         document.head.appendChild(script);
     });
-    
+
     return tinymceLoadPromise;
 }
 
@@ -203,7 +203,7 @@ function loadUploadAsyncClient() {
 async function createTinyMCE(elementId, options = {}) {
     await loadTinyMCE();
     await loadUploadAsyncClient();
-    
+
     const defaultOptions = {
         height: 500,
         menubar: true,
@@ -329,7 +329,7 @@ async function createTinyMCE(elementId, options = {}) {
         remove_script_host: false,
         convert_urls: true,
         content_style: `
-            body { 
+            body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
                 font-size: 16px;
                 line-height: 1.8;
@@ -341,9 +341,9 @@ async function createTinyMCE(elementId, options = {}) {
                 font-size: 14px;
             }
             img { max-width: 100%; height: auto; }
-            blockquote { 
-                border-left: 4px solid #007bff; 
-                padding-left: 16px; 
+            blockquote {
+                border-left: 4px solid #007bff;
+                padding-left: 16px;
                 margin-left: 0;
                 color: #666;
             }
@@ -364,13 +364,13 @@ async function createTinyMCE(elementId, options = {}) {
             });
         }
     };
-    
-    const finalOptions = { 
-        ...defaultOptions, 
+
+    const finalOptions = {
+        ...defaultOptions,
         target: document.getElementById(elementId),
-        ...options 
+        ...options
     };
-    
+
     const editors = await tinymce.init(finalOptions);
     return editors[0];
 }
@@ -397,7 +397,7 @@ function initEditors() {
         const value = el.dataset.value || '';
         const readOnly = el.dataset.readonly === 'true';
         const theme = el.dataset.theme || 'auto';
-        
+
         createMonacoEditor(id, {
             language: language,
             value: value,
@@ -408,25 +408,25 @@ function initEditors() {
             el.dispatchEvent(new CustomEvent('editor:ready', { detail: editor }));
         });
     });
-    
+
     // 初始化 TinyMCE
     document.querySelectorAll('[data-editor="tinymce"]').forEach(el => {
         const id = el.id;
         const height = parseInt(el.dataset.height) || 500;
         const menubar = el.dataset.menubar !== 'false';
         const simple = el.dataset.simple === 'true';
-        
+
         const options = {
             height: height,
             menubar: menubar
         };
-        
+
         if (simple) {
             options.plugins = ['lists', 'link', 'autolink'];
             options.toolbar = 'bold italic | bullist numlist | link | removeformat';
             options.menubar = false;
         }
-        
+
         createTinyMCE(id, options).then(editor => {
             el.dispatchEvent(new CustomEvent('editor:ready', { detail: editor }));
         });

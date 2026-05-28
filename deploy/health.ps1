@@ -16,11 +16,11 @@ function Err   { Write-Host "[$(Get-Date -Format 'HH:mm:ss')] ERROR: $args" -For
 
 if ($Action -eq "check") {
     Log "=== 健康检查 ==="
-    
+
     # 容器状态
     $services = @("db", "redis", "web", "celery_worker", "celery_beat", "nginx")
     $allHealthy = $true
-    
+
     foreach ($svc in $services) {
         $state = docker compose ps $svc --format json 2>$null | ConvertFrom-Json
         if ($state.State -eq "running") {
@@ -30,13 +30,13 @@ if ($Action -eq "check") {
             $allHealthy = $false
         }
     }
-    
+
     # 健康检查
     $states = docker compose ps --format "{{.Name}}: {{.Status}}" 2>$null
     Log ""
     Log "健康状态:"
     $states | ForEach-Object { Log "  $_" }
-    
+
     if ($allHealthy) {
         Log ""
         Log "所有服务运行正常!"

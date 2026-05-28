@@ -56,8 +56,8 @@ htmlcov/
 coverage.xml
 *.cover
 
-# Docker
-*.log
+# Logs
+logs/
 
 # Backup files
 *.bak

@@ -42,17 +42,15 @@ class CustomUserAdmin(UserAdmin):
         ("重要日期", {"fields": ("last_login", "date_joined"), "classes": ("collapse",)}),
     )
 
+    @admin.action(description="激活所选用户")
     def activate_users(self, request, queryset):
         count = queryset.update(is_active=True)
         self.message_user(request, f"成功激活 {count} 个用户")
 
-    activate_users.short_description = "激活所选用户"  # type: ignore[attr-defined]
-
+    @admin.action(description="禁用所选用户")
     def deactivate_users(self, request, queryset):
         count = queryset.update(is_active=False)
         self.message_user(request, f"成功禁用 {count} 个用户")
-
-    deactivate_users.short_description = "禁用所选用户"  # type: ignore[attr-defined]
 
 
 @admin.register(Profile, site=admin_site)

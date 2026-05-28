@@ -66,7 +66,7 @@ create_backup_dir() {
         mkdir -p "${BACKUP_DIR}"
         log "INFO" "创建备份目录: ${BACKUP_DIR}"
     fi
-    
+
     if [ ! -d "${LOG_DIR}" ]; then
         mkdir -p "${LOG_DIR}"
         log "INFO" "创建日志目录: ${LOG_DIR}"
@@ -77,10 +77,10 @@ create_backup_dir() {
 backup_mysql() {
     local timestamp=$(date +%Y%m%d_%H%M%S)
     local backup_file="${BACKUP_DIR}/djangoblog_${timestamp}.sql"
-    
+
     log "INFO" "开始备份数据库: ${DB_NAME}"
     log "INFO" "备份文件: ${backup_file}"
-    
+
     # 使用 Docker exec 执行 mysqldump
     docker exec "${DOCKER_CONTAINER}" mysqldump \
         -u "${DB_USER}" \
@@ -92,19 +92,19 @@ backup_mysql() {
         --triggers \
         --add-drop-database \
         --databases "${DB_NAME}" > "${backup_file}" 2>> "${LOG_FILE}"
-    
+
     if [ $? -eq 0 ]; then
         log "INFO" "数据库备份成功"
-        
+
         # 获取备份文件大小
         local file_size=$(du -h "${backup_file}" | cut -f1)
         log "INFO" "备份文件大小: ${file_size}"
-        
+
         # 压缩备份文件
         if [ "${COMPRESS}" = true ]; then
             compress_backup "${backup_file}"
         fi
-        
+
         return 0
     else
         log "ERROR" "数据库备份失败"
@@ -116,18 +116,18 @@ backup_mysql() {
 compress_backup() {
     local backup_file=$1
     local compressed_file="${backup_file}.gz"
-    
+
     log "INFO" "压缩备份文件: ${backup_file}"
-    
+
     gzip -f "${backup_file}"
-    
+
     if [ $? -eq 0 ]; then
         log "INFO" "压缩完成: ${compressed_file}"
-        
+
         # 获取压缩后文件大小
         local compressed_size=$(du -h "${compressed_file}" | cut -f1)
         log "INFO" "压缩后大小: ${compressed_size}"
-        
+
         return 0
     else
         log "ERROR" "压缩失败"
@@ -138,26 +138,26 @@ compress_backup() {
 # 验证备份文件
 verify_backup() {
     local backup_file=$1
-    
+
     if [ "${VERIFY}" != true ]; then
         return 0
     fi
-    
+
     log "INFO" "验证备份文件: ${backup_file}"
-    
+
     # 检查文件是否存在
     if [ ! -f "${backup_file}" ]; then
         log "ERROR" "备份文件不存在: ${backup_file}"
         return 1
     fi
-    
+
     # 检查文件大小
     local file_size=$(stat -c%s "${backup_file}")
     if [ "${file_size}" -lt 1024 ]; then
         log "ERROR" "备份文件过小，可能损坏: ${backup_file}"
         return 1
     fi
-    
+
     # 如果是压缩文件，检查是否可以解压
     if [[ "${backup_file}" == *.gz ]]; then
         if ! gzip -t "${backup_file}" 2>/dev/null; then
@@ -165,7 +165,7 @@ verify_backup() {
             return 1
         fi
     fi
-    
+
     log "INFO" "备份文件验证通过"
     return 0
 }
@@ -173,12 +173,12 @@ verify_backup() {
 # 清理旧备份
 cleanup_old_backups() {
     log "INFO" "清理 ${RETENTION_DAYS} 天前的备份"
-    
+
     # 查找并删除旧备份
     find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete 2>> "${LOG_FILE}"
-    
+
     local deleted_count=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f -mtime +${RETENTION_DAYS} | wc -l)
-    
+
     if [ ${deleted_count} -gt 0 ]; then
         log "INFO" "已删除 ${deleted_count} 个旧备份"
     else
@@ -189,11 +189,11 @@ cleanup_old_backups() {
 # 生成备份报告
 generate_report() {
     log "INFO" "生成备份报告"
-    
+
     local total_backups=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f | wc -l)
     local total_size=$(du -sh "${BACKUP_DIR}" | cut -f1)
     local latest_backup=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
-    
+
     echo ""
     echo "=========================================="
     echo "📊 数据库备份报告"
@@ -211,11 +211,11 @@ generate_report() {
 send_notification() {
     local status=$1
     local message=$2
-    
+
     # 这里可以添加发送邮件、Slack、微信等通知
     # 例如：
     # curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${message}\"}" ${SLACK_WEBHOOK_URL}
-    
+
     log "INFO" "通知: [${status}] ${message}"
 }
 
@@ -225,7 +225,7 @@ send_notification() {
 
 main() {
     local start_time=$(date +%s)
-    
+
     echo "=========================================="
     echo "🚀 DjangoBlog 数据库备份开始"
     echo "=========================================="
@@ -233,48 +233,48 @@ main() {
     echo "数据库: ${DB_NAME}"
     echo "备份目录: ${BACKUP_DIR}"
     echo ""
-    
+
     # 记录开始时间
     log "INFO" "========== 备份开始 =========="
-    
+
     # 1. 创建备份目录
     create_backup_dir
-    
+
     # 2. 检查 Docker 容器
     if ! check_container; then
         send_notification "ERROR" "Docker 容器未运行，备份失败"
         exit 1
     fi
-    
+
     # 3. 执行备份
     if ! backup_mysql; then
         send_notification "ERROR" "数据库备份失败"
         exit 1
     fi
-    
+
     # 4. 验证备份
     local latest_backup=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
     if ! verify_backup "${latest_backup}"; then
         send_notification "ERROR" "备份验证失败"
         exit 1
     fi
-    
+
     # 5. 清理旧备份
     cleanup_old_backups
-    
+
     # 6. 生成报告
     generate_report
-    
+
     # 计算耗时
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
-    
+
     log "INFO" "备份完成，耗时: ${duration} 秒"
     log "INFO" "========== 备份结束 =========="
-    
+
     # 发送成功通知
     send_notification "SUCCESS" "数据库备份成功，耗时 ${duration} 秒"
-    
+
     echo "=========================================="
     echo "✅ 数据库备份完成！"
     echo "=========================================="

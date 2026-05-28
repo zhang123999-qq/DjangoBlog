@@ -41,7 +41,7 @@ class SecurityMonitorMiddleware:
                 request.method,
                 request.path,
                 request.META.get("REMOTE_ADDR", "unknown"),
-                request.META.get("HTTP_USER_AGENT", "unknown"),
+                request.headers.get("user-agent", "unknown"),
             )
         response = self.get_response(request)
         return response
@@ -77,7 +77,7 @@ def security_logger(get_response):
             logger.warning(
                 f"[安全警告] 可疑请求: {request.method} {request.path} "
                 f"来自: {request.META.get('REMOTE_ADDR', 'unknown')} "
-                f"User-Agent: {request.META.get('HTTP_USER_AGENT', 'unknown')}"
+                f"User-Agent: {request.headers.get('user-agent', 'unknown')}"
             )
 
         response = get_response(request)

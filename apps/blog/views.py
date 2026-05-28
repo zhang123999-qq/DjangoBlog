@@ -208,7 +208,7 @@ def comment_create_view(request, post_slug):
 
             # 记录IP地址和用户代理
             comment.ip_address = request.META.get("REMOTE_ADDR")
-            comment.user_agent = request.META.get("HTTP_USER_AGENT", "")[:200]
+            comment.user_agent = request.headers.get("user-agent", "")[:200]
 
             # 先保存为 pending 状态
             comment.review_status = "pending"

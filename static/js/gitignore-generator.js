@@ -3,7 +3,7 @@
  */
 (function() {
     'use strict';
-    
+
     // 复制到剪贴板
     window.copyToClipboard = function() {
         const code = document.getElementById('gitignore-code');
@@ -16,7 +16,7 @@
             });
         }
     };
-    
+
     // 下载文件
     window.downloadFile = function() {
         const code = document.getElementById('gitignore-code');
@@ -30,16 +30,16 @@
             URL.revokeObjectURL(url);
         }
     };
-    
+
     // 显示Toast通知
     function showToast(message, type) {
         const toast = document.createElement('div');
         toast.className = 'toast-container position-fixed bottom-0 end-0 p-3';
         toast.style.zIndex = '9999';
-        
+
         const bgColor = type === 'success' ? 'bg-success' : 'bg-danger';
         const icon = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle';
-        
+
         toast.innerHTML = `
             <div class="toast show" role="alert">
                 <div class="toast-header ${bgColor} text-white">

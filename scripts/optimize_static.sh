@@ -34,15 +34,15 @@ SAVED=0
 echo "[转换] PNG/JPG -> WebP (质量: $QUALITY%)"
 find "$STATIC_DIR/img" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) | while read img; do
     webp_path="${img%.*}.webp"
-    
+
     # 转换
     cwebp -q $QUALITY "$img" -o "$webp_path" 2>/dev/null
-    
+
     # 计算节省空间
     orig_size=$(stat -f%z "$img" 2>/dev/null || stat -c%s "$img")
     webp_size=$(stat -f%z "$webp_path" 2>/dev/null || stat -c%s "$webp_path")
     saved=$((orig_size - webp_size))
-    
+
     echo "  ✓ $(basename "$img") -> $(basename "$webp_path") (节省 $((saved / 1024))KB)"
 done
 

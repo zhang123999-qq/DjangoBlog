@@ -95,7 +95,7 @@ class IPQueryTool(BaseTool):
 
     def _get_client_ip(self, request):
         """获取客户端真实 IP"""
-        xff = request.META.get("HTTP_X_FORWARDED_FOR")
+        xff = request.headers.get("x-forwarded-for")
         if xff:
             ip = xff.split(",")[0].strip()
         else:

@@ -3,7 +3,7 @@
  */
 (function() {
     'use strict';
-    
+
     function initReplyLike() {
         document.querySelectorAll('.like-btn').forEach(button => {
             button.addEventListener('click', async function() {
@@ -11,12 +11,12 @@
                 const likeUrl = this.dataset.likeUrl;
                 const likeCountElement = this.querySelector('.like-count');
                 const likeIconElement = this.querySelector('.like-icon');
-                
+
                 if (!replyId || !likeUrl) {
                     console.error('缺少必要的数据属性');
                     return;
                 }
-                
+
                 try {
                     const response = await fetch(likeUrl, {
                         method: 'POST',
@@ -26,7 +26,7 @@
                         },
                         credentials: 'same-origin'
                     });
-                    
+
                     if (response.ok) {
                         const data = await response.json();
                         if (data.success) {
@@ -53,7 +53,7 @@
             });
         });
     }
-    
+
     function getCsrfToken() {
         const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
         if (csrfInput) {
@@ -62,7 +62,7 @@
         const cookieValue = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
         return cookieValue ? cookieValue.pop() : '';
     }
-    
+
     // 页面加载完成后初始化
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initReplyLike);

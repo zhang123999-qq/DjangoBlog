@@ -233,17 +233,17 @@ class ViewsCounter:
 
         # 使用 IP + User-Agent
         ip = cls._get_client_ip(request)
-        user_agent = request.META.get("HTTP_USER_AGENT", "")[:50]
+        user_agent = request.headers.get("user-agent", "")[:50]
         return f"ip_{ip}_{hash(user_agent) % 10000}"
 
     @staticmethod
     def _get_client_ip(request: HttpRequest) -> str:
         """获取客户端 IP"""
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        x_forwarded_for = request.headers.get("x-forwarded-for")
         if x_forwarded_for:
             return str(x_forwarded_for).split(",")[0].strip()
 
-        x_real_ip = request.META.get("HTTP_X_REAL_IP")
+        x_real_ip = request.headers.get("x-real-ip")
         if x_real_ip:
             return str(x_real_ip)
 

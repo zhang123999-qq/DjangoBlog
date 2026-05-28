@@ -36,7 +36,7 @@ LOCKOUT_SECONDS = 300  # 5 分钟
 
 def get_client_ip(request):
     """获取客户端真实 IP 地址"""
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    x_forwarded_for = request.headers.get("x-forwarded-for")
     if x_forwarded_for:
         ip = x_forwarded_for.split(",")[0].strip()
     else:

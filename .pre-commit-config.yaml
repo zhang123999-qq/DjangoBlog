@@ -90,14 +90,7 @@ repos:
       - id: django-upgrade
         args: [--target-version, "4.2"]
 
-  # ============================================================
-  # 依赖安全检查
-  # ============================================================
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.3
-    hooks:
-      - id: python-safety-dependencies-check
-        files: pyproject.toml
+  # 依赖安全检查已在 CI 中通过 bandit / pip-audit 覆盖
 
 # ============================================================
 # CI 配置

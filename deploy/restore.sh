@@ -60,25 +60,25 @@ list_backups() {
     echo "=========================================="
     echo "📋 可用备份文件"
     echo "=========================================="
-    
+
     local count=0
     while IFS= read -r file; do
         count=$((count + 1))
         local size=$(du -h "${file}" | cut -f1)
         local date=$(stat -c %y "${file}" | cut -d' ' -f1,2 | cut -d'.' -f1)
         local filename=$(basename "${file}")
-        
+
         echo "${count}. ${filename}"
         echo "   大小: ${size}"
         echo "   时间: ${date}"
         echo ""
     done < <(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
-    
+
     if [ ${count} -eq 0 ]; then
         echo "未找到备份文件"
         return 1
     fi
-    
+
     echo "总计: ${count} 个备份"
     echo ""
     return 0
@@ -87,34 +87,34 @@ list_backups() {
 # 选择备份文件
 select_backup() {
     list_backups
-    
+
     if [ $? -ne 0 ]; then
         return 1
     fi
-    
+
     local count=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f | wc -l)
-    
+
     if [ ${count} -eq 1 ]; then
         SELECTED_BACKUP=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f | head -1)
         log "INFO" "自动选择唯一备份: ${SELECTED_BACKUP}"
         return 0
     fi
-    
+
     echo "请选择要恢复的备份 (1-${count}): "
     read -r selection
-    
+
     if ! [[ "${selection}" =~ ^[0-9]+$ ]] || [ "${selection}" -lt 1 ] || [ "${selection}" -gt ${count} ]; then
         log "ERROR" "无效选择: ${selection}"
         return 1
     fi
-    
+
     SELECTED_BACKUP=$(find "${BACKUP_DIR}" -name "djangoblog_*.sql.gz" -type f -printf '%T@ %p\n' | sort -rn | sed -n "${selection}p" | cut -d' ' -f2-)
-    
+
     if [ -z "${SELECTED_BACKUP}" ]; then
         log "ERROR" "未找到选择的备份"
         return 1
     fi
-    
+
     log "INFO" "选择备份: ${SELECTED_BACKUP}"
     return 0
 }
@@ -129,12 +129,12 @@ confirm_restore() {
     echo ""
     echo "请确认是否继续？(yes/no): "
     read -r confirmation
-    
+
     if [ "${confirmation}" != "yes" ]; then
         log "INFO" "用户取消恢复操作"
         return 1
     fi
-    
+
     log "INFO" "用户确认恢复操作"
     return 0
 }
@@ -142,22 +142,22 @@ confirm_restore() {
 # 验证备份文件
 verify_backup() {
     local backup_file=$1
-    
+
     log "INFO" "验证备份文件: ${backup_file}"
-    
+
     # 检查文件是否存在
     if [ ! -f "${backup_file}" ]; then
         log "ERROR" "备份文件不存在: ${backup_file}"
         return 1
     fi
-    
+
     # 检查文件大小
     local file_size=$(stat -c%s "${backup_file}")
     if [ "${file_size}" -lt 1024 ]; then
         log "ERROR" "备份文件过小，可能损坏: ${backup_file}"
         return 1
     fi
-    
+
     # 如果是压缩文件，检查是否可以解压
     if [[ "${backup_file}" == *.gz ]]; then
         if ! gzip -t "${backup_file}" 2>/dev/null; then
@@ -165,7 +165,7 @@ verify_backup() {
             return 1
         fi
     fi
-    
+
     log "INFO" "备份文件验证通过"
     return 0
 }
@@ -174,12 +174,12 @@ verify_backup() {
 decompress_backup() {
     local backup_file=$1
     local temp_file="/tmp/djangoblog_restore_$$.sql"
-    
+
     log "INFO" "解压备份文件: ${backup_file}"
-    
+
     if [[ "${backup_file}" == *.gz ]]; then
         gunzip -c "${backup_file}" > "${temp_file}"
-        
+
         if [ $? -eq 0 ]; then
             log "INFO" "解压完成: ${temp_file}"
             echo "${temp_file}"
@@ -198,32 +198,32 @@ decompress_backup() {
 # 恢复数据库
 restore_database() {
     local backup_file=$1
-    
+
     log "INFO" "开始恢复数据库: ${DB_NAME}"
     log "INFO" "备份文件: ${backup_file}"
-    
+
     # 解压备份文件
     local sql_file=$(decompress_backup "${backup_file}")
-    
+
     if [ $? -ne 0 ]; then
         return 1
     fi
-    
+
     # 使用 Docker exec 执行 mysql 恢复
     docker exec -i "${DOCKER_CONTAINER}" mysql \
         -u "${DB_USER}" \
         -p"${DB_PASSWORD}" \
         -h localhost \
         -P "${DB_PORT}" < "${sql_file}" 2>> "${LOG_FILE}"
-    
+
     local restore_result=$?
-    
+
     # 清理临时文件
     if [[ "${backup_file}" == *.gz ]] && [ -f "${sql_file}" ]; then
         rm -f "${sql_file}"
         log "INFO" "清理临时文件: ${sql_file}"
     fi
-    
+
     if [ ${restore_result} -eq 0 ]; then
         log "INFO" "数据库恢复成功"
         return 0
@@ -236,7 +236,7 @@ restore_database() {
 # 验证恢复结果
 verify_restore() {
     log "INFO" "验证恢复结果"
-    
+
     # 检查数据库连接
     docker exec "${DOCKER_CONTAINER}" mysql \
         -u "${DB_USER}" \
@@ -244,10 +244,10 @@ verify_restore() {
         -h localhost \
         -P "${DB_PORT}" \
         -e "USE ${DB_NAME}; SELECT COUNT(*) FROM django_migrations;" 2>> "${LOG_FILE}"
-    
+
     if [ $? -eq 0 ]; then
         log "INFO" "数据库连接正常"
-        
+
         # 检查表数量
         local table_count=$(docker exec "${DOCKER_CONTAINER}" mysql \
             -u "${DB_USER}" \
@@ -255,9 +255,9 @@ verify_restore() {
             -h localhost \
             -P "${DB_PORT}" \
             -e "USE ${DB_NAME}; SHOW TABLES;" 2>/dev/null | wc -l)
-        
+
         log "INFO" "数据库表数量: $((table_count - 1))"
-        
+
         return 0
     else
         log "ERROR" "数据库连接失败"
@@ -269,7 +269,7 @@ verify_restore() {
 send_notification() {
     local status=$1
     local message=$2
-    
+
     # 这里可以添加发送邮件、Slack、微信等通知
     log "INFO" "通知: [${status}] ${message}"
 }
@@ -280,62 +280,62 @@ send_notification() {
 
 main() {
     local start_time=$(date +%s)
-    
+
     echo "=========================================="
     echo "🔄 DjangoBlog 数据库恢复开始"
     echo "=========================================="
     echo "时间: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "数据库: ${DB_NAME}"
     echo ""
-    
+
     # 记录开始时间
     log "INFO" "========== 恢复开始 =========="
-    
+
     # 1. 检查 Docker 容器
     if ! check_container; then
         send_notification "ERROR" "Docker 容器未运行，恢复失败"
         exit 1
     fi
-    
+
     # 2. 选择备份文件
     if ! select_backup; then
         send_notification "ERROR" "选择备份文件失败"
         exit 1
     fi
-    
+
     # 3. 验证备份文件
     if ! verify_backup "${SELECTED_BACKUP}"; then
         send_notification "ERROR" "备份文件验证失败"
         exit 1
     fi
-    
+
     # 4. 确认恢复
     if ! confirm_restore; then
         exit 0
     fi
-    
+
     # 5. 执行恢复
     if ! restore_database "${SELECTED_BACKUP}"; then
         send_notification "ERROR" "数据库恢复失败"
         exit 1
     fi
-    
+
     # 6. 验证恢复结果
     if ! verify_restore; then
         send_notification "ERROR" "恢复验证失败"
         exit 1
     fi
-    
+
     # 计算耗时
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
-    
+
     log "INFO" "恢复完成，耗时: ${duration} 秒"
     log "INFO" "========== 恢复结束 =========="
-    
+
     # 发送成功通知
     send_notification "SUCCESS" "数据库恢复成功，耗时 ${duration} 秒"
-    
+
     echo "=========================================="
     echo "✅ 数据库恢复完成！"
     echo "=========================================="
@@ -404,22 +404,22 @@ if [ -n "${SELECTED_BACKUP}" ]; then
     if ! verify_backup "${SELECTED_BACKUP}"; then
         exit 1
     fi
-    
+
     # 确认恢复
     if ! confirm_restore; then
         exit 0
     fi
-    
+
     # 执行恢复
     if ! restore_database "${SELECTED_BACKUP}"; then
         exit 1
     fi
-    
+
     # 验证恢复结果
     if ! verify_restore; then
         exit 1
     fi
-    
+
     echo "✅ 数据库恢复完成！"
     exit 0
 fi

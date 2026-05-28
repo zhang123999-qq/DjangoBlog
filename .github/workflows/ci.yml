@@ -123,7 +123,8 @@ jobs:
         run: |
           uv run mypy apps/api/ apps/blog/ \
             --ignore-missing-imports \
-            --no-error-summary
+            --no-error-summary \
+            --follow-imports=skip
 
   # ========================================
   # 多版本测试

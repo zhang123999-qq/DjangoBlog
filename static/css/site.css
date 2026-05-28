@@ -16,7 +16,7 @@ body {
     line-height: 1.6;
     color: #333;
     background-color: #f8f9fa;
-    background-image: 
+    background-image:
         radial-gradient(circle at 10% 20%, rgba(100, 116, 139, 0.05) 0%, transparent 20%),
         radial-gradient(circle at 80% 70%, rgba(100, 116, 139, 0.05) 0%, transparent 30%);
     padding-top: 70px; /* 为固定导航栏预留空间 */
@@ -207,7 +207,7 @@ body {
         padding-left: 15px;
         padding-right: 15px;
     }
-    
+
     .navbar {
         background: white;
     }

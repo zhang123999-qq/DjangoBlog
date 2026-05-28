@@ -3,7 +3,7 @@
  */
 (function() {
     'use strict';
-    
+
     function initToolSearch() {
         const searchInput = document.getElementById('tool-search');
         const clearBtn = document.getElementById('clear-search');
@@ -131,7 +131,7 @@
             }
         });
     }
-    
+
     // 页面加载完成后初始化
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initToolSearch);

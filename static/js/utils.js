@@ -1,6 +1,6 @@
 /**
  * DjangoBlog 公共工具函数库
- * 
+ *
  * 提供跨模块共享的通用函数，避免重复定义。
  * 此文件应在所有需要 JS 交互的页面中引入。
  */
@@ -94,25 +94,25 @@ async function requestJson(url, options = {}) {
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', 'application/json');
         setCSRFHeaders(headers);
-        
+
         const response = await fetch(url, {
             ...options,
             headers: headers,
         });
-        
+
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
             const text = await response.text();
             throw new Error(`Expected JSON response, got: ${text.substring(0, 200)}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (!response.ok) {
             const errorMessage = getErrorMessage(data);
             throw new Error(`API Error ${response.status}: ${errorMessage}`);
         }
-        
+
         return data;
     } catch (error) {
         // 捕获网络错误、JSON 解析错误等
