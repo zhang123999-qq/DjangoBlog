@@ -35,12 +35,22 @@ LOCKOUT_SECONDS = 300  # 5 分钟
 
 
 def get_client_ip(request):
-    """获取客户端真实 IP 地址"""
+    """获取客户端真实 IP 地址
+
+    兼容 request.headers (Django 2.2+) 和 request.META (传统方式)。
+    """
+    # 优先使用 headers (Django 2.2+ 标准方式)
     x_forwarded_for = request.headers.get("x-forwarded-for")
-    if x_forwarded_for:
+    # 防御性编程：headers.get() 在测试 Mock 环境下可能返回 Mock 对象
+    if x_forwarded_for and isinstance(x_forwarded_for, str):
         ip = x_forwarded_for.split(",")[0].strip()
     else:
-        ip = request.META.get("REMOTE_ADDR", "0.0.0.0")  # nosec B104
+        # 兼容传统 META 方式 (测试环境常用)
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for and isinstance(x_forwarded_for, str):
+            ip = x_forwarded_for.split(",")[0].strip()
+        else:
+            ip = request.META.get("REMOTE_ADDR", "0.0.0.0")  # nosec B104
     return ip
 
 

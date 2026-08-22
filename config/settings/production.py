@@ -51,6 +51,43 @@ if _use_https:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # =============================================================================
+# CORS / CSRF 配置（前端分离架构）
+# =============================================================================
+
+# Session 认证（非 JWT）必须携带 Cookie
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
+
+# 前端域名白名单（从环境变量读取，逗号分隔）
+# 开发测试：http://localhost:4321
+# 生产环境：https://yourdomain.com
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:4321",
+        "http://127.0.0.1:4321",
+    ],
+)
+
+# CSRF 信任来源（允许跨域 POST/PUT/DELETE）
+# 格式必须包含协议前缀：https://yourdomain.com
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "http://localhost:4321",
+        "http://127.0.0.1:4321",
+    ],
+)
+
+# Session Cookie 跨域配置
+SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="Lax")
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=_use_https)
+
+CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="Lax")
+CSRF_COOKIE_HTTPONLY = False  # 前端 JS 需要读取 CSRF Cookie
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=_use_https)
+
+# =============================================================================
 # 数据库配置（生产环境）
 # =============================================================================
 

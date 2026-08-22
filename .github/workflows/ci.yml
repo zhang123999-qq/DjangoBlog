@@ -117,11 +117,11 @@ jobs:
           uv run flake8 apps/ config/ \
             --max-line-length=120 \
             --exclude=__pycache__,migrations,.venv \
-            --extend-ignore=E501,W503,W293,W391,F401,F841,E402,F541,E201,E128,W292,E203
+            --extend-ignore=E501,W503,W293,W391,W292,E203,E201,E128,F541
 
-      - name: Mypy (scoped)
+      - name: Mypy (extended)
         run: |
-          uv run mypy apps/api/ apps/blog/ \
+          uv run mypy apps/api/ apps/blog/ apps/core/ apps/forum/ apps/tools/ \
             --ignore-missing-imports \
             --no-error-summary \
             --follow-imports=skip
@@ -290,14 +290,65 @@ jobs:
           uv pip install bandit safety pip-audit
 
       - name: Bandit security scan
-        run: uv run bandit -r apps/ -ll --skip B101,B311
-        continue-on-error: true
+        run: |
+          uv run bandit -r apps/ -ll --skip B101,B311 -f json -o bandit-report.json
+          # 检查是否有 HIGH severity 问题
+          python -c "
+import json, sys
+with open('bandit-report.json') as f:
+    data = json.load(f)
+high = [r for r in data.get('results', []) if r.get('issue_severity') == 'HIGH']
+if high:
+    print(f'::error::Bandit found {len(high)} HIGH severity issues')
+    for r in high:
+        print(f'  {r[\"filename\"]}:{r[\"line_number\"]} {r[\"issue_text\"]}')
+    sys.exit(1)
+print('Bandit: No HIGH severity issues found')
+"
 
       - name: Safety check
-        run: uv run safety check --full-report
+        run: |
+          uv run safety check --full-report --json --output safety-report.json || true
+          python -c "
+import json, sys
+with open('safety-report.json') as f:
+    data = json.load(f)
+# Safety 返回漏洞列表，检查 CVSS >= 7.0
+high = []
+for vuln in data:
+    cvss = vuln.get('cvss', 0)
+    if cvss and cvss >= 7.0:
+        high.append(vuln)
+if high:
+    print(f'::error::Safety found {len(high)} HIGH/Critical vulnerabilities (CVSS >= 7.0)')
+    for v in high:
+        print(f'  {v[\"package_name\"]} {v[\"analyzed_version\"]} CVSS={v.get(\"cvss\", \"N/A\")}: {v.get(\"advisory\", \"\")[:100]}')
+    sys.exit(1)
+print('Safety: No HIGH/Critical vulnerabilities found')
+"
 
       - name: Pip-audit
-        run: uv run pip-audit
+        run: |
+          uv run pip-audit --format=json --output=pip-audit-report.json || true
+          python -c "
+import json, sys
+with open('pip-audit-report.json') as f:
+    data = json.load(f)
+high = []
+for vuln in data.get('vulnerabilities', []):
+    for fix in vuln.get('fix_versions', []):
+        pass
+    # pip-audit 不直接提供 CVSS，检查是否有已知漏洞
+    aliases = vuln.get('aliases', [])
+    if aliases:
+        high.append(vuln)
+if high:
+    print(f'::error::Pip-audit found {len(high)} packages with known vulnerabilities')
+    for v in high[:5]:
+        print(f'  {v[\"package\"]} {v[\"version\"]}: {v.get(\"description\", \"\")[:100]}')
+    sys.exit(1)
+print('Pip-audit: No known vulnerabilities found')
+"
 
   # ========================================
   # 构建 Docker 镜像

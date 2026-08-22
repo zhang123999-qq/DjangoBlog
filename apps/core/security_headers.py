@@ -3,6 +3,7 @@
 
 功能：
 - Content Security Policy (CSP) with nonce support
+- Static frontend route handling (Astro pre-rendered pages)
 - HSTS
 - X-Frame-Options
 - X-Content-Type-Options
@@ -15,12 +16,22 @@ import secrets
 from django.conf import settings
 
 
+# 静态前端路由前缀（Astro 预渲染页面，含内联 <script> 无法使用 nonce）
+_STATIC_FRONTEND_PREFIXES = ("/blog", "/forum", "/tools", "/login", "/register")
+
+
+def _is_static_frontend_request(request):
+    """判断请求是否为静态前端页面"""
+    path = request.path.rstrip("/")
+    return path == "" or any(path.startswith(p) for p in _STATIC_FRONTEND_PREFIXES)
+
+
 class CSPMiddleware:
     """
     Content Security Policy 中间件
 
     轻量级实现，无需 django-csp 依赖。
-    支持 per-request nonce 以替换 unsafe-inline。
+    支持 per-request nonce（Django 模板页面）和 static-frontend 安全回退。
     """
 
     NONCE_LENGTH = 16  # 16 bytes = 32 hex chars
@@ -40,12 +51,16 @@ class CSPMiddleware:
         response = self.get_response(request)
 
         if self.csp_enabled:
-            directives = self._build_directives(nonce if self.nonce_enabled else None)
+            is_static_frontend = _is_static_frontend_request(request)
+            directives = self._build_directives(
+                nonce=nonce if self.nonce_enabled else None,
+                is_static_frontend=is_static_frontend,
+            )
             response["Content-Security-Policy"] = directives
 
         return response
 
-    def _build_directives(self, nonce=None):
+    def _build_directives(self, nonce=None, is_static_frontend=False):
         """构建 CSP 指令字符串"""
         directives = []
 
@@ -53,17 +68,28 @@ class CSPMiddleware:
         script_src = list(getattr(settings, "CSP_SCRIPT_SRC", ["'self'"]))
         style_src = list(getattr(settings, "CSP_STYLE_SRC", ["'self'"]))
 
-        # 如果启用了 nonce，替换 unsafe-inline
-        if nonce:
-            nonce_str = f"'nonce-{nonce}'"
-            if nonce_str not in script_src:
-                script_src.append(nonce_str)
-            if "'unsafe-inline'" in script_src:
-                script_src.remove("'unsafe-inline'")
-            if nonce_str not in style_src:
-                style_src.append(nonce_str)
-            if "'unsafe-inline'" in style_src:
-                style_src.remove("'unsafe-inline'")
+        if is_static_frontend:
+            # 静态前端：HTML 在构建时生成，无法使用 per-request nonce
+            # 使用 'unsafe-inline' + 'strict-dynamic'：仅信任由已信任脚本动态加载的脚本
+            if "'unsafe-inline'" not in script_src:
+                script_src.append("'unsafe-inline'")
+            if "'strict-dynamic'" not in script_src:
+                script_src.append("'strict-dynamic'")
+            # 样式同理：Tailwind 和组件内联样式
+            if "'unsafe-inline'" not in style_src:
+                style_src.append("'unsafe-inline'")
+        else:
+            # Django 模板页面：使用 nonce 替代 unsafe-inline
+            if nonce:
+                nonce_str = f"'nonce-{nonce}'"
+                if nonce_str not in script_src:
+                    script_src.append(nonce_str)
+                if "'unsafe-inline'" in script_src:
+                    script_src.remove("'unsafe-inline'")
+                if nonce_str not in style_src:
+                    style_src.append(nonce_str)
+                if "'unsafe-inline'" in style_src:
+                    style_src.remove("'unsafe-inline'")
 
         configs = {
             "default-src": getattr(settings, "CSP_DEFAULT_SRC", ["'self'"]),
@@ -173,3 +199,17 @@ class SecurityHeadersMiddleware:
                 response["Strict-Transport-Security"] = hsts_value
 
         return response
+
+
+def csp_nonce_context(request):
+    """
+    CSP Nonce 模板上下文处理器
+    
+    在 settings.py TEMPLATES['OPTIONS']['context_processors'] 中添加：
+    'apps.core.security_headers.csp_nonce_context'
+    
+    模板中使用：
+        <script nonce="{{ csp_nonce }}">...</script>
+        <style nonce="{{ csp_nonce }}">...</style>
+    """
+    return {"csp_nonce": getattr(request, "csp_nonce", "")}

@@ -16,7 +16,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.db import connection
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 
 logger = logging.getLogger(__name__)

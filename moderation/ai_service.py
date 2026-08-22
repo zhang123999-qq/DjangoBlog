@@ -185,7 +185,11 @@ class BaiduModerationService:
 
 
 class MockModerationService:
-    """模拟审核服务（开发/测试环境）"""
+    """模拟审核服务（开发/测试环境使用）
+
+    默认返回 "pending" 模拟 AI 服务未启用/不确定的情况，
+    符合生产环境百度 AI 未配置时的降级行为。
+    """
 
     # 模拟违规词
     MOCK_VIOLATION_WORDS = [
@@ -197,7 +201,7 @@ class MockModerationService:
     def moderate_text(self, content: str) -> Tuple[str, Optional[List[Dict]]]:
         """模拟文本审核"""
         if not content:
-            return "approved", None
+            return "pending", None
 
         # 检查模拟违规词
         for word in self.MOCK_VIOLATION_WORDS:
@@ -210,7 +214,8 @@ class MockModerationService:
                     }
                 ]
 
-        return "approved", None
+        # 默认返回 pending，模拟 AI 服务未启用/不确定
+        return "pending", None
 
     def moderate_image(self, image_path: str) -> Tuple[str, Optional[List[Dict]]]:
         """模拟图片审核"""

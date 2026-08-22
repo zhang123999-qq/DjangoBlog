@@ -28,6 +28,13 @@ from django.core.cache import cache
 from django.db.models import F
 from django.http import HttpRequest
 
+from apps.core.constants import (
+    VIEWS_ANTI_SPAM_TTL,
+    VIEWS_BUFFER_CLEANUP_INTERVAL,
+    VIEWS_BUFFER_MAX_PER_TYPE,
+    VIEWS_SYNC_INTERVAL,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,24 +63,31 @@ class ViewsBuffer:
         # 缓冲区锁
         self._buffer_lock = threading.Lock()
         # 缓冲区大小限制
-        self._max_size = getattr(settings, "VIEWS_BUFFER_MAX_SIZE", 10000)
+        self._max_size = getattr(settings, "VIEWS_BUFFER_MAX_SIZE", VIEWS_BUFFER_MAX_PER_TYPE)
         # 最后刷新时间
         self._last_flush = time.time()
         # 刷新间隔（秒）
-        self._flush_interval = getattr(settings, "VIEWS_FLUSH_INTERVAL", 10)
+        self._flush_interval = getattr(settings, "VIEWS_FLUSH_INTERVAL", VIEWS_SYNC_INTERVAL)
         # 已记录的请求（防刷）: {model_type: {object_id: set(ip_or_user_id)}}
         self._recorded: Dict[str, Dict[int, Set[str]]] = defaultdict(lambda: defaultdict(set))
         # 防刷过期时间（秒）
-        self._anti_spam_ttl = getattr(settings, "VIEWS_ANTI_SPAM_TTL", 300)  # 5分钟
+        self._anti_spam_ttl = getattr(settings, "VIEWS_ANTI_SPAM_TTL", VIEWS_ANTI_SPAM_TTL)
         # 防刷记录时间戳
         self._recorded_timestamp: Dict[str, Dict[int, float]] = defaultdict(dict)
+        # 访问时间记录（用于 LRU）
+        self._access_time: Dict[str, Dict[int, float]] = defaultdict(dict)
+        # 每类型最大条目数
+        self._max_items_per_type = getattr(settings, "VIEWS_MAX_ITEMS_PER_TYPE", VIEWS_BUFFER_MAX_PER_TYPE)
+        # 清理间隔（秒）
+        self._cleanup_interval = getattr(settings, "VIEWS_CLEANUP_INTERVAL", VIEWS_BUFFER_CLEANUP_INTERVAL)
+        self._last_cleanup = time.time()
 
     def reset(self):
         """重置缓冲区状态（用于测试）"""
         # 直接重新初始化所有状态，避免死锁
-        self._buffer: Dict[str, Dict[int, int]] = defaultdict(lambda: defaultdict(int))
-        self._recorded: Dict[str, Dict[int, Set[str]]] = defaultdict(lambda: defaultdict(set))
-        self._recorded_timestamp: Dict[str, Dict[int, float]] = defaultdict(dict)
+        self._buffer = defaultdict(lambda: defaultdict(int))
+        self._recorded = defaultdict(lambda: defaultdict(set))
+        self._recorded_timestamp = defaultdict(dict)
         self._last_flush = time.time()
 
     def add(self, model_type: str, object_id: int, identifier: str) -> bool:
@@ -92,16 +106,23 @@ class ViewsBuffer:
         if self._is_recorded(model_type, object_id, identifier):
             return False
 
+        now = time.time()
         with self._buffer_lock:
             # 记录到缓冲区
             self._buffer[model_type][object_id] += 1
             # 标记为已记录
             self._recorded[model_type][object_id].add(identifier)
-            self._recorded_timestamp[model_type][object_id] = time.time()
+            self._recorded_timestamp[model_type][object_id] = now
+            # 记录访问时间（用于 LRU）
+            self._access_time[model_type][object_id] = now
 
             # 检查是否需要刷新
             if self._should_flush():
                 self._flush_to_redis()
+
+            # 定期清理 LRU 和过期防刷记录
+            if now - self._last_cleanup > self._cleanup_interval:
+                self._cleanup_lru(now)
 
         return True
 
@@ -166,6 +187,41 @@ class ViewsBuffer:
         """强制刷新"""
         with self._buffer_lock:
             self._flush_to_redis()
+
+    def _cleanup_lru(self, now: float):
+        """清理最久未访问的条目（LRU）和过期防刷记录"""
+        for model_type in list(self._buffer.keys()):
+            items = self._buffer[model_type]
+            access_times = self._access_time[model_type]
+
+            # 超过限制：按访问时间排序，删除最旧的
+            if len(items) > self._max_items_per_type:
+                sorted_ids = sorted(access_times.keys(), key=lambda k: access_times.get(k, 0))
+                to_remove = sorted_ids[:len(items) - self._max_items_per_type]
+                for oid in to_remove:
+                    items.pop(oid, None)
+                    access_times.pop(oid, None)
+                    self._recorded[model_type].pop(oid, None)
+                    self._recorded_timestamp[model_type].pop(oid, None)
+
+            # 清理过期防刷记录
+            expired = [
+                oid for oid, ts in self._recorded_timestamp[model_type].items()
+                if now - ts > self._anti_spam_ttl
+            ]
+            for oid in expired:
+                self._recorded[model_type].pop(oid, None)
+                self._recorded_timestamp[model_type].pop(oid, None)
+                # 注意：不删除 _access_time，保留用于 LRU 判断
+
+            # 清理空的 model_type
+            if not items:
+                self._buffer.pop(model_type, None)
+                self._access_time.pop(model_type, None)
+                self._recorded.pop(model_type, None)
+                self._recorded_timestamp.pop(model_type, None)
+
+        self._last_cleanup = now
 
     def get_buffer_stats(self) -> Dict:
         """获取缓冲区统计"""

@@ -20,28 +20,31 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "username"]
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class _TaxonomySerializer(serializers.ModelSerializer):
+    """分类/标签共享序列化器基类（name + slug + post_count）"""
+
+    post_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = ["id", "name", "slug", "post_count", "created_at"]
+
+
+class CategorySerializer(_TaxonomySerializer):
     """分类序列化器"""
 
-    post_count = serializers.IntegerField(read_only=True)
-
-    class Meta:
+    class Meta(_TaxonomySerializer.Meta):
         model = Category
-        fields = ["id", "name", "slug", "post_count", "created_at"]
 
 
-class TagSerializer(serializers.ModelSerializer):
+class TagSerializer(_TaxonomySerializer):
     """标签序列化器"""
 
-    post_count = serializers.IntegerField(read_only=True)
-
-    class Meta:
+    class Meta(_TaxonomySerializer.Meta):
         model = Tag
-        fields = ["id", "name", "slug", "post_count", "created_at"]
 
 
 class PostSerializer(serializers.ModelSerializer):
-    """文章序列化器"""
+    """文章详情序列化器"""
 
     author = UserSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
@@ -50,24 +53,14 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            "id",
-            "title",
-            "slug",
-            "summary",
-            "content",
-            "status",
-            "views_count",
-            "allow_comments",
-            "published_at",
-            "created_at",
-            "author",
-            "category",
-            "tags",
+            "id", "title", "slug", "summary", "content", "status",
+            "views_count", "allow_comments", "published_at", "created_at",
+            "author", "category", "tags",
         ]
 
 
 class PostListSerializer(serializers.ModelSerializer):
-    """文章列表序列化器"""
+    """文章列表序列化器（轻量级，扁平化关联）"""
 
     author = serializers.CharField(source="author.username", read_only=True)
     category_name = serializers.CharField(source="category.name", read_only=True)
@@ -90,16 +83,13 @@ class CommentSerializer(serializers.ModelSerializer):
 class BoardSerializer(serializers.ModelSerializer):
     """版块序列化器"""
 
-    topic_count = serializers.IntegerField(read_only=True)
-    reply_count = serializers.IntegerField(read_only=True)
-
     class Meta:
         model = Board
         fields = ["id", "name", "slug", "description", "topic_count", "reply_count", "created_at"]
 
 
 class TopicSerializer(serializers.ModelSerializer):
-    """主题序列化器"""
+    """主题详情序列化器"""
 
     author = UserSerializer(read_only=True)
     board = BoardSerializer(read_only=True)
@@ -107,21 +97,13 @@ class TopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
         fields = [
-            "id",
-            "title",
-            "content",
-            "views_count",
-            "reply_count",
-            "is_pinned",
-            "is_locked",
-            "created_at",
-            "author",
-            "board",
+            "id", "title", "content", "views_count", "reply_count",
+            "is_pinned", "is_locked", "created_at", "author", "board",
         ]
 
 
 class TopicListSerializer(serializers.ModelSerializer):
-    """主题列表序列化器"""
+    """主题列表序列化器（轻量级，扁平化关联）"""
 
     author = serializers.CharField(source="author.username", read_only=True)
     board_name = serializers.CharField(source="board.name", read_only=True)

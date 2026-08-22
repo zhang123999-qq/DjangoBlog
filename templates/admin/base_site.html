@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/admin-modern.css' %}">
+<style>
+    /* 隐藏侧边栏中的冗余菜单项（兜底 CSS） */
+    #nav-sidebar .module:has(a[href*="group"]),
+    #nav-sidebar .module:has(a[href*="sites/site"]) {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 需要隐藏的菜单项文本（精确匹配）
+    var hideLabels = ['组', 'Groups', '站点', 'Sites', '审核提醒'];
+
+    // 遍历侧边栏所有导航链接
+    var links = document.querySelectorAll('#nav-sidebar a, .sidebar a, nav a');
+    links.forEach(function(link) {
+        var text = link.textContent.trim();
+        if (hideLabels.indexOf(text) !== -1) {
+            // 隐藏整个 <li> 父元素（如果存在），否则隐藏链接本身
+            var li = link.closest('li') || link.closest('.module') || link;
+            li.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <i class="fas fa-blog"></i>
+    <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a>
+</h1>
+{% endblock %}
+
+{% block userlinks %}
+{% if site_url %}
+<a href="{{ site_url }}"><i class="fas fa-external-link-alt"></i> 查看网站</a> /
+{% endif %}
+{% if user.is_active and user.is_staff %}
+<a href="{% url 'admin:password_change' %}"><i class="fas fa-key"></i> 修改密码</a> /
+{% endif %}
+<a href="{% url 'admin:logout' %}"><i class="fas fa-sign-out-alt"></i> 退出</a>
+{% endblock %}

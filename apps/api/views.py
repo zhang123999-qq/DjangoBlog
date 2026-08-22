@@ -1,6 +1,8 @@
 """API 视图"""
 
 from django.db.models import Count, Q
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django_filters import rest_framework as django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
@@ -36,6 +38,8 @@ class PostFilter(django_filters.FilterSet):
         fields = ["category", "tags"]
 
 
+@method_decorator(cache_page(60 * 5), name="list")
+@method_decorator(cache_page(60 * 5), name="retrieve")
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """分类 API"""
 
@@ -65,6 +69,8 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(cache_page(60 * 5), name="list")
+@method_decorator(cache_page(60 * 5), name="retrieve")
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """标签 API"""
 
@@ -102,7 +108,9 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         """获取文章评论（分页）"""
         post = self.get_object()
         comments = (
-            Comment.objects.filter(post=post, review_status="approved").select_related("user").order_by("created_at")
+            Comment.objects.filter(post=post, review_status="approved")
+            .select_related("user")
+            .order_by("created_at")
         )
 
         page = self.paginate_queryset(comments)
@@ -114,6 +122,8 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(cache_page(60 * 5), name="list")
+@method_decorator(cache_page(60 * 5), name="retrieve")
 class BoardViewSet(viewsets.ReadOnlyModelViewSet):
     """版块 API"""
 
@@ -169,7 +179,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         topic = self.get_object()
         replies = (
             Reply.objects.filter(topic=topic, review_status="approved")
-            .select_related("author", "topic")
+            .select_related("author")
             .order_by("created_at")
         )
 

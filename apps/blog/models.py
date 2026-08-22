@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.core.cache import cache
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
+from django.db.utils import IntegrityError
 from django.urls import reverse
 
 from apps.core.utils import generate_slug
@@ -112,28 +113,34 @@ class Post(models.Model):
 
                 self.slug = f"post-{timezone.now().timestamp():.0f}"
 
-        # 确保 slug 唯一
         original_slug = self.slug
         counter = 1
-        while True:
-            # 排除当前实例本身
-            queryset = Post.objects.filter(slug=self.slug)
-            if self.pk:
-                queryset = queryset.exclude(pk=self.pk)
-            if not queryset.exists():
-                break
-            # slug 已存在，添加数字后缀
-            self.slug = f"{original_slug}-{counter}"
-            counter += 1
+        max_retries = 10
 
-        # 设置发布时间
+        for attempt in range(max_retries):
+            try:
+                with transaction.atomic():
+                    # 先尝试保存，让数据库唯一约束生效
+                    super().save(*args, **kwargs)
+                break  # 成功跳出
+            except IntegrityError as e:
+                if "slug" in str(e).lower() or "unique" in str(e).lower():
+                    self.slug = f"{original_slug}-{counter}"
+                    counter += 1
+                    # 重置 pk 以便重试插入
+                    self.pk = None
+                    continue
+                raise  # 非 slug 冲突，向上抛出
+        else:
+            raise RuntimeError(f"无法生成唯一 slug，已重试 {max_retries} 次")
+
+        # 发布时间逻辑已在事务中处理
         if self.status == "published" and not self.published_at:
             from django.utils import timezone
 
             self.published_at = timezone.now()
 
-        super().save(*args, **kwargs)
-        # 清除分类/标签缓存（文章发布/编辑/删除后侧边栏数量需要刷新）
+        # 已在事务中保存，无需再次 super().save()
         cache.delete("blog_categories_tags")
 
     def __str__(self):

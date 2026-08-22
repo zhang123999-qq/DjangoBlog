@@ -245,3 +245,16 @@ def ai_batch_moderate(model_class, batch_size=100):
 
     logger.info("%s 批量审核完成: %s", model_class.__name__, stats)
     return stats
+
+
+def moderate_with_fallback(instance, content=None):
+    """便捷审核入口：自动捕获异常，返回 (status, message) 元组。
+
+    当审核服务不可用时，安全降级为 pending 状态，不阻塞业务流程。
+    供各业务 app 的 services.py 统一调用，消除 try/except 样板代码。
+    """
+    try:
+        return smart_moderate_instance(instance, content=content)
+    except Exception as e:
+        logger.warning("审核服务异常: %s", e)
+        return "pending", "审核服务暂时不可用，稍后审核"

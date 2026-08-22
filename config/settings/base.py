@@ -125,7 +125,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.site_config",
-                "apps.core.csp_nonce.csp_nonce_context",  # CSP nonce 支持
+                "apps.core.security_headers.csp_nonce_context",  # CSP nonce 支持
             ],
         },
     },
@@ -419,6 +419,8 @@ REST_FRAMEWORK = {
         "user": env("API_USER_RATE", default="1000/hour"),
         "upload": env("API_UPLOAD_RATE", default="30/hour"),
         "api_read": env("API_READ_RATE", default="1200/hour"),
+        "login": env("API_LOGIN_RATE", default="10/minute"),
+        "register": env("API_REGISTER_RATE", default="5/hour"),
     },
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -611,49 +613,49 @@ CSP_ENABLED = env.bool("CSP_ENABLED", default=not DEBUG)
 CSP_NONCE_ENABLED = env.bool("CSP_NONCE_ENABLED", default=CSP_ENABLED)
 
 if CSP_ENABLED:
-    # CSP 指令配置
+    # CSP 指令配置（面向 Astro 静态前端 + Django 模板混合架构）
     CSP_DEFAULT_SRC = env.list("CSP_DEFAULT_SRC", default=["'self'"])
     CSP_SCRIPT_SRC = env.list(
         "CSP_SCRIPT_SRC",
         default=[
             "'self'",
-            "cdn.jsdelivr.net",
-            "code.jquery.com",
+            # 'unsafe-inline' 和 'strict-dynamic' 由 CSPMiddleware 按路由自动注入
+            # 静态前端页面：unsafe-inline + strict-dynamic
+            # Django 模板页面：nonce-based（更严格）
         ],
     )
     CSP_STYLE_SRC = env.list(
         "CSP_STYLE_SRC",
         default=[
             "'self'",
-            "'unsafe-inline'",  # 内联样式（Bootstrap 需要）
-            "cdn.jsdelivr.net",
-            "fonts.googleapis.com",
+            "'unsafe-inline'",  # Tailwind CSS 和组件内联样式需要
         ],
     )
     CSP_IMG_SRC = env.list(
         "CSP_IMG_SRC",
         default=[
             "'self'",
-            "data:",  # Base64 图片
+            "data:",  # Base64 图片（工具输出面板）
             "blob:",  # Blob 图片
-            "cdn.jsdelivr.net",
+            "https:",  # Markdown 正文中的外部图片
         ],
     )
     CSP_FONT_SRC = env.list(
         "CSP_FONT_SRC",
         default=[
             "'self'",
-            "cdn.jsdelivr.net",
-            "fonts.gstatic.com",
+            "data:",  # 内联字体
         ],
     )
     CSP_CONNECT_SRC = env.list(
         "CSP_CONNECT_SRC",
         default=[
             "'self'",
+            "ws:",  # WebSocket 通知（开发环境）
+            "wss:",  # WebSocket 通知（生产环境 WSS）
         ],
     )
-    CSP_FRAME_ANCESTORS = env.list("CSP_FRAME_ANCESTORS", default=["'self'"])
+    CSP_FRAME_ANCESTORS = env.list("CSP_FRAME_ANCESTORS", default=["'none'"])
     CSP_BASE_URI = env.list("CSP_BASE_URI", default=["'self'"])
     CSP_FORM_ACTION = env.list("CSP_FORM_ACTION", default=["'self'"])
 else:

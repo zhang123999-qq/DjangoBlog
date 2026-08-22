@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
 from django.urls import reverse
 
@@ -42,16 +42,21 @@ class Board(models.Model):
         return "#"
 
     def update_counts(self):
-        """更新版块的主题数和回复数（使用 update_fields 减少写入量）"""
+        """更新版块的主题数和回复数（加行锁防并发）"""
         from django.db.models import Sum
 
-        approved_topics = self.topics.filter(review_status="approved")
-        self.topic_count = approved_topics.count()
-        reply_count_result = approved_topics.aggregate(total_replies=Sum("reply_count"))
-        self.reply_count = reply_count_result["total_replies"] or 0
-        last_topic = approved_topics.order_by("-last_reply_at").first()
-        self.last_post_at = last_topic.last_reply_at if last_topic else None
-        self.save(update_fields=["topic_count", "reply_count", "last_post_at"])
+        with transaction.atomic():
+            # 锁住版块行
+            board = Board.objects.select_for_update().get(pk=self.pk)
+
+            approved_topics = board.topics.filter(review_status="approved")
+            board.topic_count = approved_topics.count()
+            reply_count_result = approved_topics.aggregate(total_replies=Sum("reply_count"))
+            board.reply_count = reply_count_result["total_replies"] or 0
+            last_topic = approved_topics.order_by("-last_reply_at").first()
+            board.last_post_at = last_topic.last_reply_at if last_topic else None
+
+            board.save(update_fields=["topic_count", "reply_count", "last_post_at"])
 
 
 class Topic(models.Model):
@@ -109,14 +114,19 @@ class Topic(models.Model):
             self.views_count += 1
 
     def update_reply_count(self):
-        """更新回复数和最后回复时间（使用 update_fields 减少写入量）"""
-        approved_replies = self.replies.filter(review_status="approved")
-        self.reply_count = approved_replies.count()
-        last_reply = approved_replies.order_by("-created_at").first()
-        self.last_reply_at = last_reply.created_at if last_reply else None
-        self.save(update_fields=["reply_count", "last_reply_at"])
-        # 更新版块的统计信息
-        self.board.update_counts()
+        """更新回复数和最后回复时间（加行锁防并发）"""
+        with transaction.atomic():
+            # 锁住当前行
+            Topic.objects.select_for_update().get(pk=self.pk)
+
+            approved_replies = self.replies.filter(review_status="approved")
+            self.reply_count = approved_replies.count()
+            last_reply = approved_replies.order_by("-created_at").first()
+            self.last_reply_at = last_reply.created_at if last_reply else None
+
+            self.save(update_fields=["reply_count", "last_reply_at"])
+            # 更新版块的统计信息（在同一事务中）
+            self.board.update_counts()
 
     @property
     def is_pending(self):

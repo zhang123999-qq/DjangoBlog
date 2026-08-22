@@ -1,7 +1,6 @@
 import gzip
 import json
 import socket
-from io import BytesIO
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, TestCase

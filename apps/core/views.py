@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+import shutil
 import time
 
 from django.conf import settings
@@ -197,6 +198,12 @@ def healthz_view(request):
     checks = {
         "database": _check_database(),
         "cache": _check_cache(),
+        "disk": _check_disk(),
+    }
+    checks_detail = {
+        "database": {"status": "healthy" if checks["database"] else "unhealthy"},
+        "cache": {"status": "healthy" if checks["cache"] else "unhealthy"},
+        "disk": _check_disk_detail(),
     }
 
     duration_ms = (time.time() - start_time) * MS_CONVERSION_FACTOR
@@ -205,12 +212,36 @@ def healthz_view(request):
 
     response_data = {
         "status": "healthy" if all_healthy else "unhealthy",
-        "checks": checks,
+        "checks": checks_detail,
         "duration_ms": round(duration_ms, 2),
         "version": "2.3.2",
     }
 
     return JsonResponse(response_data, status=status_code)
+
+
+def _check_disk():
+    """检查磁盘空间，返回布尔值供 all() 判断"""
+    try:
+        total, used, free = shutil.disk_usage("/")
+        free_pct = free / total * 100
+        return free_pct > 5  # 低于 5% 视为不健康
+    except Exception:
+        return False
+
+
+def _check_disk_detail():
+    """检查磁盘空间详情，供 healthz 返回"""
+    try:
+        total, used, free = shutil.disk_usage("/")
+        free_pct = free / total * 100
+        return {
+            "status": "healthy" if free_pct > 10 else "warning",
+            "free_percent": round(free_pct, 1),
+            "free_gb": round(free / (1024**3), 1),
+        }
+    except Exception:
+        return {"status": "unknown"}
 
 
 def _check_database():

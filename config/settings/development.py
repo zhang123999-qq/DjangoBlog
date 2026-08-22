@@ -149,3 +149,28 @@ os.makedirs(BASE_DIR / "tmp" / "session", exist_ok=True)
 # =============================================================================
 
 AXES_ENABLED = False
+
+# =============================================================================
+# CORS / CSRF - 前端开发服务器
+# =============================================================================
+
+# Astro 默认端口 4321
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4321",
+    "http://127.0.0.1:4321",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:4321",
+    "http://127.0.0.1:4321",
+]
+
+# Session Cookie 跨域配置
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False
+
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = False

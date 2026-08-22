@@ -8,8 +8,13 @@
 """
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
+
+from apps.core.constants import (
+    REPUTATION_CLEAN_DAYS_BONUS_INTERVAL,
+    REPUTATION_WEEKLY_BONUS,
+)
 
 
 class UserReputation(models.Model):
@@ -124,40 +129,44 @@ class UserReputation(models.Model):
         self.save(update_fields=["report_count", "last_violation_at"])
 
     def check_clean_days(self):
-        """检查连续无违规天数
+        """检查连续无违规天数（加行锁防并发）
 
         使用 last_violation_at 判断自上次检查以来是否有新违规，
         而非使用终身累计的 rejected_count/report_count。
         """
-        today = timezone.now().date()
+        with transaction.atomic():
+            # 锁住信誉记录
+            reputation = UserReputation.objects.select_for_update().get(pk=self.pk)
 
-        if self.last_clean_check >= today:
-            return self.clean_days
+            today = timezone.now().date()
 
-        days_diff = (today - self.last_clean_check).days
+            if reputation.last_clean_check >= today:
+                return reputation.clean_days
 
-        # 判断上次检查之后是否有新违规
-        has_new_violation = False
-        if self.last_violation_at:
-            last_violation_date = self.last_violation_at.date()
-            has_new_violation = last_violation_date > self.last_clean_check
+            days_diff = (today - reputation.last_clean_check).days
 
-        if has_new_violation:
-            self.clean_days = 0
-        else:
-            self.clean_days += days_diff
+            # 判断上次检查之后是否有新违规
+            has_new_violation = False
+            if reputation.last_violation_at:
+                last_violation_date = reputation.last_violation_at.date()
+                has_new_violation = last_violation_date > reputation.last_clean_check
 
-        self.last_clean_check = today
-        self.save(update_fields=["clean_days", "last_clean_check"])
+            if has_new_violation:
+                reputation.clean_days = 0
+            else:
+                reputation.clean_days += days_diff
 
-        # 连续7天无违规，奖励5分（仅在恰好满7天倍数时触发一次）
-        if self.clean_days >= 7 and self.clean_days % 7 == 0 and days_diff > 0:
-            from django.conf import settings as django_settings
+            reputation.last_clean_check = today
+            reputation.save(update_fields=["clean_days", "last_clean_check"])
 
-            bonus = getattr(django_settings, "REPUTATION_WEEKLY_BONUS", 5)
-            self.update_score(bonus, f"连续{self.clean_days}天无违规")
+            # 连续7天无违规，奖励5分（仅在恰好满7天倍数时触发一次）
+            if reputation.clean_days >= REPUTATION_CLEAN_DAYS_BONUS_INTERVAL and reputation.clean_days % REPUTATION_CLEAN_DAYS_BONUS_INTERVAL == 0 and days_diff > 0:
+                from django.conf import settings as django_settings
 
-        return self.clean_days
+                bonus = getattr(django_settings, "REPUTATION_WEEKLY_BONUS", REPUTATION_WEEKLY_BONUS)
+                reputation.update_score(bonus, f"连续{reputation.clean_days}天无违规")
+
+            return reputation.clean_days
 
     @classmethod
     def get_or_create_for_user(cls, user):

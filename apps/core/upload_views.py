@@ -17,6 +17,12 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
+from apps.core.constants import (
+    ALLOWED_IMAGE_EXTENSIONS,
+    ALLOWED_IMAGE_MIMES,
+    DANGEROUS_FILE_EXTENSIONS,
+    FILE_ALLOWED_EXTENSIONS as CORE_FILE_EXTENSIONS,
+)
 from apps.core.error_codes import ErrorCodes, api_error_payload
 
 logger = logging.getLogger(__name__)
@@ -26,37 +32,14 @@ class UploadRateThrottle(UserRateThrottle):
     scope = "upload"
 
 
-IMAGE_ALLOWED_MIME_TYPES = {
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-}
-IMAGE_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
+# 使用统一常量
+IMAGE_ALLOWED_MIME_TYPES = ALLOWED_IMAGE_MIMES
+IMAGE_ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS
 
-FILE_ALLOWED_EXTENSIONS = {
-    "pdf",
-    "txt",
-    "md",
-    "csv",
-    "json",
-    "doc",
-    "docx",
-    "xls",
-    "xlsx",
-    "ppt",
-    "pptx",
-    "zip",
-    "7z",
-    "rar",
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-    "webp",
-}
+FILE_ALLOWED_EXTENSIONS = CORE_FILE_EXTENSIONS | {"csv", "json", "xls", "xlsx", "ppt", "pptx", "7z"}
 
-DANGEROUS_FILE_EXTENSIONS = {
+# 扩展危险扩展名（保留原有额外项）
+UPLOAD_DANGEROUS_EXTENSIONS = DANGEROUS_FILE_EXTENSIONS | {
     "exe",
     "dll",
     "bat",
@@ -77,6 +60,53 @@ DANGEROUS_FILE_EXTENSIONS = {
     "rb",
     "jar",
 }
+
+# MIME 类型白名单：扩展名 -> 允许的 MIME 类型集合
+FILE_MIME_WHITELIST = {
+    "pdf": {"application/pdf"},
+    "txt": {"text/plain"},
+    "md": {"text/markdown", "text/plain"},
+    "csv": {"text/csv"},
+    "json": {"application/json"},
+    "doc": {"application/msword"},
+    "docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+    "xls": {"application/vnd.ms-excel"},
+    "xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+    "ppt": {"application/vnd.ms-powerpoint"},
+    "pptx": {"application/vnd.openxmlformats-officedocument.presentationml.presentation"},
+    "zip": {"application/zip", "application/x-zip-compressed"},
+    "7z": {"application/x-7z-compressed"},
+    "rar": {"application/vnd.rar", "application/x-rar-compressed"},
+    # 复用图片白名单
+    "jpg": IMAGE_ALLOWED_MIME_TYPES,
+    "jpeg": IMAGE_ALLOWED_MIME_TYPES,
+    "png": IMAGE_ALLOWED_MIME_TYPES,
+    "gif": IMAGE_ALLOWED_MIME_TYPES,
+    "webp": IMAGE_ALLOWED_MIME_TYPES,
+}
+
+
+def _detect_mime_from_header(header: bytes, ext: str) -> str | None:
+    """简易 MIME 检测，避免引入 python-magic 依赖"""
+    if ext in {"jpg", "jpeg"} and header.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if ext == "png" and header.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if ext == "gif" and header.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if ext == "webp" and len(header) >= 12 and header.startswith(b"RIFF") and header[8:12] == b"WEBP":
+        return "image/webp"
+    if ext == "pdf" and header.startswith(b"%PDF"):
+        return "application/pdf"
+    if ext == "zip" and header.startswith(b"PK\x03\x04"):
+        return "application/zip"
+    if ext == "7z" and header.startswith(b"7z\xbc\xaf\x27\x1c"):
+        return "application/x-7z-compressed"
+    if ext == "rar" and header.startswith(b"Rar!\x1a\x07\x00"):
+        return "application/vnd.rar"
+    # 可按需补充更多类型
+    return None
+
 
 CLAMAV_ENABLED = getattr(settings, "UPLOAD_CLAMAV_ENABLED", False)
 CLAMAV_HOST = getattr(settings, "UPLOAD_CLAMAV_HOST", "127.0.0.1")
@@ -350,11 +380,24 @@ def upload_file(request):
         return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_TOO_LARGE), status=status.HTTP_400_BAD_REQUEST)
 
     ext = _safe_extension(upload.name)
-    if ext in DANGEROUS_FILE_EXTENSIONS:
+    if ext in UPLOAD_DANGEROUS_EXTENSIONS:
         return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_TYPE_DENIED), status=status.HTTP_400_BAD_REQUEST)
 
     if ext not in FILE_ALLOWED_EXTENSIONS:
         return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_EXT_NOT_ALLOWED), status=status.HTTP_400_BAD_REQUEST)
+
+    # MIME 类型验证：检查文件头与扩展名是否匹配
+    if ext in FILE_MIME_WHITELIST:
+        allowed_mimes = FILE_MIME_WHITELIST[ext]
+        # 读取文件头判断真实 MIME
+        upload.seek(0)
+        header = upload.read(256)
+        upload.seek(0)
+
+        detected_mime = _detect_mime_from_header(header, ext)
+        if detected_mime and detected_mime not in allowed_mimes:
+            logger.warning(f"MIME 不匹配: ext={ext}, declared={upload.content_type}, detected={detected_mime}")
+            return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_EXT_NOT_ALLOWED), status=status.HTTP_400_BAD_REQUEST)
 
     if _contains_dangerous_magic(upload, ext):
         return Response(api_error_payload(ErrorCodes.UPLOAD_FILE_MAGIC_DENIED), status=status.HTTP_400_BAD_REQUEST)

@@ -61,11 +61,11 @@ class ModerationStrategy:
         }
 
         # 1. 获取用户信誉等级
-        if user.is_authenticated:
+        if user and user.is_authenticated:
             reputation = UserReputation.get_or_create_for_user(user)
             details["user_level"] = reputation.level
         else:
-            # 匿名用户，默认普通等级
+            # 匿名用户/游客，默认普通等级
             details["user_level"] = "normal"
 
         # 2. 高信誉用户：快速敏感词检查 + 自动发布

@@ -18,6 +18,12 @@ from django.contrib.auth import get_user_model
 from django.db import DatabaseError
 from django.utils import timezone
 
+from apps.core.celery_lock import task_lock
+from apps.core.constants import (
+    REPUTATION_APPROVE_BONUS,
+    REPUTATION_REJECT_PENALTY,
+)
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
@@ -71,10 +77,10 @@ def async_moderate_text(self, content_type: str, content_id: int, content: str, 
                 reputation.increment_posts(approved=(result["status"] == "approved"))
 
                 if result["status"] == "approved":
-                    bonus = getattr(settings, "REPUTATION_APPROVE_BONUS", 1)
+                    bonus = getattr(settings, "REPUTATION_APPROVE_BONUS", REPUTATION_APPROVE_BONUS)
                     reputation.update_score(bonus, "内容审核通过")
                 elif result["status"] == "rejected":
-                    penalty = getattr(settings, "REPUTATION_REJECT_PENALTY", 5)
+                    penalty = getattr(settings, "REPUTATION_REJECT_PENALTY", REPUTATION_REJECT_PENALTY)
                     reputation.update_score(-penalty, "内容被拒绝")
 
         # 如果需要人工审核，创建提醒
@@ -149,6 +155,14 @@ def async_moderate_image(
 @shared_task
 def check_pending_moderation():
     """检查待审核内容，生成提醒。"""
+    try:
+        with task_lock("check_pending_moderation", timeout=600) as acquired:
+            if not acquired:
+                logger.info("check_pending_moderation: 另一个实例正在运行，跳过")
+                return 0
+    except RuntimeError:
+        return 0
+
     from .models import ModerationAdmin, ModerationReminder
 
     logger.info("开始检查待审核内容")
@@ -210,6 +224,14 @@ def check_pending_moderation():
 @shared_task
 def auto_approve_old_pending():
     """自动通过超过 24 小时无敏感词的待审核内容。"""
+    try:
+        with task_lock("auto_approve_old_pending", timeout=600) as acquired:
+            if not acquired:
+                logger.info("auto_approve_old_pending: 另一个实例正在运行，跳过")
+                return 0
+    except RuntimeError:
+        return 0
+
     from .models import ModerationLog
     from .utils import check_sensitive_content
 
@@ -313,6 +335,14 @@ def auto_approve_old_pending():
 @shared_task
 def update_reputation_clean_days():
     """更新用户信誉连续无违规天数（使用 iterator 分批加载）。"""
+    try:
+        with task_lock("update_reputation_clean_days", timeout=600) as acquired:
+            if not acquired:
+                logger.info("update_reputation_clean_days: 另一个实例正在运行，跳过")
+                return 0
+    except RuntimeError:
+        return 0
+
     from .reputation import UserReputation
 
     logger.info("开始更新用户信誉连续无违规天数")

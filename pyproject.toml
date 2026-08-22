@@ -143,6 +143,16 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
+# ===== Phase 1: 基础检查（当前）=====
+# check_untyped_defs = true  # 暂不全局开启，避免误报过多
+
+# ===== Phase 2: 核心模块严格检查（下一步启用）=====
+# disallow_untyped_defs = true
+# disallow_incomplete_defs = true
+
+# ===== Phase 3: 全项目严格模式（最终目标）=====
+# strict = true
+
 [[tool.mypy.overrides]]
 module = [
     "apps.core.migrations.*",
@@ -153,6 +163,44 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = ["apps.core.admin"]
 disable_error_code = ["attr-defined"]
+
+# ===== 核心模块：启用 check_untyped_defs (Phase 1.5) =====
+[[tool.mypy.overrides]]
+module = [
+    "apps.core.views_counter",
+    "apps.core.celery_lock",
+    "apps.core.constants",
+    "apps.core.views",
+]
+check_untyped_defs = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = [
+    "apps.blog.models",
+    "apps.blog.tasks",
+]
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "apps.forum.models",
+]
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "moderation.utils",
+    "moderation.strategy",
+    "moderation.reputation",
+    "moderation.tasks",
+]
+check_untyped_defs = true
+
+# ===== 工具模块：已有类型注解，可后续启用 =====
+# [[tool.mypy.overrides]]
+# module = ["apps.tools.*"]
+# check_untyped_defs = true
 
 [build-system]
 requires = ["setuptools>=75.0", "wheel"]
