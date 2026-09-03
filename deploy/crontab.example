@@ -1,32 +1,42 @@
 # ========================================
 # DjangoBlog 定时备份配置
 # ========================================
-
-# crontab 配置示例
+#
 # 使用方法：
-#   1. 编辑 crontab: crontab -e
-#   2. 添加以下配置
+#   1. 根据实际项目路径修改下面的 PROJECT_DIR
+#   2. crontab -e 粘贴本文件内容（或 crontab crontab.example）
 #   3. 保存退出
+#
+# 注意：脚本内部使用 docker compose，需要部署用户有 docker 权限（加入 docker 组）
+
+# 项目根目录（按实际部署修改）
+PROJECT_DIR=/opt/djangoblog
 
 # ========================================
 # 数据库备份定时任务
 # ========================================
 
 # 每天凌晨 2 点执行备份
-0 2 * * * /mnt/f/DjangoBlog/deploy/backup.sh >> /mnt/f/DjangoBlog/deploy/logs/cron_backup.log 2>&1
+0 2 * * * cd $PROJECT_DIR && bash deploy/backup.sh >> $PROJECT_DIR/deploy/logs/cron_backup.log 2>&1
 
 # 每周日凌晨 3 点清理旧备份
-0 3 * * 0 /mnt/f/DjangoBlog/deploy/backup.sh --cleanup >> /mnt/f/DjangoBlog/deploy/logs/cron_cleanup.log 2>&1
+0 3 * * 0 cd $PROJECT_DIR && bash deploy/backup.sh --cleanup >> $PROJECT_DIR/deploy/logs/cron_cleanup.log 2>&1
 
 # 每月 1 号凌晨 4 点生成备份报告
-0 4 1 * * /mnt/f/DjangoBlog/deploy/backup.sh --report >> /mnt/f/DjangoBlog/deploy/logs/cron_report.log 2>&1
+0 4 1 * * cd $PROJECT_DIR && bash deploy/backup.sh --report >> $PROJECT_DIR/deploy/logs/cron_report.log 2>&1
 
 # ========================================
 # 备份验证定时任务
 # ========================================
 
 # 每天凌晨 5 点验证最新备份
-0 5 * * * /mnt/f/DjangoBlog/deploy/backup.sh --verify >> /mnt/f/DjangoBlog/deploy/logs/cron_verify.log 2>&1
+0 5 * * * cd $PROJECT_DIR && bash deploy/backup.sh --verify >> $PROJECT_DIR/deploy/logs/cron_verify.log 2>&1
+
+# ========================================
+# 健康检查（每 10 分钟）
+# ========================================
+
+*/10 * * * * cd $PROJECT_DIR && bash deploy/health.sh check >> $PROJECT_DIR/deploy/logs/cron_health.log 2>&1
 
 # ========================================
 # 说明
@@ -34,22 +44,24 @@
 #
 # 备份策略：
 #   - 每天凌晨 2 点自动备份
-#   - 保留最近 7 天备份
 #   - 每周清理旧备份
 #   - 每月生成备份报告
 #   - 每天验证备份完整性
+#   - 每 10 分钟健康检查
 #
 # 日志位置：
-#   - 备份日志: /mnt/f/DjangoBlog/deploy/logs/backup_*.log
-#   - Cron 日志: /mnt/f/DjangoBlog/deploy/logs/cron_*.log
+#   - 备份日志: $PROJECT_DIR/deploy/logs/backup_*.log
+#   - Cron 日志: $PROJECT_DIR/deploy/logs/cron_*.log
 #
 # 手动操作：
-#   - 手动备份: ./backup.sh
-#   - 恢复数据: ./restore.sh
-#   - 列出备份: ./restore.sh --list
-#   - 验证备份: ./backup.sh --verify
+#   - 手动备份:  ./backup.sh
+#   - 恢复数据:  ./restore.sh
+#   - 列出备份:  ./restore.sh --list
+#   - 验证备份:  ./backup.sh --verify
+#   - 健康检查:  ./health.sh check
+#   - 查看日志:  ./health.sh logs
 #
-# 监控告警：
-#   - 备份失败会记录到日志
-#   - 可配置邮件/Slack通知
-#   - 建议监控备份日志文件
+# 监控告警建议：
+#   - 监控 cron_health.log 中是否有 "异常" 关键字
+#   - 备份失败可接入邮件/Slack 通知
+#   - 建议配合 Prometheus + Grafana 做可视化

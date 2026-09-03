@@ -4,6 +4,13 @@
 # 容器: db, redis, web, celery_worker, celery_beat
 # 说明: 宿主机 Nginx 反向代理到 web:8000
 #       migrate/collectstatic 在 web 启动时由 entrypoint.sh 自动执行
+# 启动顺序: command 行由 entrypoint.sh 包装执行
+#          (entrypoint 先 setuid 到 djangoblog 用户，再 exec 此 command)
+# ========================================
+
+# 容器: db, redis, web, celery_worker, celery_beat
+# 说明: 宿主机 Nginx 反向代理到 web:8000
+#       migrate/collectstatic 在 web 启动时由 entrypoint.sh 自动执行
 # ========================================
 
 volumes:
@@ -146,6 +153,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    # 启动 Gunicorn（entrypoint.sh 会先执行 migrate/collectstatic，再降权执行此命令）
     command: ["gunicorn", "config.wsgi:application", "--config", "deploy/gunicorn.conf.py"]
     deploy:
       resources:

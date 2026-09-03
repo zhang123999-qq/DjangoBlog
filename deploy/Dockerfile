@@ -34,7 +34,10 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources \
 
 # Install Python dependencies
 COPY requirements/ /app/requirements/
-RUN pip install --no-cache-dir \
+# BuildKit cache mount（自动检测，普通 docker build 也能跑）
+# syntax=docker/dockerfile:1.4
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install \
     --timeout 120 \
     --retries 5 \
     -r /app/requirements/production.lock
