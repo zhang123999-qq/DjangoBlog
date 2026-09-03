@@ -9,6 +9,43 @@
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-09-03
+
+### 🚀 部署改进
+- **Docker 部署链完善**：
+  - `.env.example` 补充 `WEB_PORT_EXPOSED` 和 `DB_BUFFER_POOL_SIZE` 字段（之前缺失）
+  - `crontab.example` 改用通用 `/opt/djangoblog` 路径，移除 Windows 风格 `/mnt/f/`
+  - 新增每 10 分钟健康检查定时任务
+  - `Dockerfile` 改用 BuildKit cache mount（兼容普通 docker build）
+  - 新增 `deploy/install_nginx.sh`（一键安装 Nginx 配置，支持 generic/bt/frontend 三种）
+  - `docker-compose.yml` 补充 command 机制说明（避免与 entrypoint 冲突的歧义）
+
+### 🔄 CI/CD 自动化
+- 新增 `.github/workflows/deploy.yml`（push to main 自动部署）
+- 10 步部署流程：SSH → 备份 → pull → 部署 → 健康检查 → 通知
+- 自动回滚机制（部署失败时 `git checkout HEAD~1`）
+- 并发控制（同一时间只允许一个部署）
+- paths-ignore（文档改动不触发部署）
+
+### 📚 文档重构
+- **删除 21 份过期/重复文档**：
+  - 5 份部署文档（DEPLOYMENT / deployment-manual / FIX_PLAN / 模块12）
+  - 3 份一次性审计报告（PROJECT_AUDIT / SYSTEM_TEST / FRONTEND_AUDIT）
+  - 12 份过时模块文档（6721 行 → 1 份 ARCHITECTURE）
+  - 1 份 docs/README.md（与根 README 重复）
+- **新增 4 份精简文档**：
+  - `docs/ARCHITECTURE.md` - 架构总览（替代 12 份模块文档）
+  - `docs/QUICKSTART.md` - 5 分钟上手指南
+  - `docs/OPERATIONS.md` - 日常运维速查
+  - `docs/CI_DEPLOY.template.yml` - deploy.yml 完整模板
+- **重写** `README.md` - 项目真实状态、新功能、当前架构
+
+### 🔧 工具改进
+- 文档系统从"6721 行模块文档 + 5 份部署文档"精简到"1 份架构 + 1 份快速上手 + 1 份运维"
+- 信息密度提升：每份文档都聚焦核心问题
+
+## [Unreleased]
+
 ### 🔒 安全修复
 - **修复 DOM-based XSS 漏洞**：`nat_detector.html` 和 `json_formatter_enhanced.html` 中 `innerHTML` 直接插入外部数据（WebRTC ICE 候选、公网 IP、JSON 解析错误），改用 `textContent`/`createElement` 安全 API
 - **启用 CSP nonce 机制**：`CSPMiddleware` 集成 per-request nonce 生成，移除 `unsafe-inline`；所有模板 `<script>` 标签添加 `nonce="{{ request.csp_nonce }}"` 属性；Nginx 移除重复 CSP 头

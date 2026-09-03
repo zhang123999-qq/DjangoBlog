@@ -4,6 +4,35 @@
 
 ---
 
+## 🛡 当前安全状态（2026-09-03 更新）
+
+### 最近一次深度安全审计
+
+- **日期**：2026-04-12 发现 → 2026-05-12 全部修复
+- **问题**：10 个（严重 3 / 中等 4 / 小问题 3）
+- **状态**：✅ **全部已修复**
+- **审计报告**：已整合到 git history（FIX_PLAN.md 已删除，因问题已闭环）
+
+### 2.4.1 新增安全措施
+
+- ✅ **非 root 容器运行**：容器内 `djangoblog` 用户（`/sbin/nologin`）
+- ✅ **端口仅绑 127.0.0.1**：`127.0.0.1:8000:8000` 不暴露公网
+- ✅ **自动密钥生成**：`secrets.token_urlsafe(64)`
+- ✅ **CSP nonce 机制**：per-request nonce，移除 `unsafe-inline`
+- ✅ **CSRF Cookie 配置正确**：`HTTPONLY=False` 保持 JS 读取能力
+- ✅ **Redis 密码认证**：`--requirepass` 强制开启
+- ✅ **Nginx server_tokens off**：隐藏版本号
+- ✅ **依赖更新自动化**：Dependabot 配置
+- ✅ **CI 安全扫描**：Safety/Pip-audit 阻断有漏洞的构建
+
+### 待办（持续改进）
+
+- 🟡 集成 Sentry 做运行时错误追踪
+- 🟡 接入 Prometheus + Grafana 做安全指标监控
+- 🟡 定期（季度）跑一次外部渗透测试
+
+---
+
 ## 目录
 
 - [支持的版本](#支持的版本)

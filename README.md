@@ -1,464 +1,172 @@
 # DjangoBlog
 
-<div align="center">
+> **博客 + 论坛 + 工具箱 + API** —— 一个面向生产部署的 Django 综合站点
 
-![Python](https://img.shields.io/badge/Python-3.13-blue)
-![Django](https://img.shields.io/badge/Django-4.2%20LTS-green)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)
-![Redis](https://img.shields.io/badge/Redis-7-DC382D)
-![License](https://img.shields.io/badge/License-MIT-black)
-![Tests](https://img.shields.io/badge/Tests-45%20passed-brightgreen)
-![Security](https://img.shields.io/badge/Security-Audited-brightgreen)
-![Code Quality](https://img.shields.io/badge/Code%20Quality-9.5%2F10-brightgreen)
-![Deploy](https://img.shields.io/badge/Deploy-ready-brightgreen)
-![GitHub stars](https://img.shields.io/github/stars/zhang123999-qq/DjangoBlog?style=social)
+[![Python](https://img.shields.io/badge/Python-3.13-blue)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-4.2%20LTS-green)](https://www.djangoproject.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://www.docker.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)](https://www.mysql.com/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D)](https://redis.io/)
+[![License](https://img.shields.io/badge/License-MIT-black)](LICENSE)
 
-一个面向生产部署的 Django 综合站点：**博客 + 论坛 + 工具箱 + API**。
-强调「可用性、可维护性、可部署性」，适合个人站点、中小团队内容平台与教学演示。
-
-**🔒 安全审计通过** | **📊 代码质量 9.5/10** | **🚀 生产就绪**
-
-[在线演示](#) · [快速开始](#-快速开始) · [API 文档](./docs/API.md) · [贡献指南](./CONTRIBUTING.md) · [审计报告](./docs/PROJECT_AUDIT_2026.md)
+[快速开始](docs/QUICKSTART.md) · [架构](docs/ARCHITECTURE.md) · [API 文档](docs/API.md) · [部署](docs/CI_DEPLOY.md) · [运维](docs/OPERATIONS.md) · [更新日志](CHANGELOG.md)
 
 </div>
 
 ---
 
-## 目录
+## ✨ 核心特性
 
-- [项目亮点](#-项目亮点)
-- [项目截图](#-项目截图)
-- [技术栈](#-技术栈)
-- [项目结构](#-项目结构)
-- [快速开始](#-快速开始)
-  - [一键自动部署（推荐）](#一键自动部署推荐)
-  - [手动分步部署](#手动分步部署)
-- [依赖管理](#-依赖管理)
-- [本地开发](#-本地开发非-docker)
-- [生产安全配置](#-生产安全配置)
-- [运维命令速查](#-运维命令速查)
-- [API 文档](#-api-文档)
-- [路线图](#-路线图roadmap)
-- [贡献指南](#-贡献指南)
-- [文档目录](#-文档目录)
-- [许可证](#-许可证)
+| 模块 | 功能 |
+|------|------|
+| 📰 **博客系统** | 文章、分类、标签、评论、点赞、Slug 路由、阅读量统计 |
+| 💬 **社区论坛** | 主题、回复、附件、订阅、互动 |
+| 🧰 **工具箱** | 68 个在线工具（编码转换、文本处理、加解密、图像） |
+| 🔌 **REST API** | 60+ 端点，DRF + OpenAPI 文档 |
+| 🔔 **实时通知** | WebSocket 推送（Channels + Redis）|
+| 🔍 **全文搜索** | Meilisearch/Elasticsearch（可选）|
+| 🛡️ **安全增强** | Axes 登录防护、限流、CSRF、XSS、CSP、内容审核 |
+| 🚀 **生产部署** | 5 容器 Docker Compose + Nginx + Gunicorn + CI/CD |
+| 🧪 **质量保障** | 45 测试通过、mypy/flake8/bandit/pre-commit |
+| 💾 **数据备份** | 定时 mysqldump + 验证 + 恢复脚本 |
 
 ---
 
-## ✨ 项目亮点
+## 🏗 技术栈
 
-| 功能 | 说明 |
-|------|------|
-| 📰 **内容系统** | 博客文章、分类、评论、点赞、Slug 路由 |
-| 💬 **社区模块** | 论坛主题、回复、互动链路 |
-| 🧰 **工具箱模块** | 72+ 个实用工具（编码转换、文本处理、加解密、图像类等） |
-| 🔌 **API 能力** | Django REST Framework + OpenAPI 文档支持 |
-| 🔔 **实时通知** | WebSocket 实时推送、未读消息计数 |
-| 🔍 **全文搜索** | Meilisearch/Elasticsearch 毫秒级响应 |
-| 🛡️ **安全增强** | 安全响应头、限流、登录防护（Axes）、内容审核机制、验证码密码学安全 |
-| 🚀 **生产部署友好** | Docker Compose / Nginx / Gunicorn / MySQL / Redis |
-| 🧪 **质量保障** | 测试全覆盖、pre-commit 钩子、CI/CD 流水线 |
-| 💾 **数据备份** | 管理后台一键备份/恢复，gzip 压缩 JSON 导出 |
+| 层 | 技术 |
+|---|---|
+| **后端** | Python 3.13 + Django 4.2 LTS + DRF 3.14 + Channels 4.0 |
+| **数据** | MySQL 8.0 + Redis 7 + Meilisearch 1.0 |
+| **异步** | Celery 5+ |
+| **部署** | Docker Compose + Nginx + Gunicorn (gthread) |
+| **CI/CD** | GitHub Actions（CI + 自动部署 + 回滚）|
+| **质量** | pytest + mypy + flake8 + black + bandit + pre-commit |
 
 ---
 
-## 📸 项目截图
+## 🚀 30 秒快速开始
 
-### 网站首页
-
-![首页截图](./docs/screenshots/homepage.png)
-
-### 管理后台
-
-![工具栏截图](./docs/screenshots/admin.png)
-
-### API 文档
-
-![管理员后台截图](./docs/screenshots/api-docs.png)
-
-> 💡 如果图片无法显示，欢迎访问 [在线演示](#) 查看实际效果。
-
----
-
-## 🧱 技术栈
-
-### Backend
-
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Python | 3.13 | 编程语言 |
-| Django | 4.2 LTS | Web 框架 |
-| Django REST Framework | 3.14+ | API 框架 |
-| Django Channels | 4.0+ | WebSocket 支持（可选） |
-| Celery | 5+ | 异步任务队列 |
-
-### Data & Middleware
-
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| MySQL | 8.0+ | 主数据库 |
-| Redis | 7+ | 缓存 & 消息队列 |
-| Meilisearch | 1.0+ | 全文搜索（可选） |
-
-### Deploy
-
-| 技术 | 说明 |
-|------|------|
-| Docker & Docker Compose | 容器化部署 |
-| Nginx | 反向代理 |
-| Gunicorn | WSGI 服务器 |
-
-### Engineering
-
-| 工具 | 说明 |
-|------|------|
-| pytest | 测试框架 |
-| mypy | 类型检查 |
-| flake8 | 代码规范 |
-| pre-commit | Git 钩子 |
-| GitHub Actions | CI/CD 流水线 |
-
----
-
-## 📦 依赖管理
-
-项目使用分层依赖文件，`*.txt` 作为人工维护的依赖入口，`*.lock` 作为 CI、Docker 和生产部署使用的可复现锁文件。
-
-| 文件 | 用途 |
-|------|------|
-| `requirements/base.txt` | 应用公共依赖入口 |
-| `requirements/development.txt` | 本地开发、测试、文档工具入口 |
-| `requirements/production.txt` | 生产环境额外依赖入口 |
-| `requirements/base.lock` | 公共依赖锁定版本 |
-| `requirements/development.lock` | CI/开发环境锁定版本 |
-| `requirements/production.lock` | Docker/生产环境锁定版本 |
-| `uv.lock` | `pyproject.toml` 对应的完整解析锁 |
-
-常用更新命令：
+### Docker 部署（推荐）
 
 ```bash
-uv pip compile requirements/base.txt -o requirements/base.lock --upgrade --universal
-uv pip compile requirements/production.txt -o requirements/production.lock --upgrade --universal
-uv pip compile requirements/development.txt -o requirements/development.lock --upgrade --universal
-uv lock --upgrade
+git clone https://github.com/zhang123999-qq/DjangoBlog.git
+cd DjangoBlog
+sudo bash deploy/auto-deploy.sh
+sudo bash deploy/install_nginx.sh
 ```
+
+**搞定** ✅ 访问 `http://your-domain`
+
+### 本地开发
+
+```bash
+python3.13 -m venv venv
+source venv/bin/activate
+pip install -r requirements/development.lock
+cp .env.example .env
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+详细：[docs/QUICKSTART.md](docs/QUICKSTART.md)
 
 ---
 
 ## 📁 项目结构
 
-```text
+```
 DjangoBlog/
-├── apps/                    # 业务应用
-│   ├── accounts/            # 用户与认证
-│   ├── blog/                # 博客
-│   ├── forum/               # 论坛
-│   ├── tools/               # 工具箱（72+ 工具）
-│   ├── api/                 # REST API 层
-│   ├── notifications/       # 实时通知系统
-│   └── core/                # 公共能力（安全、中间件、Admin）
-├── config/                  # Django 配置
-│   └── settings/            # base / development / production / test
-├── deploy/                  # 部署相关
-│   ├── Dockerfile           # Docker 镜像构建
-│   ├── docker-compose.yml   # 服务编排
-│   └── auto-deploy.sh       # 一键部署脚本
-├── docs/                    # 项目文档
-├── requirements/            # 依赖分层管理
-├── templates/               # 模板文件
-├── static/                  # 静态资源
-└── tests/                   # 测试用例
+├── apps/                # 7 个业务应用
+│   ├── accounts/        # 用户系统
+│   ├── blog/            # 博客核心
+│   ├── forum/           # 论坛
+│   ├── core/            # 公共工具
+│   ├── notifications/   # 实时通知
+│   ├── tools/           # 工具箱
+│   └── api/             # REST API
+├── moderation/          # 内容审核
+├── config/              # Django 配置（4 套环境）
+├── deploy/              # Docker 部署 + 运维脚本
+│   ├── docker-compose.yml
+│   ├── Dockerfile
+│   ├── auto-deploy.sh   # 一键部署
+│   ├── health.sh        # 健康检查
+│   ├── backup.sh        # 备份
+│   └── install_nginx.sh # Nginx 配置安装
+├── requirements/        # 分层依赖
+├── docs/                # 项目文档
+├── templates/           # Django 模板
+├── static/              # 静态资源
+└── tests/               # 测试
 ```
+
+详细：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-## 🚀 快速开始
+## 📊 项目状态
 
-### 一键自动部署（推荐）
-
-> **支持环境**：阿里云、腾讯云、华为云、飞牛 NAS 等
-> **前置条件**：已安装 Docker 和 Docker Compose
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/zhang123999-qq/DjangoBlog.git
-cd DjangoBlog
-
-# 2. 一键部署
-bash deploy/auto-deploy.sh
-
-# . 增量更新
-bash deploy/auto-deploy.sh update
-```
-
-**脚本自动完成：**
-
-| 步骤 | 功能 |
-|:----:|------|
-| 1 | 自动生成 `.env` 配置文件（含随机 SECRET_KEY） |
-| 2 | 配置 Docker 镜像加速（国内环境自动启用，始终刷新失效镜像源） |
-| 3 | 构建 Docker 镜像（多阶段构建，所有服务共享） |
-| 4 | 启动 MySQL + Redis 并等待就绪 |
-| 5 | 自动执行数据库迁移 + 静态文件收集 |
-| 6 | 启动全部服务（Web、Celery、Nginx） |
-| 7 | 交互式创建管理员账户 |
-
-**部署完成后：**
-
-- 🌐 网站首页：`http://你的服务器IP`
-- 🛠 管理后台：`http://你的服务器IP/admin/`
-- 📖 API 文档：`http://你的服务器IP/api/docs/`
+| 指标 | 数值 |
+|---|---|
+| **代码量** | ~33,800 行 Python |
+| **文件数** | 463 个（276 Python）|
+| **API 端点** | 60+ |
+| **在线工具** | 68 个 |
+| **测试** | 45 通过 |
+| **提交** | 297+ |
+| **代码质量** | 9.5/10 |
+| **生产就绪** | ✅ |
 
 ---
 
-### 手动分步部署
+## 📚 文档
 
-#### 1) 准备环境变量
-
-```bash
-# 复制示例配置
-cp .env.example .env
-
-# 编辑配置（必填项）
-# - SECRET_KEY: 强随机字符串
-# - ALLOWED_HOSTS: 服务器 IP 或域名
-# - DEBUG=False
-```
-
-#### 2) 构建镜像并启动
-
-```bash
-docker compose --env-file .env -f deploy/docker-compose.yml build
-docker compose --env-file .env -f deploy/docker-compose.yml up -d
-```
-
-#### 3) 数据库迁移
-
-```bash
-docker compose --env-file .env -f deploy/docker-compose.yml up migrate
-```
-
-#### 4) 创建管理员账户
-
-```bash
-docker compose --env-file .env -f deploy/docker-compose.yml exec web python manage.py createsuperuser
-```
-
-#### 5) 检查运行状态
-
-```bash
-docker compose --env-file .env -f deploy/docker-compose.yml ps
-docker compose --env-file .env -f deploy/docker-compose.yml logs -f --tail=50
-```
+| 文档 | 内容 |
+|---|---|
+| [QUICKSTART.md](docs/QUICKSTART.md) | 5 分钟上手（本地 / Docker / 生产）|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 架构总览、模块设计、数据流 |
+| [API.md](docs/API.md) | REST API 完整文档 |
+| [CI_DEPLOY.md](docs/CI_DEPLOY.md) | CI/CD 自动部署 |
+| [OPERATIONS.md](docs/OPERATIONS.md) | 日常运维速查 |
+| [CHANGELOG.md](CHANGELOG.md) | 更新日志 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
+| [SECURITY.md](SECURITY.md) | 安全政策 |
 
 ---
 
-## 🧑‍💻 本地开发（非 Docker）
+## 🛡️ 安全
 
-### 1) 配置环境变量
-
-```bash
-# .env 中设置
-DEPLOY_MODE=host
-DEBUG=True
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=yourpassword
-DB_NAME=djangoblog
-```
-
-### 2) 创建虚拟环境
-
-```bash
-uv venv
-source .venv/bin/activate  # Linux/macOS
-# 或 .venv\Scripts\activate  # Windows
-
-uv pip install -r requirements/development.lock
-```
-
-### 3) 初始化数据库
-
-```bash
-uv run python manage.py migrate
-uv run python manage.py createsuperuser
-```
-
-### 4) 启动开发服务器
-
-```bash
-uv run python manage.py runserver 0.0.0.0:8000
-```
-
-### 5) 常用检查命令
-
-```bash
-# 系统检查
-uv run python manage.py check
-
-# 迁移检查
-uv run python manage.py makemigrations --check --dry-run
-
-# 运行测试
-uv run pytest -q
-```
+- ✅ 通过深度安全审计
+- ✅ 非 root 容器运行
+- ✅ 端口仅绑定 127.0.0.1
+- ✅ 自动密钥生成
+- ✅ 依赖定期更新（Dependabot）
+- 🔒 如发现安全问题，请查看 [SECURITY.md](SECURITY.md)
 
 ---
 
-## 🔐 生产安全配置
+## 🤝 贡献
 
-### 纯 HTTP 部署（无 SSL 证书）
+欢迎 PR！流程：[CONTRIBUTING.md](CONTRIBUTING.md)
 
-```env
-SECURE_SSL_REDIRECT=False
-SESSION_COOKIE_SECURE=False
-CSRF_COOKIE_SECURE=False
-```
-
-> 💡 v2.3.4+ 已实现 HTTPS 联动：安全配置自动根据 `USE_X_FORWARDED_PROTO` 生效
-> 纯 HTTP 不再需要手动修改，部署即用
-
-### HTTPS 部署（有 SSL 证书）
-
-```env
-USE_X_FORWARDED_PROTO=True  # 启用后自动开启所有安全配置
-SECURE_SSL_REDIRECT=True
-SESSION_COOKIE_SECURE=True
-CSRF_COOKIE_SECURE=True
-SECURE_HSTS_SECONDS=31536000
-```
-
-### 安全检查清单
-
-- [ ] `DEBUG=False` 已设置
-- [ ] `SECRET_KEY` 已更改为强随机值
-- [ ] `ALLOWED_HOSTS` 已正确配置
-- [ ] 数据库不使用 root 用户
-- [ ] Redis 不暴露到公网
-- [ ] HTTPS 已启用（推荐）
-
-详细安全策略请参阅 [SECURITY.md](./SECURITY.md)
-
----
-
-## 🛑 运维命令速查
-
+提交前请跑：
 ```bash
-# 启动所有服务
-bash deploy/up.sh           # Linux
-deploy\up.bat               # Windows
-
-# 停止服务（保留数据卷）
-bash deploy/down.sh         # Linux
-deploy\down.bat             # Windows
-
-# 彻底清理（包括数据卷）
-bash deploy/down.sh --purge
-
-# 查看日志
-docker compose -f deploy/docker-compose.yml logs -f --tail=50
-
-# 重启服务
-docker compose -f deploy/docker-compose.yml restart web
-
-# 进入容器调试
-docker compose -f deploy/docker-compose.yml exec web bash
-
-# 执行 Django 命令
-docker compose -f deploy/docker-compose.yml exec web python manage.py check --deploy
+pre-commit run --all-files
+pytest
 ```
-
----
-
-## 📖 API 文档
-
-项目提供完整的 REST API，包含 **25+ 个接口**：
-
-| 模块 | 接口 | 说明 |
-|------|------|------|
-| 博客 | 分类、标签、文章、评论 | 内容管理 |
-| 论坛 | 版块、主题、回复 | 社区互动 |
-| 通知 | 通知列表、已读标记、未读计数 | 实时通知 |
-| 上传 | 图片、文件上传 | 富媒体支持 |
-| 审核 | 审核操作、指标统计 | 内容管理 |
-
-**在线文档**（开发环境）：
-- Swagger UI：`/api/docs/`
-- ReDoc：`/api/redoc/`
-
-**完整文档**：[docs/API.md](./docs/API.md)
-
----
-
-## 📌 路线图（Roadmap）
-
-- [x] 完整 CI 工作流（lint + tests + deploy checks）
-- [x] 统一 API 响应格式
-- [x] WebSocket 实时通知
-- [x] 全文搜索（Meilisearch/Elasticsearch）
-- [x] 管理后台数据备份与恢复
-- [x] 管理后台仪表盘（趋势图、系统信息、快捷操作）
-- [ ] 统一 API 权限策略与审计日志
-- [ ] 前端页面体验与主题体系持续优化
-- [ ] 监控告警（Prometheus / Sentry）进一步完善
-
-更新日志：[CHANGELOG.md](./CHANGELOG.md)
-
----
-
-## 🤝 贡献指南
-
-我们欢迎所有形式的贡献！
-
-### 贡献方式
-
-- 🐛 报告 Bug：提交 [Issue](https://github.com/zhang123999-qq/DjangoBlog/issues)
-- 💡 建议功能：提交 [Issue](https://github.com/zhang123999-qq/DjangoBlog/issues)
-- 📝 改进文档：提交 Pull Request
-- 🔧 提交代码：提交 Pull Request
-
-### 快速开始贡献
-
-1. Fork 仓库并创建功能分支
-2. 提交前执行测试与代码检查
-3. 提交 PR 并说明改动内容
-
-详细贡献指南：[CONTRIBUTING.md](./CONTRIBUTING.md)
-
----
-
-## 📚 文档目录
-
-| 文档 | 说明 |
-|------|------|
-| [README.md](./README.md) | 项目主文档（本文档） |
-| [CHANGELOG.md](./CHANGELOG.md) | 版本更新日志 |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南 |
-| [SECURITY.md](./SECURITY.md) | 安全策略与漏洞报告 |
-| [docs/API.md](./docs/API.md) | API 接口文档（25+ 接口） |
-| [docs/deployment-manual.md](./docs/deployment-manual.md) | 手动部署教程 |
 
 ---
 
 ## 📄 许可证
 
-本项目采用 [MIT](./LICENSE) 许可证。
+[MIT License](LICENSE)
 
 ---
 
-## 💬 联系方式
+## 🌟 Star History
 
-- **Issues**: https://github.com/zhang123999-qq/DjangoBlog/issues
-- **Discussions**: https://github.com/zhang123999-qq/DjangoBlog/discussions
+如果这个项目对你有帮助，欢迎点 ⭐
 
----
-
-<div align="center">
-
-如果这个项目对你有帮助，欢迎 ⭐ Star 支持！
-
-**Made with ❤️ by DjangoBlog Team**
-
-</div>
+[![Star History Chart](https://api.star-history.com/svg?repos=zhang123999-qq/DjangoBlog&type=Date)](https://star-history.com/#zhang123999-qq/DjangoBlog)
