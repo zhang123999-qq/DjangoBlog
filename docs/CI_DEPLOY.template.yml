@@ -1,0 +1,215 @@
+# =============================================
+# DjangoBlog 自动部署工作流
+# =============================================
+# 使用方法：
+#   1. 复制本文件全部内容
+#   2. GitHub 网页: Add file -> Create new file
+#   3. 路径: .github/workflows/deploy.yml
+#   4. Commit
+# =============================================
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "部署环境"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+# 并发控制：同一时间只允许一个部署
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+# 环境配置
+environment:
+  name: ${{ github.event.inputs.environment || 'production' }}
+  url: ${{ secrets.PRODUCTION_URL }}
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ============================================
+      # 1. 检出代码
+      # ============================================
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ============================================
+      # 2. 配置 SSH
+      # ============================================
+      - name: 🔑 Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "✅ SSH 配置完成"
+
+      # ============================================
+      # 3. 记录部署信息
+      # ============================================
+      - name: 📝 Generate deploy info
+        id: info
+        run: |
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          AUTHOR=$(git log -1 --pretty=%an)
+          echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+          echo "time=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+          echo "🚀 部署信息:"
+          echo "  SHA: $COMMIT_SHA"
+          echo "  Message: $COMMIT_MSG"
+          echo "  Author: $AUTHOR"
+
+      # ============================================
+      # 4. 部署前健康检查
+      # ============================================
+      - name: 🩺 Pre-deploy health check
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          PROJECT_DIR: ${{ secrets.PROJECT_DIR }}
+        run: |
+          echo "🩺 部署前健康检查..."
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd $PROJECT_DIR && bash deploy/health.sh check" || {
+            echo "⚠️ 当前服务存在异常，但仍继续部署"
+          }
+
+      # ============================================
+      # 5. 备份当前版本（用于回滚）
+      # ============================================
+      - name: 💾 Backup current version
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          PROJECT_DIR: ${{ secrets.PROJECT_DIR }}
+        run: |
+          echo "💾 备份当前数据库..."
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd $PROJECT_DIR && bash deploy/backup.sh" || echo "⚠️ 备份失败，继续部署"
+
+      # ============================================
+      # 6. 拉取最新代码
+      # ============================================
+      - name: 📥 Pull latest code
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          PROJECT_DIR: ${{ secrets.PROJECT_DIR }}
+        run: |
+          echo "📥 拉取最新代码..."
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd $PROJECT_DIR && git pull origin main" || {
+            echo "❌ git pull 失败"
+            exit 1
+          }
+
+      # ============================================
+      # 7. 执行增量部署
+      # ============================================
+      - name: 🚀 Run auto-deploy update
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          PROJECT_DIR: ${{ secrets.PROJECT_DIR }}
+        run: |
+          echo "🚀 执行增量部署..."
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd $PROJECT_DIR && bash deploy/auto-deploy.sh update" || {
+            echo "❌ 部署失败，执行回滚"
+            ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+              "cd $PROJECT_DIR && git checkout HEAD~1 && bash deploy/auto-deploy.sh update"
+            exit 1
+          }
+
+      # ============================================
+      # 8. 部署后健康检查
+      # ============================================
+      - name: ✅ Post-deploy health check
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          PROJECT_DIR: ${{ secrets.PROJECT_DIR }}
+        run: |
+          echo "✅ 部署后健康检查..."
+          sleep 10
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd $PROJECT_DIR && bash deploy/health.sh check"
+
+      # ============================================
+      # 9. 通知成功
+      # ============================================
+      - name: 📢 Notify success
+        if: success()
+        run: |
+          echo "✅ 部署成功！"
+          echo "  仓库: ${{ github.repository }}"
+          echo "  分支: ${{ github.ref }}"
+          echo "  提交: ${{ steps.info.outputs.sha }} - ${{ steps.info.outputs.msg }}"
+          echo "  作者: ${{ steps.info.outputs.author }}"
+          echo "  时间: ${{ steps.info.outputs.time }}"
+          if [ -n "${{ secrets.DINGTALK_WEBHOOK }}" ]; then
+            curl -X POST "${{ secrets.DINGTALK_WEBHOOK }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"msgtype\": \"markdown\",
+                \"markdown\": {
+                  \"title\": \"✅ DjangoBlog 部署成功\",
+                  \"text\": \"### 🚀 部署成功\n- 提交: ${{ steps.info.outputs.sha }}\n- 说明: ${{ steps.info.outputs.msg }}\n- 作者: ${{ steps.info.outputs.author }}\n- 时间: ${{ steps.info.outputs.time }}\"
+                }
+              }" || echo "⚠️ 通知发送失败"
+          fi
+
+      # ============================================
+      # 10. 通知失败
+      # ============================================
+      - name: ❌ Notify failure
+        if: failure()
+        run: |
+          echo "❌ 部署失败！请检查日志"
+          echo "  Workflow: ${{ github.workflow }}"
+          echo "  Run: ${{ github.run_id }}"
+          echo "  URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ -n "${{ secrets.DINGTALK_WEBHOOK }}" ]; then
+            curl -X POST "${{ secrets.DINGTALK_WEBHOOK }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"msgtype\": \"markdown\",
+                \"markdown\": {
+                  \"title\": \"❌ DjangoBlog 部署失败\",
+                  \"text\": \"### 🚨 部署失败\n- 分支: ${{ github.ref }}\n- 提交: ${{ steps.info.outputs.sha }}\n- 详情: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+                }
+              }" || true
+          fi
